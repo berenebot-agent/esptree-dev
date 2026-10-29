@@ -44,10 +44,18 @@ export class EspTopologyNode extends LitElement {
     const isQueued = !!job && job.status === 'queued';
     const percent = job?.percent ?? 0;
     const hasChildren = this.childNodesData.length > 0;
-    const isRemote = (this.node.hops ?? 0) > 0;
+    // Any node that is not the tree root and not the bridge itself is a remote.
+    // Gating on `hops > 0` alone hid retained remotes: those are restored from the
+    // integration store without a hop count, so they silently lost their config
+    // badge and their Edit YAML button.
+    const isRemote = !this.isRoot && !this.node.is_bridge;
 
     const configStatus = this.configForMac(this.node.mac);
     const configState = configStatus?.config_state ?? 'no_config';
+    // The row shows no config badge any more; the only config fact worth surfacing
+    // inline is the one that changes what the Edit YAML click does - with no YAML
+    // yet that page offers "Create Config", not an editor, so flag it on the button.
+    const needsConfig = isRemote && configState === 'no_config';
     const isCompiling = configState === 'compiling';
     const isCompileQueued = configState === 'compile_queued';
     const compileQueuePos = configStatus?.queue_position ?? 1;
@@ -56,20 +64,15 @@ export class EspTopologyNode extends LitElement {
       <div class="tree-row">
         <div class="branch ${this.isRoot ? 'root' : ''}" aria-hidden="true"></div>
         <div class="tree-node ${this.node.online ? 'online' : 'offline'}" @click=${this.selectNode}>
-          ${isRemote ? html`
-            <span class="config-badge config-${configState}">
-              ${configState === 'no_config' ? '—' : configState === 'has_config' ? '✓' : configState === 'compiled_ready' ? '↑' : '—'}
-            </span>
-          ` : this.isRoot ? html`
-            <span class="bridge-badge">B</span>
-          ` : html`<span></span>`}
           <span class="status-dot ${this.node.online ? 'online' : 'offline'}"></span>
           <span class="identity">
-            <span class="bridge-name-line">${this.isRoot && this.node.network_id ? html`<strong>${this.node.friendly_name || this.node.esphome_name || this.node.label || this.node.mac}</strong><span class="network-id">${this.node.network_id}</span>` : html`<strong>${this.node.friendly_name || this.node.esphome_name || this.node.label || this.node.mac}</strong>`}</span>
+            <span class="bridge-name-line">${this.isRoot ? html`<span class="bridge-badge" title="Bridge">B</span>` : nothing}${this.isRoot && this.node.network_id ? html`<strong>${this.node.friendly_name || this.node.esphome_name || this.node.label || this.node.mac}</strong><span class="network-id">${this.node.network_id}</span>` : html`<strong>${this.node.friendly_name || this.node.esphome_name || this.node.label || this.node.mac}</strong>`}</span>
             <small>${this.node.mac}</small>
           </span>
           <span class="metrics">
-            <span class="${this.node.online ? '' : 'offline-metric'}">${this.node.online ? fmtDuration(this.node.uptime_s) : html`<button class="hide-pill" title="hide until back online" @click=${(e: Event) => { e.stopPropagation(); this.onHideDevice(this.node.mac); }}>✕ hide</button>`}</span>
+            ${this.node.online
+              ? html`<span>${fmtDuration(this.node.uptime_s)}</span>`
+              : html`<button class="hide-pill" title="hide until back online" @click=${(e: Event) => { e.stopPropagation(); this.onHideDevice(this.node.mac); }}>✕ hide</button>`}
             ${this.isRoot || this.node.last_seen_ago == null ? html`<span class="pill-placeholder">—</span>` : html`<span class="last-seen">${fmtDuration(this.node.last_seen_ago)} ago</span>`}
             ${this.isRoot ? html`<span class="pill-placeholder">—</span>` : this.node.online
               ? html`<span title="${this.node.rssi != null ? `${this.node.rssi} dBm` : ''}">${this.rssiBars(this.node.rssi)}${(this.node.hops ?? 0) > 0 ? `  ${this.node.hops}↷` : ''}</span>`
@@ -102,7 +105,7 @@ export class EspTopologyNode extends LitElement {
           ` : html`<span></span>`}
           ${isRemote ? html`
             <span class="action-buttons">
-              <button class="icon-btn" title="Edit YAML config" @click=${(e: Event) => { e.stopPropagation(); this.navigateTo(`/device/${encodeURIComponent(this.node.mac)}/config`); }}>Edit YAML</button>
+              <button class="icon-btn" title="Edit YAML config" @click=${(e: Event) => { e.stopPropagation(); this.navigateTo(`/device/${encodeURIComponent(this.node.mac)}/config`); }}>Edit YAML${needsConfig ? html`<span class="config-dot" title="No configuration yet"></span>` : nothing}</button>
             </span>
           ` : nothing}
         </div>
@@ -173,7 +176,21 @@ export class EspTopologyNode extends LitElement {
     .tree-node {
       width: 100%;
       display: grid;
-      grid-template-columns: 14px 10px minmax(180px, 1fr) 1fr auto auto;
+      /* Fixed trailing tracks keep every box - bridge or remote - on the same
+         column grid: status dot, identity, metrics, then the Settings and
+         Edit YAML action pills, each a fixed 112px. */
+      /* The metrics column must hold all four pills on ONE line, and the identity
+         column yields to it. It was minmax(0, 1fr), which lets the track collapse
+         to whatever is left over: at a 913px row that is ~245px, while four 76px
+         pills plus 3x6px gaps need ~322px. So the chip pill wrapped to a second
+         line on every row and each box grew ~20px taller, leaving the metrics
+         stranded above the buttons. max-content gives the pills exactly what they
+         need; the identity takes the slack and truncates rather than pushing the
+         track wider.
+
+         The single-column layout below takes over at 960px to preserve room for
+         the device name. */
+      grid-template-columns: 10px minmax(0, 1fr) minmax(0, max-content) 112px 112px;
       gap: 12px;
       align-items: center;
       border: 1px solid var(--line);
@@ -207,35 +224,6 @@ export class EspTopologyNode extends LitElement {
       background: var(--ok);
     }
 
-    .config-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 14px;
-      height: 14px;
-      font-size: 9px;
-      font-weight: 700;
-      border: 1px solid var(--line);
-      border-radius: 4px;
-    }
-
-    .config-badge.config-has_config {
-      border-color: var(--ok);
-      color: var(--ok);
-      background: #dcfce7;
-    }
-
-    .config-badge.config-compiled_ready {
-      border-color: var(--primary);
-      color: var(--primary);
-      background: #d5f0f3;
-    }
-
-    .config-badge.config-no_config {
-      border-color: var(--line);
-      color: var(--muted);
-    }
-
     .bridge-badge {
       display: inline-flex;
       align-items: center;
@@ -247,6 +235,19 @@ export class EspTopologyNode extends LitElement {
       border-radius: 4px;
       background: var(--primary);
       color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* Marks the one config state that changes what the button does: no YAML yet, so
+       Edit YAML opens "Create Config" rather than an editor. A dot rather than a
+       count, because the row has no space for a label and none is needed. */
+    .config-dot {
+      width: 6px;
+      height: 6px;
+      margin-left: 6px;
+      border-radius: 50%;
+      background: #fbbf24;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35);
       flex-shrink: 0;
     }
 
@@ -263,24 +264,22 @@ export class EspTopologyNode extends LitElement {
 
     .action-buttons {
       display: flex;
-      gap: 12px;
+      width: 112px;
+      gap: 8px;
     }
 
     .icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      box-sizing: border-box;
+      width: 112px;
+      flex: 0 0 112px;
       border: 1px solid #0f766e;
       background: #0f766e;
       color: #fff;
-      min-height: 36px;
-      padding: 0 16px;
+      padding: 0 10px;
       font: inherit;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
-      border-radius: 8px;
       cursor: pointer;
-      white-space: nowrap;
       transition: all 0.12s;
     }
 
@@ -325,21 +324,44 @@ export class EspTopologyNode extends LitElement {
 
     .metrics {
       display: flex;
-      gap: 8px;
+      /* wrap, not nowrap: the track above is sized to fit all four pills on one
+         line at any desktop width (>=961px), so wrapping only engages as a
+         graceful fallback. nowrap would overflow invisibly instead. */
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 0;
       font-size: 12px;
       color: var(--muted);
       justify-content: flex-end;
     }
 
-    .metrics span {
+    /* One pill language for the row. Every pill and badge shares the same height,
+       radius and horizontal padding so a row reads as a single band. box-sizing is
+       set here because nothing sets it globally: without it a width:76px pill
+       actually rendered 92px (76 plus 2x8px padding), so each pill's real width
+       depended on its own padding rather than a shared column. */
+    .metrics span,
+    .metrics .hide-pill,
+    .pill-placeholder,
+    .ota-badge,
+    .icon-btn {
+      box-sizing: border-box;
+      min-height: 26px;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #f1f5f9;
-      padding: 3px 8px;
-      border-radius: 6px;
       white-space: nowrap;
-      width: 76px;
+    }
+
+    .metrics span {
+      background: #f1f5f9;
+      padding: 0 10px;
+      /* min-width, not width: the cells line up but a long value can still grow
+         instead of overflowing. */
+      min-width: 76px;
       text-align: center;
     }
 
@@ -349,13 +371,8 @@ export class EspTopologyNode extends LitElement {
     }
 
     .hide-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 76px;
-      padding: 3px 8px;
+      padding: 0 10px;
       border: none;
-      border-radius: 6px;
       background: var(--danger);
       color: #fff;
       font: inherit;
@@ -369,14 +386,13 @@ export class EspTopologyNode extends LitElement {
     }
 
     .metrics .chip-name {
-      min-width: 72px;
+      min-width: 76px;
     }
 
     .pill-placeholder {
       background: #f1f5f9;
-      padding: 3px 8px;
-      border-radius: 6px;
-      width: 76px;
+      padding: 0 10px;
+      min-width: 76px;
       text-align: center;
       color: var(--muted);
     }
@@ -398,9 +414,7 @@ export class EspTopologyNode extends LitElement {
       color: #fff;
       font-size: 11px;
       font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 6px;
-      white-space: nowrap;
+      padding: 0 10px;
       cursor: pointer;
       transition: all 0.12s;
     }
@@ -457,7 +471,9 @@ export class EspTopologyNode extends LitElement {
       padding-left: 0;
     }
 
-    @media (max-width: 840px) {
+    /* Keep enough horizontal room for the identity beside the four metric pills
+       and the fixed-width Settings/Edit YAML actions before using two columns. */
+    @media (max-width: 960px) {
       :host {
         margin-left: 0;
       }
@@ -470,9 +486,6 @@ export class EspTopologyNode extends LitElement {
         align-items: start;
         gap: 6px 10px;
         padding: 12px 12px;
-      }
-      .config-badge {
-        display: none;
       }
       .status-dot {
         grid-column: 2;

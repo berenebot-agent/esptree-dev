@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import time
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
 from .bridge_runtime import get_runtime
+from .const import DOMAIN
 from .device_model import norm_mac
 
 
@@ -92,13 +95,16 @@ class RemoteDiagnosticSensor(SensorEntity):
         runtime = get_runtime(self.hass)
         remote = runtime.remotes.get(self._remote_mac)
         name = remote.display_name if remote else self._remote_mac
+        # via_device_id, not the deprecated via_device identifier tuple (HA
+        # deprecates via_device from 2027.8.0). The parent device is the bridge.
+        via_device_id = runtime.parent_device_id(remote.bridge_mac) if remote and remote.bridge_mac else None
         return {
-            "identifiers": {(("esp_tree", self._remote_mac))},
+            "identifiers": {((DOMAIN, self._remote_mac))},
             "name": name,
             "manufacturer": remote.manufacturer if remote else "ESPHome",
             "model": remote.model if remote else "esp_tree_remote",
             "sw_version": remote.project_version if remote else None,
-            "via_device": (("esp_tree", remote.bridge_mac)) if remote and remote.bridge_mac else None,
+            "via_device_id": via_device_id,
         }
 
     @property
@@ -115,8 +121,13 @@ class RemoteDiagnosticSensor(SensorEntity):
         if self._object_id == "uptime_s":
             return int(remote.uptime_s or 0)
         if self._object_id == "last_seen_s":
-            last_seen_bridge_uptime_s = remote.last_live_observed_ms // 1000
-            return last_seen_bridge_uptime_s if last_seen_bridge_uptime_s > 0 else None
+            bridge_uptime_s = runtime._effective_bridge_uptime(remote.bridge_mac)
+            last_seen_bridge_uptime_s = remote.last_seen_bridge_uptime_s
+            last_seen_observed_at = remote.last_seen_observed_at
+            if bridge_uptime_s <= 0 or last_seen_bridge_uptime_s <= 0 or last_seen_observed_at <= 0:
+                return None
+            effective_last_seen = last_seen_bridge_uptime_s + max(0, int(time.time() - last_seen_observed_at))
+            return max(0, bridge_uptime_s - effective_last_seen)
         if self._object_id == "chip_name":
             return normalize_chip_name(remote.chip_name)
         return None
