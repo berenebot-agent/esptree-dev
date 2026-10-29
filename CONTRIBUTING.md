@@ -126,10 +126,11 @@ project's `tools/archive/` directory. It is not part of the add-on.
 
 ## Git workflow
 
-- Canonical repository: `dellarb/esphomenow-tree-ha`.
+- Canonical repository: `dellarb/esp-tree`.
 - Upstream target branch: `master`.
-- Working fork: `berenebot-agent/esphomenow-tree-ha-devbranch`.
-- Current upstream pull request: <https://github.com/dellarb/esphomenow-tree-ha/pull/6>, from `esptree-dev` to `master`. PR #5 (from the retired `consolidate-latest` branch) is closed.
+- Working fork: `berenebot-agent/esp-tree-devbranch`.
+- Current upstream pull request: <https://github.com/dellarb/esp-tree/pull/6>, from `esptree-dev` to `master`. PR #5 (from the retired `consolidate-latest` branch) is closed.
+- `esptree-dev` is a standalone snapshot of the release path, not the upstream pull-request fork. It has been branch-consolidated and is the only branch on both `berenebot-agent/esptree-dev` (as `main`) and the pull-request fork; any other branch name on a remote is stale.
 - Once implementation is requested, work on the active branch and commit focused changes in place. Do not create a separate branch for an ordinary change.
 - Push the active branch to the fork and update its existing pull request, or open a pull request when the branch has none.
 - Never push directly to the canonical repository.

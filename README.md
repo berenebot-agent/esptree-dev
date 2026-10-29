@@ -64,7 +64,7 @@ See `CONTRIBUTING.md` for the per-domain entry points.
 ## Install the add-on
 
 1. In Home Assistant: **Settings → Add-ons → Add-on Store → ⋮ → Repositories**,
-   and add `https://github.com/dellarb/esphomenow-tree-ha`.
+   and add `https://github.com/dellarb/esp-tree`.
 2. Install **ESP Tree**, start it, then open its panel from the sidebar
    (ingress) or **OPEN WEB UI** on the add-on page.
 
