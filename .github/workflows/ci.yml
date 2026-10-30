@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - esptree-dev
   workflow_dispatch:
 
 permissions:
@@ -64,7 +65,7 @@ jobs:
           echo "ui/dist matches the current UI source."
 
   regression-tests:
-    name: Fix regression tests
+    name: Python regression tests
     runs-on: ubuntu-latest
 
     steps:
