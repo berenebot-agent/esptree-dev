@@ -274,20 +274,30 @@ static void test_hmac_sha256_different_keys_different_output() {
 
 static void test_hmac_sha256_empty_data() {
   uint8_t key[32] = {0};
-  uint8_t data[0] = {};
+  uint8_t data[1] = {};  // C++17 does not permit a zero-length array.
   uint8_t out[32] = {};
+  const uint8_t expected[32] = {
+      0xb6,0x13,0x67,0x9a,0x08,0x14,0xd9,0xec,0x77,0x2f,0x95,0xd7,0x78,0xc3,0x5f,0xc5,
+      0xff,0x16,0x97,0xc4,0x93,0x71,0x56,0x53,0xc6,0xc7,0x12,0x14,0x42,0x92,0xc5,0xad
+  };  // HMAC-SHA256(key=32 zero bytes, message=empty).
 
   espnow_crypto_hmac_sha256(key, 32, data, 0, out);
-  expect(out[0] != 0 || out[31] != 0, "hmac-sha256 empty data produces non-zero");
+  expect(memcmp(out, expected, sizeof(expected)) == 0,
+         "hmac-sha256 empty input matches reference digest");
 }
 
 static void test_hmac_sha256_output_length() {
   uint8_t key[32] = {0};
   uint8_t data[16] = {0};
   uint8_t out[32] = {};
+  const uint8_t expected[32] = {
+      0x85,0x3c,0x74,0x03,0x93,0x7d,0x8b,0x62,0x39,0x56,0x9b,0x18,0x4e,0xb7,0x99,0x3f,
+      0xc5,0xf7,0x51,0xae,0xfc,0xea,0x28,0xf2,0xc8,0x63,0x85,0x8e,0x2d,0x29,0xc5,0x0b
+  };  // HMAC-SHA256(key=32 zero bytes, message=16 zero bytes).
 
   espnow_crypto_hmac_sha256(key, 32, data, 16, out);
-  expect(out[31] == out[31], "hmac-sha256 produces 32 bytes");
+  expect(memcmp(out, expected, sizeof(expected)) == 0,
+         "hmac-sha256 full 32-byte output matches reference digest");
 }
 
 static void test_hmac_sha256_different_data_different_output() {
