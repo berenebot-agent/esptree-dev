@@ -16,16 +16,19 @@ extern "C" {
  * output without reading or writing any module-level state.
  * The caller is responsible for deriving and storing per-peer session keys.
  *
- * Session key derivation:
- *   session_key = HKDF-SHA256(PSK, bridge_nonce || remote_nonce)
+ * Directional v3 session key derivation:
+ *   prk = HKDF-Extract(zero_salt, stored_PSK)
+ *   uplink_key   = HKDF-Expand(prk, bridge_nonce || remote_nonce || "esp-tree-v3-up", 32)
+ *   downlink_key = HKDF-Expand(prk, bridge_nonce || remote_nonce || "esp-tree-v3-down", 32)
+ *   Each endpoint uses its transmit direction key for both AES-CTR and session HMAC.
  *
  * PSK tag (first 4 bytes):
  *   psk_tag = HMAC-SHA256(PSK, bytes[2..12] || payload)[0:4]
  * Session tag (first 8 bytes):
- *   session_tag = HMAC-SHA256(session_key, bytes[2..12] || ciphertext)[0:8]
+ *   session_tag = HMAC-SHA256(directional_key, bytes[2..12] || ciphertext)[0:8]
  *
  * Per-packet encryption:
- *   AES-CTR(session_key, nonce = tx_counter_as_16_bytes_LE)
+ *   AES-CTR(directional_key, nonce = tx_counter_as_16_bytes_LE)
  *   ciphertext = plaintext XOR keystream
  */
 
@@ -51,19 +54,21 @@ int espnow_crypto_verify_psk_tag(const uint8_t* header_bytes,
                                  const uint8_t* received_psk_tag);
 
 /**
- * @brief Derive a session key from the PSK and two nonces.
+ * @brief Derive independent session keys for both directions (ESP Tree v3).
  *
- * This function is stateless — it writes the derived key to out_session_key.
+ * Uplink is remote -> bridge; downlink is bridge -> remote. The PSK, bridge
+ * nonce and remote nonce must be identical at both endpoints. This change
+ * deliberately requires reflashing both sides of pre-release v3 deployments.
  *
- *   session_key = HKDF-SHA256(stored_PSK, bridge_nonce || remote_nonce)
- *
- * @param bridge_nonce  16 bytes
- * @param remote_nonce  16 bytes
- * @param out_session_key  Caller-allocated 32-byte output buffer
+ * @param bridge_nonce 16 bytes
+ * @param remote_nonce 16 bytes
+ * @param out_up_key   Caller-allocated 32-byte uplink key
+ * @param out_down_key Caller-allocated 32-byte downlink key
  */
-void espnow_crypto_derive_session_key(const uint8_t* bridge_nonce,
-                                      const uint8_t* remote_nonce,
-                                      uint8_t* out_session_key);
+void espnow_crypto_derive_session_keys(const uint8_t* bridge_nonce,
+                                       const uint8_t* remote_nonce,
+                                       uint8_t* out_up_key,
+                                       uint8_t* out_down_key);
 
 /**
  * @brief Compute session_tag = HMAC-SHA256(session_key, bytes[2..12] || ciphertext),
