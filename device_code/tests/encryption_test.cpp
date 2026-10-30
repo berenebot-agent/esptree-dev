@@ -164,30 +164,87 @@ static void test_psk_tag_valid() {
 }
 
 static void test_session_key_derivation_deterministic() {
-  uint8_t bridge_nonce[16] = {0};
-  uint8_t remote_nonce[16] = {0xFF};
-  uint8_t key1[32] = {};
-  uint8_t key2[32] = {};
+  char psk_hex[65];
+  fill_hex(psk_hex, 64, 0xA5);
+  expect(espnow_crypto_init(psk_hex) == 0, "directional key init");
 
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, key1);
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, key2);
+  uint8_t bridge_nonce[16]{};
+  uint8_t remote_nonce[16]{};
+  for (uint8_t i = 0; i < 16; ++i) {
+    bridge_nonce[i] = i;
+    remote_nonce[i] = i + 16;
+  }
 
-  expect(memcmp(key1, key2, 32) == 0, "session key deterministic");
+  uint8_t up1[32]{}, down1[32]{}, up2[32]{}, down2[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, up1, down1);
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, up2, down2);
+
+  expect(memcmp(up1, up2, 32) == 0, "uplink key deterministic");
+  expect(memcmp(down1, down2, 32) == 0, "downlink key deterministic");
+  expect(memcmp(up1, down1, 32) != 0, "uplink and downlink keys separated");
+
+  // Independent HKDF-SHA256 reference vectors using PSK=0xA5 repeated,
+  // bridge_nonce=00..0f, remote_nonce=10..1f and v3 direction labels.
+  const uint8_t expected_up[32] = {
+      0xc7,0xd8,0x2d,0xb6,0x59,0x42,0x53,0x53,0x68,0x4a,0x11,0xab,0xf8,0x63,0x90,0x64,
+      0xc9,0x5d,0x03,0x4d,0x38,0xed,0x80,0x54,0x84,0xbc,0x09,0x23,0x44,0x01,0xb9,0x83};
+  const uint8_t expected_down[32] = {
+      0x29,0x21,0x36,0x30,0x4e,0xe7,0x71,0x35,0xb7,0x3d,0xae,0x0f,0xe9,0x16,0x85,0xea,
+      0xd3,0xf7,0xe3,0x49,0x1e,0x46,0xe2,0x45,0x86,0x0a,0x6b,0xf4,0x7e,0x40,0x4c,0x06};
+  expect(memcmp(up1, expected_up, 32) == 0, "uplink HKDF reference vector");
+  expect(memcmp(down1, expected_down, 32) == 0, "downlink HKDF reference vector");
 }
 
 static void test_session_key_derivation_different_nonces() {
-  uint8_t bridge_nonce1[16] = {0};
-  uint8_t remote_nonce1[16] = {0};
-  uint8_t bridge_nonce2[16] = {0};
-  uint8_t remote_nonce2[16] = {1};
+  uint8_t bridge_nonce[16]{};
+  uint8_t remote_nonce[16]{};
+  uint8_t up1[32]{}, down1[32]{}, up2[32]{}, down2[32]{};
 
-  uint8_t key1[32] = {};
-  uint8_t key2[32] = {};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, up1, down1);
+  remote_nonce[0] = 1;
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, up2, down2);
 
-  espnow_crypto_derive_session_key(bridge_nonce1, remote_nonce1, key1);
-  espnow_crypto_derive_session_key(bridge_nonce2, remote_nonce2, key2);
+  expect(memcmp(up1, up2, 32) != 0, "nonce change rotates uplink key");
+  expect(memcmp(down1, down2, 32) != 0, "nonce change rotates downlink key");
+}
 
-  expect(memcmp(key1, key2, 32) != 0, "different nonces produce different keys");
+static void test_directional_encryption_and_authentication() {
+  uint8_t bridge_nonce[16]{};
+  uint8_t remote_nonce[16]{};
+  uint8_t up[32]{}, down[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, up, down);
+  const uint8_t plaintext[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10};
+  uint8_t up_cipher[sizeof(plaintext)]{}, down_cipher[sizeof(plaintext)]{};
+  uint8_t roundtrip[sizeof(plaintext)]{}, retransmission[sizeof(plaintext)]{};
+  const uint32_t counter = 42;
+
+  expect(espnow_crypto_crypt(up, counter, plaintext, up_cipher, sizeof(plaintext)) == 0,
+         "encrypt uplink");
+  expect(espnow_crypto_crypt(down, counter, plaintext, down_cipher, sizeof(plaintext)) == 0,
+         "encrypt downlink");
+  expect(memcmp(up_cipher, down_cipher, sizeof(plaintext)) != 0,
+         "same counter and plaintext produce different ciphertext across directions");
+  expect(espnow_crypto_crypt(up, counter, up_cipher, roundtrip, sizeof(plaintext)) == 0 &&
+         memcmp(roundtrip, plaintext, sizeof(plaintext)) == 0, "uplink decrypts correctly");
+  expect(espnow_crypto_crypt(down, counter, down_cipher, roundtrip, sizeof(plaintext)) == 0 &&
+         memcmp(roundtrip, plaintext, sizeof(plaintext)) == 0, "downlink decrypts correctly");
+  expect(espnow_crypto_crypt(up, counter, plaintext, retransmission, sizeof(plaintext)) == 0 &&
+         memcmp(up_cipher, retransmission, sizeof(plaintext)) == 0,
+         "exact retransmission with same key and counter is identical");
+
+  espnow_frame_header_t header{};
+  header.protocol_version = ESPNOW_PROTOCOL_VER;
+  header.packet_type = PKT_STATE;
+  header.tx_counter = counter;
+  uint8_t up_tag[ESPNOW_SESSION_TAG_LEN]{};
+  espnow_crypto_session_tag(up, reinterpret_cast<const uint8_t*>(&header),
+                            up_cipher, sizeof(up_cipher), up_tag);
+  expect(espnow_crypto_verify_session_tag(up, reinterpret_cast<const uint8_t*>(&header),
+                                          up_cipher, sizeof(up_cipher), up_tag) == 1,
+         "correct directional HMAC accepted");
+  expect(espnow_crypto_verify_session_tag(down, reinterpret_cast<const uint8_t*>(&header),
+                                          up_cipher, sizeof(up_cipher), up_tag) == 0,
+         "wrong directional HMAC rejected");
 }
 
 static void test_hmac_sha256_consistency() {
@@ -256,6 +313,7 @@ int main() {
   test_psk_tag_valid();
   test_session_key_derivation_deterministic();
   test_session_key_derivation_different_nonces();
+  test_directional_encryption_and_authentication();
 
   test_hmac_sha256_consistency();
   test_hmac_sha256_different_keys_different_output();
