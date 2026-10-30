@@ -54,6 +54,7 @@ docker run -it --name esptree-homeassistant-addon-test \
   -e BRIDGE_API_KEY="$BRIDGE_API_KEY" \
   -e BRIDGE_WS_PERSISTENT="${BRIDGE_WS_PERSISTENT:-true}" \
   -e ESP_TREE_DATA_DIR=/data \
+  -e ESP_TREE_TRUSTED_PEERS="${ESP_TREE_TRUSTED_PEERS:-}" \
   -e LOG_LEVEL=info \
   -v "${CACHE_DIR}:/data" \
   "$IMAGE_NAME"
