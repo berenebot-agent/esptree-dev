@@ -35,7 +35,8 @@ struct BridgeIdentity {
 struct BridgeSession {
   std::array<uint8_t, 6> leaf_mac{};
   std::array<uint8_t, 6> parent_mac{};
-  std::array<uint8_t, 32> session_key{};
+  std::array<uint8_t, 32> session_key{};     // bridge TX (downlink)
+  std::array<uint8_t, 32> session_rx_key{};  // bridge RX (uplink)
   std::array<uint8_t, 16> bridge_nonce{};
   std::array<uint8_t, 16> remote_nonce{};
   std::array<uint8_t, 32> schema_hash{};
