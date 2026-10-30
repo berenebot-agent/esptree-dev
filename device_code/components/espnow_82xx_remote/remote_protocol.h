@@ -169,7 +169,8 @@ class RemoteProtocol {
   std::array<uint8_t, 6> bridge_mac_{};
   std::array<uint8_t, 16> remote_nonce_{};
   std::array<uint8_t, 16> bridge_nonce_{};
-  std::array<uint8_t, 32> session_key_{};
+  std::array<uint8_t, 32> session_key_{};     // remote TX (uplink)
+  std::array<uint8_t, 32> session_rx_key_{};  // remote RX (downlink)
   std::atomic<bool> session_key_valid_{false};
   std::atomic<bool> joined_{false};
 
