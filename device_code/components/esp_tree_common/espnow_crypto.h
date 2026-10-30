@@ -36,7 +36,7 @@ extern "C" {
  * @brief Initialize the crypto layer with a Pre-Shared Key (hex string).
  *
  * This is the only function that uses module-level state.
- * It stores the PSK for use in espnow_crypto_derive_session_key().
+ * It stores the PSK for use in espnow_crypto_derive_session_keys().
  *
  * @param psk_hex Null-terminated hex string (64 chars = 32 bytes)
  * @return 0 on success, -1 on invalid hex
