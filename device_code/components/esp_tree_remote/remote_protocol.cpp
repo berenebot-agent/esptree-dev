@@ -537,7 +537,7 @@ bool RemoteProtocol::validate_psk_(const espnow_frame_header_t &header, const ui
 bool RemoteProtocol::validate_session_(const espnow_frame_header_t &header, const uint8_t *ciphertext, size_t ciphertext_len,
                                        const uint8_t *session_tag) const {
   if (!session_key_valid_ || session_tag == nullptr) return false;
-  return espnow_crypto_verify_session_tag(session_key_.data(), reinterpret_cast<const uint8_t *>(&header), ciphertext, ciphertext_len,
+  return espnow_crypto_verify_session_tag(session_rx_key_.data(), reinterpret_cast<const uint8_t *>(&header), ciphertext, ciphertext_len,
                                           session_tag) != 0;
 }
 
@@ -1149,7 +1149,8 @@ bool RemoteProtocol::handle_join_ack_(const uint8_t *, const espnow_frame_header
     session_max_payload_ = ESPNOW_V1_MAX_PAYLOAD;
   }
   update_mtu_from_route_();
-  espnow_crypto_derive_session_key(bridge_nonce_.data(), remote_nonce_.data(), session_key_.data());
+  espnow_crypto_derive_session_keys(bridge_nonce_.data(), remote_nonce_.data(),
+                                   session_key_.data(), session_rx_key_.data());
   session_key_valid_ = true;
   joined_ = true;
   fast_rejoin_ = false;
@@ -1218,7 +1219,7 @@ bool RemoteProtocol::handle_ack_(const uint8_t *sender_mac, const espnow_frame_h
   if (!joined_ || !counter_is_newer(header.tx_counter, last_seen_counter_)) return false;
   if (!validate_session_(header, payload, payload_len, payload + payload_len)) return false;
   std::vector<uint8_t> plaintext(payload_len);
-  if (espnow_crypto_crypt(session_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
+  if (espnow_crypto_crypt(session_rx_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
     return false;
   }
   if (plaintext.size() < sizeof(espnow_ack_t)) {
@@ -1259,7 +1260,7 @@ bool RemoteProtocol::handle_command_(const uint8_t *, const espnow_frame_header_
   if (!joined_) return false;
   if (!validate_session_(header, payload, payload_len, payload + payload_len)) return false;
   std::vector<uint8_t> plaintext(payload_len);
-  if (espnow_crypto_crypt(session_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
+  if (espnow_crypto_crypt(session_rx_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
     return false;
   }
   EntityPayloadView command{};
@@ -1329,7 +1330,7 @@ bool RemoteProtocol::handle_config_(const uint8_t *, const espnow_frame_header_t
   if (!joined_ || !validate_session_(header, payload, payload_len, payload + payload_len)) return false;
 
   std::vector<uint8_t> plaintext(payload_len);
-  if (espnow_crypto_crypt(session_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
+  if (espnow_crypto_crypt(session_rx_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
     return false;
   }
 
@@ -1436,7 +1437,7 @@ bool RemoteProtocol::handle_schema_request_(const uint8_t *, const espnow_frame_
   if (!joined_ || !counter_is_newer(header.tx_counter, last_seen_counter_)) return false;
   if (!validate_session_(header, payload, payload_len, payload + payload_len)) return false;
   std::vector<uint8_t> plaintext(payload_len);
-  if (espnow_crypto_crypt(session_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
+  if (espnow_crypto_crypt(session_rx_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
     return false;
   }
   if (plaintext.size() != sizeof(espnow_schema_request_t)) {
@@ -1508,7 +1509,7 @@ bool RemoteProtocol::handle_file_transfer_(const uint8_t *, const espnow_frame_h
   }
   if (!joined_ || !validate_session_(header, payload, payload_len, session_tag)) return false;
   std::vector<uint8_t> plaintext(payload_len);
-  if (espnow_crypto_crypt(session_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
+  if (espnow_crypto_crypt(session_rx_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
     return false;
   }
   ota_last_activity_ms_ = millis();
@@ -1530,7 +1531,7 @@ bool RemoteProtocol::handle_file_data_(const uint8_t *, const espnow_frame_heade
   }
   if (!joined_ || !validate_session_(header, payload, payload_len, session_tag)) return false;
   std::vector<uint8_t> plaintext(payload_len);
-  if (espnow_crypto_crypt(session_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
+  if (espnow_crypto_crypt(session_rx_key_.data(), header.tx_counter, payload, plaintext.data(), payload_len) != 0) {
     return false;
   }
   ota_last_activity_ms_ = millis();
