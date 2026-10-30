@@ -613,7 +613,7 @@ bool BridgeProtocol::validate_session_packet_(const uint8_t *sender_mac, BridgeS
              header.packet_type, header.tx_counter);
     return false;
   }
-  if (espnow_crypto_verify_session_tag(session.session_key.data(), reinterpret_cast<const uint8_t *>(&header), ciphertext, ciphertext_len,
+  if (espnow_crypto_verify_session_tag(session.session_rx_key.data(), reinterpret_cast<const uint8_t *>(&header), ciphertext, ciphertext_len,
                                        session_tag) == 0) {
     ESP_LOGD(TAG, "%s[DROP] L3 tag_verify: mac=%02X:%02X:%02X:%02X:%02X:%02X type=0x%02X tx=%u",
              drop_prefix(sender_mac),
@@ -624,7 +624,7 @@ bool BridgeProtocol::validate_session_packet_(const uint8_t *sender_mac, BridgeS
     return false;
   }
   plaintext.resize(ciphertext_len);
-  if (espnow_crypto_crypt(session.session_key.data(), header.tx_counter, ciphertext, plaintext.data(), ciphertext_len) != 0) {
+  if (espnow_crypto_crypt(session.session_rx_key.data(), header.tx_counter, ciphertext, plaintext.data(), ciphertext_len) != 0) {
     ESP_LOGD(TAG, "%s[DROP] L3 aes_ctr: mac=%02X:%02X:%02X:%02X:%02X:%02X type=0x%02X tx=%u",
              drop_prefix(sender_mac),
              sender_mac != nullptr ? sender_mac[0] : 0, sender_mac != nullptr ? sender_mac[1] : 0,
@@ -849,7 +849,8 @@ bool BridgeProtocol::handle_join_(const uint8_t *sender_mac, const espnow_frame_
   session.bridge_nonce_valid = true;
   session.join_complete_pending = false;
   session.join_complete_retry_count = 0;
-  espnow_crypto_derive_session_key(session.bridge_nonce.data(), session.remote_nonce.data(), session.session_key.data());
+  espnow_crypto_derive_session_keys(session.bridge_nonce.data(), session.remote_nonce.data(),
+                                   session.session_rx_key.data(), session.session_key.data());
   session.session_key_valid = true;
   const std::string prior_esphome_name = session.esphome_name;
   session.esphome_name.clear();
