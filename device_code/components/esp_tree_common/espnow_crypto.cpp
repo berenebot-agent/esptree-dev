@@ -203,25 +203,34 @@ int espnow_crypto_init(const char* psk_input) {
     return 0;
 }
 
-void espnow_crypto_derive_session_key(const uint8_t* bridge_nonce,
-                                      const uint8_t* remote_nonce,
-                                      uint8_t* out_session_key) {
+void espnow_crypto_derive_session_keys(const uint8_t* bridge_nonce,
+                                       const uint8_t* remote_nonce,
+                                       uint8_t* out_up_key,
+                                       uint8_t* out_down_key) {
     if (!g_psk_set) {
-        memset(out_session_key, 0, 32);
+        memset(out_up_key, 0, 32);
+        memset(out_down_key, 0, 32);
         return;
     }
 
-    // info = bridge_nonce || remote_nonce
-    uint8_t info[32];
-    memcpy(info,               bridge_nonce, 16);
-    memcpy(info + 16,         remote_nonce,  16);
+    // Domain separation prevents the bridge and remote from reusing the same
+    // AES-CTR keystream when their independent TX counters overlap.
+    // v3 (pre-release): HKDF-Expand(HKDF-Extract(zero_salt, PSK),
+    //    bridge_nonce || remote_nonce || "esp-tree-v3-up/down", 32).
+    static const uint8_t kUpLabel[] = "esp-tree-v3-up";
+    static const uint8_t kDownLabel[] = "esp-tree-v3-down";
+    uint8_t info[32 + sizeof(kDownLabel) - 1];
+    memcpy(info, bridge_nonce, 16);
+    memcpy(info + 16, remote_nonce, 16);
 
-    // prk = HKDF-Extract(zero_salt, PSK)
     uint8_t prk[32];
     hkdf_extract(kHkdfSalt, sizeof(kHkdfSalt), g_psk, 32, prk);
 
-    // session_key = HKDF-Expand(prk, info, 32)
-    hkdf_expand(prk, 32, info, sizeof(info), out_session_key, 32);
+    memcpy(info + 32, kUpLabel, sizeof(kUpLabel) - 1);
+    hkdf_expand(prk, sizeof(prk), info, 32 + sizeof(kUpLabel) - 1, out_up_key, 32);
+
+    memcpy(info + 32, kDownLabel, sizeof(kDownLabel) - 1);
+    hkdf_expand(prk, sizeof(prk), info, 32 + sizeof(kDownLabel) - 1, out_down_key, 32);
 }
 
 void espnow_crypto_psk_tag(const uint8_t* header_bytes,
