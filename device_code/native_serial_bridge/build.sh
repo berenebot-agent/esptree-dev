@@ -74,6 +74,14 @@ if (( debug )); then
 fi
 
 if [[ ! -f "$sdkconfig" ]]; then
+  # idf.py set-target refuses to clean a directory that is not a CMake build
+  # tree. An interrupted first build leaves exactly that, and the resulting
+  # "Refusing to automatically delete files" error looks like a permissions
+  # problem rather than a half-written build directory.
+  if [[ -d "$build_dir" && ! -f "$build_dir/CMakeCache.txt" ]]; then
+    echo "==> Removing incomplete ${build_dir} left by an interrupted build" >&2
+    rm -rf "$build_dir"
+  fi
   idf.py "${build_args[@]}" set-target "$requested"
 fi
 
