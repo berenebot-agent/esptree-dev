@@ -1,0 +1,59 @@
+menu "ESP Tree Native Serial Bridge (experimental)"
+
+    config ESP_TREE_NETWORK_ID
+        string "ESP-NOW network ID (must match remotes)"
+        default ""
+
+    config ESP_TREE_PSK
+        string "ESP-NOW 64-character hexadecimal PSK"
+        default ""
+
+    config ESP_TREE_API_KEY
+        string "Serial protobuf API HMAC key (must match add-on)"
+        default ""
+
+    config ESP_TREE_NODE_NAME
+        string "Bridge device name"
+        default "esp-tree-native-serial"
+
+    choice ESP_TREE_RADIO_MODE
+        prompt "ESP-NOW PHY mode"
+        default ESP_TREE_RADIO_REGULAR
+
+        config ESP_TREE_RADIO_REGULAR
+            bool "Regular (required for ESP8266 leaves)"
+
+        config ESP_TREE_RADIO_LR
+            bool "Long Range (compatible ESP32 leaves only)"
+    endchoice
+
+    config ESP_TREE_RADIO_CHANNEL
+        int "Fixed radio channel"
+        range 1 13
+        default 11
+        help
+            Must match fixed-channel leaves and ESP8266 AP channel.
+            No access point association is performed.
+
+    config ESP_TREE_UART_PORT
+        int "UART controller"
+        range 0 1
+        default 0
+
+    config ESP_TREE_UART_TX_GPIO
+        int "UART TX GPIO (C5 devkit reference)"
+        default 1
+
+    config ESP_TREE_UART_RX_GPIO
+        int "UART RX GPIO (C5 devkit reference)"
+        default 3
+
+    config ESP_TREE_UART_BAUD
+        int "UART baud"
+        default 460800
+
+    config ESP_TREE_REMOTE_OTA
+        bool "Enable OTA of ESP-NOW remote nodes"
+        default y
+
+endmenu
