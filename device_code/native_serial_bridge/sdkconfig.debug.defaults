@@ -1,0 +1,17 @@
+# Debug bring-up flavour (used by `./build.sh --debug`).
+#
+# The data UART stays the same physical port, but this flavour gives it a
+# human-readable console at 115200 instead of a 460800 binary link. That makes
+# the "unprovisioned / failed setup / channel mismatch" aborts visible instead
+# of a silent reboot loop. It is NOT usable with the add-on: the serial client
+# expects COBS-framed protobuf at 460800.
+#
+# Applied on top of sdkconfig.defaults via SDKCONFIG_DEFAULTS, so this file wins.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_NUM=0
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG=y
+CONFIG_BOOTLOADER_LOG_LEVEL_INFO=y
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288

@@ -20,8 +20,8 @@
 #ifndef USE_SERIAL
 #include "esphome/components/wifi/wifi_component.h"
 #include "esphome/components/web_server_base/web_server_base.h"
-#endif
 #include "esphome/components/network/ip_address.h"
+#endif
 
 #include <cstdlib>
 #include <cmath>

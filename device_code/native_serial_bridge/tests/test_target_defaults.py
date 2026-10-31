@@ -53,8 +53,8 @@ class NativeTargetTests(unittest.TestCase):
 
     def test_build_does_not_implicitly_select_c5(self):
         script = (NATIVE / "build.sh").read_text()
-        self.assertNotIn("idf.py set-target esp32c5", script)
-        self.assertIn('idf.py set-target "$requested"', script)
+        self.assertNotIn("set-target esp32c5", script)
+        self.assertIn('set-target "$requested"', script)
         self.assertIn("Refusing to reset", script)
 
 

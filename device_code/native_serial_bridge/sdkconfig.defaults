@@ -2,5 +2,16 @@
 CONFIG_ESP_CONSOLE_NONE=y
 CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
 CONFIG_LOG_DEFAULT_LEVEL_NONE=y
-CONFIG_LOG_MAXIMUM_LEVEL_NONE=y
+# CONFIG_LOG_MAXIMUM_LEVEL_NONE is not a member of the LOG_MAXIMUM_LEVEL choice
+# in ESP-IDF 5.x. Assigning it only produces an "undefined symbol" warning and
+# leaves the maximum at its default; "Same as default" combined with
+# LOG_DEFAULT_LEVEL_NONE is what actually compiles application logging out.
+CONFIG_LOG_MAXIMUM_EQUALS_DEFAULT=y
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288
+
+# The bridge image is just over 1 MB, which overflows the 1 MB factory partition
+# of the default single-app table on a 2 MB flash part. Every board in
+# docs/BOARD_MATRIX.md has 4 MB or more, so use a 4 MB flash layout with a
+# 1.5 MB factory partition. There is no bridge self-OTA (no OTA partition).
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y

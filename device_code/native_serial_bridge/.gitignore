@@ -1,6 +1,17 @@
 build/
+build-*/
 sdkconfig
 sdkconfig.old
+# Per-target and debug configurations hold credentials; the tracked *.defaults
+# files are the only sdkconfig* files that belong in git.
+sdkconfig.esp32
+sdkconfig.esp32s2
+sdkconfig.esp32s3
+sdkconfig.esp32c2
+sdkconfig.esp32c3
+sdkconfig.esp32c5
+sdkconfig.esp32c6
+sdkconfig.esp32*.debug
 dependencies.lock
 managed_components/
 *.elf

@@ -18,7 +18,7 @@ idf_component_register(
     INCLUDE_DIRS
       "." "compat" "${TREE_COMPONENTS}" "${TREE_BRIDGE}"
     REQUIRES
-      esp_wifi esp_now esp_event esp_netif esp_timer esp_driver_uart
+      esp_wifi esp_event esp_netif esp_timer esp_driver_uart
       nvs_flash mbedtls json
 )
 target_compile_definitions(${COMPONENT_LIB} PRIVATE USE_SERIAL=1)

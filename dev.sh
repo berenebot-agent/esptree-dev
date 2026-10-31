@@ -84,6 +84,25 @@ do_run_cpp() {
     fi
 }
 
+do_native_test() {
+    # Host-side tests for the experimental native ESP-IDF serial bridge. No
+    # toolchain target and no hardware: the compat/JSON shim and the COBS codec
+    # are compiled for the host, and the Kconfig pin map is checked against the
+    # repository's board map. Needs IDF_PATH only so cJSON comes from the same
+    # source the device build uses.
+    echo "==> Running native serial bridge host tests..."
+    local runner="${SCRIPT_DIR}/device_code/native_serial_bridge/tests/run_host_tests.sh"
+    if [ ! -x "$runner" ]; then
+        echo "==> Missing or non-executable: $runner"
+        return 1
+    fi
+    if [ -z "${IDF_PATH:-}" ]; then
+        echo "==> IDF_PATH is not set; this test compiles ESP-IDF's cJSON for the host." >&2
+        return 1
+    fi
+    "$runner"
+}
+
 do_smoke_compile() {
     echo "==> Smoke-compiling representative ESPHome firmware..."
     local secrets="${SCRIPT_DIR}/device_code/demos/secrets.yaml"
@@ -457,6 +476,9 @@ case "$1" in
     run-cpp)
         do_run_cpp
         ;;
+    native-test)
+        do_native_test
+        ;;
     verify|test)
         shift
         do_verify "${1:-global}"
@@ -481,8 +503,9 @@ case "$1" in
         do_clean
         ;;
     *)
-        echo "Usage: dev.sh [compile|build-cpp|run-cpp|verify|qc|flash-usb|esplog|clean] [args...]"
+        echo "Usage: dev.sh [compile|build-cpp|run-cpp|native-test|verify|qc|flash-usb|esplog|clean] [args...]"
         echo "       dev.sh verify [global|device|addon]      # run deployment gate only"
+        echo "       dev.sh native-test                      # host tests for the native ESP-IDF bridge"
         echo "       dev.sh qc [quick] [global|device|addon]  # verify, then version/commit/push"
         exit 1
         ;;

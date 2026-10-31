@@ -85,12 +85,33 @@ The menu also accepts `a` for all demos and `n` for none. `b` builds, `f` flashe
 
 Prefer a cached `.ota.bin` when flashing an already-built target. Never commit files under `cache/`, `logs/`, or generated local build output.
 
+### Native ESP-IDF serial bridge (experimental)
+
+`device_code/native_serial_bridge/` builds the same protocol sources with ESP-IDF
+directly, without ESPHome. It is a separate toolchain from the Docker-backed
+ESPHome builds above: load ESP-IDF 5.5.4 first (`. /path/to/esp-idf/export.sh`),
+then build one target at a time with `./device_code/native_serial_bridge/build.sh
+<chip>`; use `--debug` for the UART0 console flavour. Keep one working copy per
+target so `sdkconfig` credentials are never reset. Nothing in the add-on or the
+wizard consumes this firmware yet.
+
 ### C++ tests
 
 ```bash
 ./dev.sh build-cpp
 ./dev.sh run-cpp
 ```
+
+### Native bridge host tests
+
+```bash
+IDF_PATH=/path/to/esp-idf ./dev.sh native-test
+```
+
+Runs, on the host with no target and no hardware: the compatibility-shim/COBS
+self-test, and the Kconfig UART-pin map check against `docs/BOARD_MATRIX.md`.
+`IDF_PATH` is needed only so ESP-IDF's cJSON is compiled from the same source the
+device build uses.
 
 ### Logging
 

@@ -26,7 +26,15 @@ class JsonValue {
       return cJSON_IsString(node_);
     } else if constexpr (std::is_same_v<T, bool>) {
       return cJSON_IsBool(node_);
-    } else if constexpr (std::is_arithmetic_v<T>) {
+    } else if constexpr (std::is_integral_v<T>) {
+      // ESPHome's variant distinguishes integers from floats, and the command
+      // parsers depend on it: `speed_level: 2.5` must be rejected, not silently
+      // truncated to 2. cJSON only reports "number", so require the value to be
+      // integral as well.
+      return cJSON_IsNumber(node_) && node_->valuedouble ==
+                                          static_cast<double>(
+                                              static_cast<long long>(node_->valuedouble));
+    } else if constexpr (std::is_floating_point_v<T>) {
       return cJSON_IsNumber(node_);
     }
     return false;
