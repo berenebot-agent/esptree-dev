@@ -17,7 +17,10 @@ from .const import CONF_TYPE, DOMAIN, INTEGRATION_VERSION, PLATFORMS, SHARED_RUN
 _LOGGER = logging.getLogger(__name__)
 _MODULE_IMPORTED_AT = int(time.time())
 
-ActivityLogger.get()
+try:
+    ActivityLogger.get()
+except Exception:  # never let logging setup block the integration from loading
+    _LOGGER.exception("Could not initialise the shared activity log")
 
 
 async def _migrate_legacy_entries(hass: HomeAssistant) -> None:
