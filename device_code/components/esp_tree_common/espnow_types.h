@@ -11,6 +11,9 @@ extern "C" {
 // session management, packet types, etc.). It is NOT the ESP-NOW protocol version defined in the
 // ESP IDF esp_now.h documentation. Our protocol version happens to share the same numeric space
 // (e.g. v3) but is an entirely independent version number for our application-layer protocol.
+// Pre-release v3 key schedule uses separate HKDF labels for upstream and
+// downstream. Older v3 firmware is not interoperable; reflash bridge and leaves.
+// See docs/esptree_radio_v3_spec.md section 7.
 #define ESPNOW_PROTOCOL_VER 3
 #define ESPNOW_HEADER_CORE_LEN 12
 #define ESPNOW_HEADER_WITH_PSK_TAG_LEN 17

@@ -73,6 +73,19 @@ so it can see serial adapters (including plug-and-play). `startup: services`
 starts it before Home Assistant Core; `init: false` is set because the container
 uses the s6-overlay init from the HA base image.
 
+**Access security:** the add-on's REST API, secrets editor, and topology WebSocket
+are intended to be used through authenticated Home Assistant ingress, **not**
+directly through `http://<HA-host>:8099`. Although host networking exposes the
+TCP listener, the server rejects HTTP and WebSocket requests from untrusted
+socket peers (403 / WebSocket policy close). Trusted callers are loopback,
+Home Assistant's internal host gateway (`172.30.32.1`), and the Supervisor
+ingress proxy (`172.30.32.2`); the integration's existing WebSocket token
+authentication still applies. Forwarded and ingress headers cannot grant trust.
+Do not publish port 8099 through a reverse proxy. For **standalone development
+only**, explicitly trust an additional browser/client IP with the environment
+variable `ESP_TREE_TRUSTED_PEERS=192.168.1.50` (comma-separated exact unicast
+addresses, not CIDRs); never trust an entire subnet.
+
 Serial targets can be a local device (`/dev/serial/by-id/...`, preferred because
 it survives renumbering, or `/dev/ttyUSB0`) or a network serial URL such as
 `socket://<host>:7000` served by a TCP serial bridge — use the latter when the

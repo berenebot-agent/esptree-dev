@@ -31,6 +31,7 @@ from .network_discovery import NetworkDiscovery
 from .compile_store import CompileStore
 from .compiler import CHIP_NAME_TO_BOARD, ESPHomeCompiler
 from .config import _int_option, _read_options, load_settings
+from .access_control import TrustedPeerMiddleware, trusted_peers
 from .db import Database
 from .firmware_store import FirmwareStore
 from .compile_worker import CompileWorker
@@ -398,6 +399,9 @@ def create_app() -> FastAPI:
     )
 
     app = FastAPI(title="ESP Tree Add-on", version="0.1.329")
+    # HA ingress authenticates the user, but host networking otherwise exposes
+    # this unauthenticated API on the LAN. Restrict the actual socket peer.
+    app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
     app.state._activity_positions = {}
     app.state.settings = settings
     app.state.db = db

@@ -86,7 +86,8 @@ static void test_aes_ctr_roundtrip_long_payload() {
   for (size_t i = 0; i < sizeof(bridge_nonce); i++) bridge_nonce[i] = static_cast<uint8_t>(i);
   for (size_t i = 0; i < sizeof(remote_nonce); i++) remote_nonce[i] = static_cast<uint8_t>(0xA0 + i);
   uint8_t session_key[32]{};
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key);
+  uint8_t downlink_key[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, session_key, downlink_key);
 
   uint8_t plaintext[223]{};
   for (size_t i = 0; i < sizeof(plaintext); i++) plaintext[i] = static_cast<uint8_t>((i * 13U) & 0xFF);
@@ -102,7 +103,8 @@ static void test_aes_ctr_counter_zero() {
   uint8_t bridge_nonce[16]{};
   uint8_t remote_nonce[16]{};
   uint8_t session_key[32]{};
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key);
+  uint8_t downlink_key[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, session_key, downlink_key);
 
   uint8_t plaintext[32] = {0};
   uint8_t ciphertext[32] = {0};
@@ -117,7 +119,8 @@ static void test_aes_ctr_counter_max() {
   uint8_t bridge_nonce[16]{};
   uint8_t remote_nonce[16]{};
   uint8_t session_key[32]{};
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key);
+  uint8_t downlink_key[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, session_key, downlink_key);
 
   uint8_t plaintext[32] = {0xFF};
   uint8_t ciphertext[32] = {0};
@@ -132,7 +135,8 @@ static void test_aes_ctr_different_counters_different_keystream() {
   uint8_t bridge_nonce[16]{};
   uint8_t remote_nonce[16]{};
   uint8_t session_key[32]{};
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key);
+  uint8_t downlink_key[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, session_key, downlink_key);
 
   uint8_t plaintext[32] = {0};
   uint8_t ct1[32] = {0};
@@ -147,7 +151,8 @@ static void test_aes_ctr_same_counter_same_keystream() {
   uint8_t bridge_nonce[16]{};
   uint8_t remote_nonce[16]{};
   uint8_t session_key[32]{};
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key);
+  uint8_t downlink_key[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, session_key, downlink_key);
 
   uint8_t plaintext[32] = {0};
   uint8_t ct1[32] = {0};
@@ -226,11 +231,17 @@ int main() {
   uint8_t session_key[32]{};
   uint8_t bridge_nonce[16]{};
   uint8_t remote_nonce[16]{};
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key);
+  uint8_t downlink_key[32]{};
+  espnow_crypto_derive_session_keys(bridge_nonce, remote_nonce, session_key, downlink_key);
   uint8_t session_tag[ESPNOW_SESSION_TAG_LEN]{};
   espnow_crypto_session_tag(session_key, reinterpret_cast<const uint8_t *>(&hdr), payload, sizeof(payload), session_tag);
   expect(espnow_crypto_verify_session_tag(session_key, reinterpret_cast<const uint8_t *>(&hdr), payload, sizeof(payload), session_tag) == 1,
           "session tag verify");
+  expect(memcmp(session_key, downlink_key, sizeof(session_key)) != 0,
+         "uplink and downlink session keys differ");
+  expect(espnow_crypto_verify_session_tag(downlink_key, reinterpret_cast<const uint8_t *>(&hdr),
+                                          payload, sizeof(payload), session_tag) == 0,
+         "session tag rejects opposite direction");
 
   uint8_t deauth_fp[4]{};
   espnow_crypto_psk_tag(reinterpret_cast<const uint8_t *>(&hdr), payload, sizeof(payload), deauth_fp);

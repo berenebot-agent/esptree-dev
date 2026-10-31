@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE="${PYTHON_TEST_IMAGE:-python:3.13-slim}"
+IMAGE="${PYTHON_TEST_IMAGE:-python:3.11-slim-bookworm}"
 
 docker run --rm \
   -e PYTHONDONTWRITEBYTECODE=1 \
