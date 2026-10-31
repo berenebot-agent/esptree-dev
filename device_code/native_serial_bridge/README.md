@@ -1,104 +1,129 @@
-# Native ESP-IDF serial bridge (experimental)
+# Native ESP-IDF serial bridge (experimental, multi-target)
 
-This is an **isolated development implementation** of the ESP Tree ESP32-C5
-serial bridge. It leaves existing ESPHome bridge firmware, add-on, integration,
-and all existing development/build paths unchanged.
+**One source tree, several ESP32 chip targets.** The same native serial bridge
+code can be compiled for `esp32`, `esp32s2`, `esp32s3`, `esp32c2`,
+`esp32c3`, `esp32c5`, and `esp32c6`. The target selects an appropriate
+toolchain, Wi-Fi radio implementation, and default UART pins. **You still need
+a separate .bin for each chip**: ESP32 binaries are not universal.
 
-**Status: unverified prototype.** No ESP32-C5 hardware test or actual ESP-IDF
-compile was possible in the authoring environment. This is source code, **not
-a verified flashable firmware release**. Do not flash a production bridge
-before completing the validation checklist.
+This is an **isolated development implementation**, not a replacement for the
+existing ESPHome bridge. The add-on, integration, ESPHome bridge firmware, and
+remote firmware are unchanged.
 
-## Design
+**Status: source-only prototype; not verified to compile or run on any target.**
+There has been no target-specific ESP-IDF compilation or physical radio/serial
+validation. Do not flash a production bridge until the checklist passes.
 
-The new ESP-IDF application builds the production source files directly:
+## Hardware and targets
 
-- ESP-NOW mesh protocol, radio routing, session crypto and schema handling
-- serial Protobuf v2 API with COBS framing and HMAC authentication
-- topology snapshots, remote state events, commands and state receipts
-- existing remote-node ESP-NOW OTA manager
+Supported *source targets*, subject to ESP-IDF version and hardware testing:
 
-It replaces ESPHome's Wi-Fi, UART, lifecycle, logging and JSON service
-dependencies with **small local compatibility adapters**. It does not copy
-or fork the protocol implementation.
+| ESP-IDF target | Default UART0 TX | Default UART0 RX | Radio |
+| --- | ---: | ---: | --- |
+| `esp32` | GPIO1 | GPIO3 | Regular, LR if supported |
+| `esp32s2` | GPIO43 | GPIO44 | Regular; verify LR on hardware |
+| `esp32s3` | GPIO43 | GPIO44 | Regular, LR if supported |
+| `esp32c2` | GPIO20 | GPIO19 | Regular; verify LR on hardware |
+| `esp32c3` | GPIO21 | GPIO20 | Regular, LR if supported |
+| `esp32c5` | GPIO11 | GPIO12 | Regular, LR if supported |
+| `esp32c6` | GPIO16 | GPIO17 | Regular, LR if supported |
 
-An ESP32 still needs its Wi-Fi driver to operate ESP-NOW, but no Wi-Fi
-association, MQTT, TCP/IP transport, or ESPHome device runtime is required.
+These are the **silicon UART0 default pins** already listed in
+`docs/BOARD_MATRIX.md` and `app/yaml_scaffold.py`. They are **not guaranteed
+to be exposed or connected** on an individual dev board. For example, the
+existing C5 serial demonstration uses an alternate GPIO1/GPIO3 routing: if
+you use that wiring, explicitly set TX=1, RX=3 in `idf.py menuconfig` instead
+of using the native project's C5 defaults (GPIO11/GPIO12).
 
-## Requirements
+Only **hardware UART + USB-to-UART adapters** are implemented currently;
+USB CDC / USB-Serial-JTAG require a different transport adapter.
+The ESP32-H2 and ESP32-P4 have no integrated Wi-Fi for this purpose and are
+not valid standalone ESP-NOW bridges. ESP8266 firmware requires a different
+SDK and is not an ESP-IDF target here. ESP32-C61 and other newer targets can
+be added after validation and an updated board pin mapping.
 
-- ESP-IDF 5.4+ with ESP32-C5 target installed.
-- ESP32-C5 devkit with a compatible USB-to-UART adapter.
-- ESP Tree add-on configured with a **serial** bridge and matching API key.
-- Remote nodes configured with matching ESP-NOW network ID, 64-hex PSK,
-  PHY mode, and radio channel.
+## Build (ESP-IDF 5.4+)
 
-## Build and flash (development hardware only)
+Load ESP-IDF and choose the **target chip**, not a particular board:
 
 ```bash
 . /path/to/esp-idf/export.sh
 cd device_code/native_serial_bridge
-idf.py set-target esp32c5
+
+# FIRST build: choose one of the targets above (example uses C3)
+./build.sh esp32c3
+
+# Fill out ESP Tree Native Serial Bridge settings:
 idf.py menuconfig
-# Set network ID, PSK and serial API key under:
-#   ESP Tree Native Serial Bridge (experimental)
-idf.py build
+
+# Rebuild with your configured network ID, 64-character hex PSK, API key,
+# regular/LR mode, channel and board UART pins:
+./build.sh
+
+# Flash only after the build and physical pin configuration are verified:
 idf.py -p /dev/ttyUSB0 flash
 ```
 
-For subsequent builds: `bash build.sh`.
+Or use `idf.py set-target esp32s3`, `idf.py menuconfig`, `idf.py build`
+directly. This is the same project for all supported targets.
 
-Do not commit `sdkconfig` or any compiled firmware containing your PSK.
-The `.gitignore` in this folder excludes build artefacts and local settings.
+**Important:** Changing target using `idf.py set-target` can reset your local
+configuration and credentials. `build.sh` refuses a target mismatch with an
+existing `sdkconfig`; keep separate working copies per target or save the
+settings and build artefacts before resetting. `sdkconfig` and `build/` are
+gitignored and must stay private because compiled firmware contains the PSK
+and API key.
 
-### UART and logs
+```bash
+python3 -m unittest discover -s tests -v
+```
 
-Default reference wiring is **UART0, 460800 baud, TX GPIO1 / RX GPIO3**,
-matching `device_code/demos/espnow-bridge-c5-serial.yml`. This is a
-**binary-only port**: ESP-IDF console and application/bootloader logging
-are disabled in `sdkconfig.defaults` to avoid injecting text into the
-COBS/protobuf stream. ROM startup messages may still be emitted on reset.
+The included source-level test compares the seven Kconfig UART defaults with
+the existing ESP Tree board map. It is **not a substitute for an IDF build**.
 
-The existing add-on `app/bridge_serial_client.py` speaks the same
-binary transport and handles keepalive, authentication, snapshots, commands,
-state receipts and remote OTA.
+## Architecture
 
-### Radio
+The native application compiles the **production sources directly**, rather
+than duplicating the mesh protocol:
 
-The bridge initialises Wi-Fi STA solely for ESP-NOW, without joining an AP,
-then selects the configured fixed channel (default **11**).
+- ESP-NOW radio/mesh, encryption, joins, topology, entities and commands
+- existing serial Protobuf v2 API, COBS framing and HMAC authentication
+- remote state receipts, event handling, and ESP-NOW remote-node OTA manager
 
-- **Regular mode**: required for ESP8266 remotes. Match their softAP channel.
-- **Long Range mode**: only for compatible ESP32 radios/remotes.
-- The channel is fixed at boot; no auto-scanning or channel negotiation.
+A minimal compatibility layer implements only the ESPHome services referenced
+by that code: clock, scheduler, name, UART, logging and JSON. Wi-Fi STA is
+initialised **without associating with a Wi-Fi AP**; the radio still operates
+ESP-NOW at the configured 2.4GHz channel.
 
-### Validation before enabling in the add-on wizard
+The hardware UART defaults to 460800 baud and is **binary-only**. The ESP-IDF
+console and normal logging are disabled to avoid corrupting COBS frames.
+ROM boot messages may still appear during a reset; a host must tolerate such
+malformed/partial frames.
 
-1. Compile with ESP-IDF 5.4+ for `esp32c5`; review and fix any API or
-   toolchain-version errors.
-2. Verify UART framing on the actual C5, HMAC authentication, full snapshot,
-   ping/pong, fresh ClientHello, timeout and reconnect.
-3. Verify ESP32 regular mode joins, state receipt/ack, commands and topology;
-   then ESP8266 channel 11 joins; then compatible ESP32 LR nodes.
-4. Verify end-to-end remote OTA, transfer interruptions, rejoin and rollback.
-5. Run sustained frame throughput tests (460800 baud), watch RX overflow,
-   RAM, stuck sessions and reset behaviour.
-6. Only after these pass, add a native firmware option to the add-on
-   compiler and new-bridge wizard.
+Regular ESP-NOW is required for ESP8266 leaves and their fixed channel must
+match the bridge (channel 11 by default). LR is an opt-in setting for hardware
+that supports the proprietary PHY; do not assume every listed chip supports it.
+Switching channels or PHY mode requires a rebuild/reflash.
 
-## Boundaries
+## Validation gates before integration or production use
 
-- First target is **ESP32-C5 hardware UART**. Native USB CDC is not included.
-- No Wi-Fi/MQTT upstream or bridge over-the-air update; flash the bridge
-  physically when updating its firmware.
-- Credentials compile into firmware (as for the existing ESPHome builds).
-- `main/compat` is a deliberately limited compatibility shim, not a general
-  ESPHome implementation.
-- No changes to the existing firmware or Home Assistant integration.
+1. Compile against the real ESP-IDF toolchain **for each intended chip**.
+2. Confirm physical UART pins, 460800baud COBS/protobuf framing, HMAC
+   authentication, ClientHello, snapshot, ping/pong and reconnect.
+3. Verify joins and discovery for ESP32 regular-mode leaves, including state
+   delivery receipts and commands; then ESP8266 on the same channel.
+4. Independently validate LR on compatible chips, and remote ESP-NOW OTA.
+5. Exercise sustained serial/ESP-NOW traffic, memory pressure and reset recovery.
+6. Only then integrate a target-aware native option into the add-on wizard.
 
-## Source map
+## Files
 
-- `main/main.cpp`: native entry point and radio/channel/serial setup.
-- `main/CMakeLists.txt`: references existing bridge/protocol/OTA sources.
-- `main/compat/`: ESPHome clock, scheduler, name, logs, UART and JSON adapters.
-- `main/Kconfig.projbuild`: selectable credentials, mode, channel, pins.
+- `main/main.cpp`: native entry, config checks, serial and radio channel setup
+- `main/Kconfig.projbuild`: per-target UART pin defaults, PHY and keys
+- `main/CMakeLists.txt`: common protocol, serial API, OTA and radio sources
+- `main/compat/`: small, isolated ESPHome compatibility adapters
+- `build.sh`: explicitly selects a chip and protects existing sdkconfig
+- `tests/test_target_defaults.py`: checks target pin defaults against the
+  repository's existing board map
+
+There are **no changes** to existing firmware, add-on UI or HA integration.

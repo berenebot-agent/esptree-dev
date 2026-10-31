@@ -8,22 +8,51 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "sdkconfig.h"
+#include "soc/soc_caps.h"
 #include "esp_tree_bridge.h"
 #include "esphome/components/uart/uart_component.h"
 #include "esphome/core/application.h"
 
+#if !defined(SOC_WIFI_SUPPORTED) || !SOC_WIFI_SUPPORTED
+#error "ESP Tree serial bridge requires an ESP32 SoC with integrated Wi-Fi/ESP-NOW."
+#endif
+
+#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2) && \
+    !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C2) && \
+    !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C5) && \
+    !defined(CONFIG_IDF_TARGET_ESP32C6)
+#error "Unsupported ESP-IDF target: choose esp32, esp32s2, esp32s3, esp32c2, esp32c3, esp32c5, or esp32c6."
+#endif
+
+static_assert(CONFIG_ESP_TREE_UART_PORT >= 0 &&
+              CONFIG_ESP_TREE_UART_PORT < SOC_UART_NUM,
+              "The chosen UART does not exist on this ESP32 target");
+static_assert(CONFIG_ESP_TREE_UART_TX_GPIO != CONFIG_ESP_TREE_UART_RX_GPIO,
+              "UART TX and RX cannot be the same GPIO");
+
 namespace {
 static esphome::esp_tree::ESPTreeBridge bridge;
 static esphome::uart::UARTComponent serial_link;
+
+bool valid_psk(const char *psk) {
+  if (std::strlen(psk) != 64) return false;
+  for (const char *p = psk; *p; ++p) {
+    if (!((*p >= '0' && *p <= '9') ||
+          (*p >= 'a' && *p <= 'f') ||
+          (*p >= 'A' && *p <= 'F'))) return false;
+  }
+  return true;
+}
 }
 
 extern "C" void app_main() {
-  // Never expose a partially provisioned bridge.
+  // Fail closed on missing credentials (no console output on the data UART).
   if (std::strlen(CONFIG_ESP_TREE_NETWORK_ID) == 0 ||
-      std::strlen(CONFIG_ESP_TREE_PSK) != 64 ||
+      !valid_psk(CONFIG_ESP_TREE_PSK) ||
       std::strlen(CONFIG_ESP_TREE_API_KEY) == 0) {
     abort();
   }
+
   esp_err_t err = nvs_flash_init();
   if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ESP_ERROR_CHECK(nvs_flash_erase());
@@ -33,7 +62,8 @@ extern "C" void app_main() {
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-  // sdkconfig.defaults disables IDF console/logging on the binary UART.
+  // Every target uses the same binary-only hardware UART implementation.
+  // The chip's default pins come from Kconfig and may be overridden per board.
   ESP_ERROR_CHECK(serial_link.begin(
       static_cast<uart_port_t>(CONFIG_ESP_TREE_UART_PORT),
       CONFIG_ESP_TREE_UART_BAUD,
@@ -60,8 +90,9 @@ extern "C" void app_main() {
   bridge.setup();
   if (bridge.is_failed()) abort();
 
-  // Production bridge initialises Wi-Fi STA for ESP-NOW without AP association.
-  // Set channel before processing any DISCOVER traffic.
+  // ESP-NOW runs over the Wi-Fi radio in STA mode without joining an AP.
+  // Explicitly select the remote network's 2.4 GHz channel before starting
+  // the bridge's protocol loop.
   ESP_ERROR_CHECK(esp_wifi_set_channel(
       CONFIG_ESP_TREE_RADIO_CHANNEL, WIFI_SECOND_CHAN_NONE));
 

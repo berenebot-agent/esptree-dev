@@ -2,7 +2,8 @@ set(TREE_COMPONENTS "${CMAKE_CURRENT_LIST_DIR}/../../components")
 set(TREE_BRIDGE "${TREE_COMPONENTS}/esp_tree_bridge")
 set(TREE_COMMON "${TREE_COMPONENTS}/esp_tree_common")
 
-# Build original production protocol / OTA / protobuf sources unmodified.
+# Use the same protocol / OTA / protobuf code for every ESP32 target.
+# No ESPHome firmware or Home Assistant source files are modified.
 idf_component_register(
     SRCS
       "main.cpp"
@@ -17,7 +18,7 @@ idf_component_register(
     INCLUDE_DIRS
       "." "compat" "${TREE_COMPONENTS}" "${TREE_BRIDGE}"
     REQUIRES
-      esp_wifi esp_event esp_netif esp_timer esp_driver_uart
+      esp_wifi esp_now esp_event esp_netif esp_timer esp_driver_uart
       nvs_flash mbedtls json
 )
 target_compile_definitions(${COMPONENT_LIB} PRIVATE USE_SERIAL=1)

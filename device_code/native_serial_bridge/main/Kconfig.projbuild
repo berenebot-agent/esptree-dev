@@ -24,11 +24,11 @@ menu "ESP Tree Native Serial Bridge (experimental)"
             bool "Regular (required for ESP8266 leaves)"
 
         config ESP_TREE_RADIO_LR
-            bool "Long Range (compatible ESP32 leaves only)"
+            bool "Long Range (supported ESP32 radios/leaves only)"
     endchoice
 
     config ESP_TREE_RADIO_CHANNEL
-        int "Fixed radio channel"
+        int "Fixed 2.4 GHz radio channel"
         range 1 13
         default 11
         help
@@ -36,20 +36,43 @@ menu "ESP Tree Native Serial Bridge (experimental)"
             No access point association is performed.
 
     config ESP_TREE_UART_PORT
-        int "UART controller"
-        range 0 1
+        int "Hardware UART controller (0, 1, or 2 on chips that provide it)"
+        range 0 2
         default 0
+        help
+            Not USB-CDC or USB-Serial-JTAG; uses an external UART adapter.
+            The application verifies this index against the selected chip.
 
     config ESP_TREE_UART_TX_GPIO
-        int "UART TX GPIO (C5 devkit reference)"
-        default 1
+        int "Hardware UART TX GPIO (chip UART0 default; override for board)"
+        range 0 48
+        default 1 if IDF_TARGET_ESP32
+        default 43 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default 20 if IDF_TARGET_ESP32C2
+        default 21 if IDF_TARGET_ESP32C3
+        default 11 if IDF_TARGET_ESP32C5
+        default 16 if IDF_TARGET_ESP32C6
+        default -1
+        help
+            UART0 defaults follow the repository's BOARD_MATRIX.md.
+            Individual boards may have different header connections.
 
     config ESP_TREE_UART_RX_GPIO
-        int "UART RX GPIO (C5 devkit reference)"
-        default 3
+        int "Hardware UART RX GPIO (chip UART0 default; override for board)"
+        range 0 48
+        default 3 if IDF_TARGET_ESP32
+        default 44 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default 19 if IDF_TARGET_ESP32C2
+        default 20 if IDF_TARGET_ESP32C3
+        default 12 if IDF_TARGET_ESP32C5
+        default 17 if IDF_TARGET_ESP32C6
+        default -1
+        help
+            Requires a valid input-capable pin on the selected board.
 
     config ESP_TREE_UART_BAUD
-        int "UART baud"
+        int "Hardware UART baud rate"
+        range 9600 3000000
         default 460800
 
     config ESP_TREE_REMOTE_OTA
