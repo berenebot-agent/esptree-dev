@@ -13,6 +13,7 @@ from .integration_client import IntegrationWSClient
 from .activity_logger import ActivityLogger
 from .const import API_VERSION, CONF_ADDON_URL, CONF_BRIDGE_MAC, CONF_INTEGRATION_TOKEN, CONF_TYPE, DOMAIN
 from .device_model import EntityModel, RemoteModel, norm_mac
+from .device_ids import device_entry_ids
 from .protobuf.generated import esp_tree_runtime_pb2 as pb
 from .store import RuntimeStore
 
@@ -100,10 +101,11 @@ class EspTreeRuntime:
         for device in registry.async_get_devices(identifiers={identifier}):
             if identifier not in device.identifiers:
                 continue
-            if keep_entry_id in device.config_entries:
+            entry_ids = device_entry_ids(device)
+            if keep_entry_id in entry_ids:
                 continue
-            is_hub_owned = bool(self._hub_entry_id and self._hub_entry_id in device.config_entries)
-            is_orphaned = not device.config_entries.intersection(live_entry_ids)
+            is_hub_owned = bool(self._hub_entry_id and self._hub_entry_id in entry_ids)
+            is_orphaned = not entry_ids.intersection(live_entry_ids)
             if is_hub_owned or is_orphaned:
                 registry.async_remove_device(device.id)
 

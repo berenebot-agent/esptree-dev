@@ -13,6 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .activity_logger import ActivityLogger
 from .const import CONF_TYPE, DOMAIN, INTEGRATION_VERSION, PLATFORMS, SHARED_RUNTIME_PATH
+from .device_ids import device_entry_ids
 
 _LOGGER = logging.getLogger(__name__)
 _MODULE_IMPORTED_AT = int(time.time())
@@ -66,7 +67,7 @@ def _remove_hub_owned_remote_devices(hass: HomeAssistant, hub_entry_id: str, run
     # (HA deprecates mapping/lookup access to `device_registry.devices` from
     # 2027.9.0). async_entries_for_config_entry returns the hub's devices directly.
     for device in dr.async_entries_for_config_entry(registry, hub_entry_id):
-        if device.config_entries.intersection(remote_entry_ids):
+        if device_entry_ids(device).intersection(remote_entry_ids):
             continue
         if device.identifiers.intersection(remote_ids):
             registry.async_remove_device(device.id)
@@ -95,7 +96,7 @@ async def _write_runtime_status(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     from .services import async_setup_services
-    from .update_repair import async_start_update_repair_watcher
+    from .update_repair import MARKER_PATH, async_start_update_repair_watcher
     from .websocket_api import async_register_websocket_commands
     from .config_flow import has_connection_data, hub_data_from_config, read_shared_config
 
@@ -125,33 +126,42 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         except Exception as exc:
             _LOGGER.debug("Could not dismiss ESP Tree restart notification: %s", exc)
 
+    def _read_marker() -> tuple[bool, int]:
+        try:
+            payload = json.loads(MARKER_PATH.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return False, 0
+        except Exception:
+            return True, 0
+        return True, int(payload.get("created_at") or 0)
+
+    def _delete_marker() -> None:
+        try:
+            MARKER_PATH.unlink()
+        except OSError:
+            pass
+
     async def _cleanup_restart_marker() -> None:
         # These are all normal outcomes, not errors: no marker means nothing to
         # clean up, and hass running / no hub entries means skip. Logged at ERROR
         # they made a healthy restart look broken and trained readers to ignore
-        # ERROR in this log.
+        # ERROR in this log. The marker lives on disk, so both the read and the
+        # delete go through the executor: HA flags synchronous file I/O here.
         if hass.is_running:
             _LOGGER.debug("RESTART_CLEANUP: hass is running, skipping cleanup")
             return
         if not hub_entries:
             _LOGGER.debug("RESTART_CLEANUP: no hub entries, skipping cleanup")
             return
-        marker_path = Path(__file__).resolve().parent / ".restart_required.json"
-        if marker_path.exists():
-            try:
-                created_at = int(json.loads(marker_path.read_text(encoding="utf-8")).get("created_at") or 0)
-            except Exception:
-                created_at = 0
-            if created_at > _MODULE_IMPORTED_AT:
-                _LOGGER.info("RESTART_CLEANUP: marker is fresh (created_at=%s > MODULE_IMPORTED_AT=%s), keeping", created_at, _MODULE_IMPORTED_AT)
-                return
-            _LOGGER.info("RESTART_CLEANUP: marker is stale, DELETING at %s", marker_path)
-            try:
-                marker_path.unlink()
-            except OSError:
-                pass
+        exists, created_at = await hass.async_add_executor_job(_read_marker)
+        if exists and created_at > _MODULE_IMPORTED_AT:
+            _LOGGER.info("RESTART_CLEANUP: marker is fresh (created_at=%s > MODULE_IMPORTED_AT=%s), keeping", created_at, _MODULE_IMPORTED_AT)
+            return
+        if exists:
+            _LOGGER.info("RESTART_CLEANUP: marker is stale, DELETING at %s", MARKER_PATH)
+            await hass.async_add_executor_job(_delete_marker)
         else:
-            _LOGGER.debug("RESTART_CLEANUP: no marker found at %s", marker_path)
+            _LOGGER.debug("RESTART_CLEANUP: no marker found at %s", MARKER_PATH)
 
     hass.async_create_task(_dismiss_restart_notification())
     await _cleanup_restart_marker()
@@ -282,7 +292,7 @@ async def cleanup_integration(hass: HomeAssistant, *, remove_hub: bool = False) 
             if device.identifiers.intersection(remote_identifiers):
                 registry.async_remove_device(device.id)
                 continue
-            if not device.config_entries.intersection(remaining_entry_ids):
+            if not device_entry_ids(device).intersection(remaining_entry_ids):
                 for ident in device.identifiers:
                     if ident[0] == DOMAIN:
                         registry.async_remove_device(device.id)
