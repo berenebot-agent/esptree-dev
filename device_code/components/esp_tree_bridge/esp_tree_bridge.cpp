@@ -105,7 +105,7 @@ static std::string format_uptime(uint32_t uptime_s) {
     const uint32_t d = uptime_s / 86400;
     const uint32_t h = (uptime_s % 86400) / 3600;
     char buf[16];
-    snprintf(buf, sizeof(buf), "%dd%dh", d, h);
+    snprintf(buf, sizeof(buf), "%ud%uh", static_cast<unsigned>(d), static_cast<unsigned>(h));
     return std::string(buf);
   }
 }
@@ -1892,7 +1892,8 @@ bool ESPTreeBridge::api_ota_start(const std::string &target_mac_colon, uint32_t 
 
   ota_job_counter_++;
   char hex_buf[8];
-  snprintf(hex_buf, sizeof(hex_buf), "%04x", ota_job_counter_ & 0xFFFFu);
+  snprintf(hex_buf, sizeof(hex_buf), "%04x",
+           static_cast<unsigned>(ota_job_counter_ & 0xFFFFu));
   ota_job_id_ = hex_buf;
   job_id_out = ota_job_id_;
 

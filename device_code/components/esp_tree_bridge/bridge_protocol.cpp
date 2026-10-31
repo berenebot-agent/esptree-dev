@@ -173,7 +173,8 @@ void BridgeProtocol::flush_log_queue() {
     }
     char uid_suffix[24] = "";
     if (entry.pkt_uid != 0) {
-      snprintf(uid_suffix, sizeof(uid_suffix), " #%06X", entry.pkt_uid & 0xFFFFFF);
+      snprintf(uid_suffix, sizeof(uid_suffix), " #%06X",
+               static_cast<unsigned>(entry.pkt_uid & 0xFFFFFFu));
     }
     const char *parent_check_label = entry.parent_check ? " PC" : "";
     if (entry.show_entity) {
@@ -258,7 +259,13 @@ void BridgeProtocol::flush_log_queue() {
           snprintf(ack_buf, sizeof(ack_buf), "0x%02X", entry.ack_type);
           ack_label = ack_buf;
         }
-        snprintf(uid_suffix, sizeof(uid_suffix), "%s%s", uid_suffix, parent_check_label);
+        // Append in place: passing uid_suffix as both destination and a %s
+        // source is undefined behaviour, and -Wrestrict/-Wformat-truncation
+        // reject it under ESP-IDF's -Wall -Werror build.
+        const size_t used = strlen(uid_suffix);
+        if (used + 1 < sizeof(uid_suffix)) {
+          snprintf(uid_suffix + used, sizeof(uid_suffix) - used, "%s", parent_check_label);
+        }
         ESP_LOGD(TAG, "%s[TX ACK (%s)] %02X%02X%02X%02X%02X%02X len=%u rssi=%d%s%s", COLOR_AQUA,
                  ack_label,
                  entry.mac[0], entry.mac[1], entry.mac[2], entry.mac[3], entry.mac[4], entry.mac[5],

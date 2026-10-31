@@ -316,6 +316,10 @@ void ESPNowOTAManager::loop() {
 
     case State::ABORTING:
     case State::IDLE:
+    // Terminal states need no periodic work: COMPLETE keeps the finished status
+    // until the next start, FAILED reports through the event path.
+    case State::COMPLETE:
+    case State::FAILED:
       break;
   }
 }

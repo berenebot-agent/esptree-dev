@@ -11,22 +11,28 @@ existing ESPHome bridge. The add-on, integration, ESPHome bridge firmware and
 remote firmware are unchanged.
 
 **Status: builds clean for all seven targets, nothing flashed.** Compilation was
-verified with ESP-IDF v5.5.4 (the version this repo's ESPHome firmware is built
-against) — every target builds without warnings and links inside the configured
-app partition. No binary has been flashed and no radio or serial link has been
-exercised, so treat this as compiled code, not a validated bridge.
+verified against upstream ESP-IDF v5.5.4 — the version this repo's ESPHome
+firmware is built against — with its stock `-Wall -Wextra -Werror`. Every target
+builds with **zero errors** and links inside the configured app partition, and
+every target now also compiles the shared bridge sources that previously failed
+under those flags. The only remaining diagnostics are `-Wunused-function` /
+`-Wunused-variable` in code paths the serial build compiles out (ESP-IDF marks
+those `-Wno-error`); ESPHome's PlatformIO toolchain comments `-Wall` out
+entirely, which is why they were invisible there. No binary has been flashed and
+no radio or serial link has been exercised, so treat this as compiled code, not a
+validated bridge.
 
 ## Hardware and targets
 
 | ESP-IDF target | Default UART0 TX | Default UART0 RX | Image | App partition free |
 | --- | ---: | ---: | ---: | ---: |
-| `esp32` | GPIO1 | GPIO3 | 937,088 B | 39% |
-| `esp32s2` | GPIO43 | GPIO44 | 900,000 B | 41% |
-| `esp32s3` | GPIO43 | GPIO44 | 930,240 B | 39% |
-| `esp32c2` | GPIO20 | GPIO19 | 825,328 B | 46% |
-| `esp32c3` | GPIO21 | GPIO20 | 969,200 B | 37% |
+| `esp32` | GPIO1 | GPIO3 | 937,056 B | 39% |
+| `esp32s2` | GPIO43 | GPIO44 | 900,016 B | 41% |
+| `esp32s3` | GPIO43 | GPIO44 | 930,256 B | 39% |
+| `esp32c2` | GPIO20 | GPIO19 | 825,344 B | 46% |
+| `esp32c3` | GPIO21 | GPIO20 | 969,216 B | 37% |
 | `esp32c5` | GPIO11 | GPIO12 | 1,049,760 B | 32% |
-| `esp32c6` | GPIO16 | GPIO17 | 999,008 B | 35% |
+| `esp32c6` | GPIO16 | GPIO17 | 999,024 B | 35% |
 
 Sizes are the release flavour with the defaults in `sdkconfig.defaults` (4 MB
 flash, single 1.5 MB factory app partition). C5 is the tightest at 32% free; C2
