@@ -544,7 +544,20 @@ class EspTreeRuntime:
                         remote.uptime_observed_at = time.time()
                         self._touch_last_seen(remote, bridge_mac)
 
-                elif remote.bridge_mac == bridge_mac and remote.session_id == ev.session_id:
+                # Do NOT require the session id to match on the way down. The
+                # bridge stamps an availability event with the session id of the
+                # session it holds *now* (`api_runtime_encode_remote_availability`
+                # reads `runtime_session_id_` off the live session), and that id is
+                # an HMAC over nonces regenerated on every JOIN. So a remote that
+                # reboots into a new session and then drops -- an OTA whose join
+                # never completed, for instance -- reports an offline for a session
+                # this runtime has never seen. Requiring equality discarded that
+                # notice and left the remote "online" with entities frozen at their
+                # last values, because nothing else in the live stream corrects
+                # availability: the online branch above accepts a session change
+                # (`_accept_live`) and `_merge_remote_snapshot` applies
+                # `runtime.online` unconditionally.
+                elif remote.bridge_mac == bridge_mac:
                     if remote.online:
                         remote.offline_started_at = int(time.time())
                     remote.online = False
