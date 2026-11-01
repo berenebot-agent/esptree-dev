@@ -61,9 +61,26 @@ do_build_cpp() {
     echo "==> Building C++ tests..."
     local test_dir="${SCRIPT_DIR}/device_code/tests"
     local build_dir="${test_dir}/build"
+    # CMakeCache records the absolute source directory, so a build tree copied
+    # from another checkout makes cmake refuse to configure with a message
+    # about mismatched paths. Recreate it instead.
+    if [ -f "${build_dir}/CMakeCache.txt" ]; then
+        local cached_src
+        cached_src="$(sed -n 's/^CMAKE_HOME_DIRECTORY:INTERNAL=//p' "${build_dir}/CMakeCache.txt" | head -n1)"
+        if [ -n "${cached_src}" ] && [ "${cached_src}" != "${test_dir}" ]; then
+            echo "==> Removing stale CMake cache (configured for ${cached_src})"
+            rm -rf "${build_dir}"
+        fi
+    fi
     mkdir -p "${build_dir}"
     cd "${build_dir}"
-    if ! cmake ..; then
+    # OpenSSL headers are not installed system-wide on every dev host; the
+    # extracted Debian sysroot carries them when it is present.
+    local cmake_args=()
+    if [ -z "${OPENSSL_ROOT_DIR:-}" ] && [ -d /opt/data/sysroot/openssl-prefix ]; then
+        cmake_args+=("-DOPENSSL_ROOT_DIR=/opt/data/sysroot/openssl-prefix")
+    fi
+    if ! cmake "${cmake_args[@]}" ..; then
         echo "==> C++ build FAILED: CMake configuration/generation error."
         return 1
     fi
@@ -101,6 +118,82 @@ do_native_test() {
         return 1
     fi
     "$runner"
+}
+
+do_compile_local() {
+    # Compile one demo with a local ESPHome install instead of the firmware
+    # Docker image, for iteration that does not need a container round-trip.
+    # Same ESPHome version as the image (requirements-compile.txt), the cached
+    # PlatformIO packages, and the same throwaway secrets the smoke compile
+    # uses, so nothing real is built and the caller's secrets.yaml is restored.
+    local demo="${1:-}"
+    if [[ -z "$demo" ]]; then
+        echo "Usage: dev.sh compile-local <demo> [extra esphome args]" >&2
+        echo "  e.g. dev.sh compile-local espnow-bridge-c5-serial" >&2
+        return 2
+    fi
+    shift || true
+
+    local yml="${SCRIPT_DIR}/device_code/demos/${demo}"
+    [[ "$yml" == *.yml ]] || yml="${yml}.yml"
+    if [[ ! -f "$yml" ]]; then
+        echo "==> No such demo: $yml" >&2
+        return 1
+    fi
+
+    local esphome_bin="${ESPHOME_BIN:-}"
+    [[ -n "$esphome_bin" ]] || esphome_bin="$(command -v esphome || true)"
+    if [[ -z "$esphome_bin" ]]; then
+        echo "==> esphome not found. Install it once, then set ESPHOME_BIN:" >&2
+        echo "    /usr/bin/python3 -m venv /opt/data/venvs/esphome" >&2
+        echo "    /opt/data/venvs/esphome/bin/pip install -r requirements-compile.txt" >&2
+        echo "    ESPHOME_BIN=/opt/data/venvs/esphome/bin/esphome ./dev.sh compile-local <demo>" >&2
+        return 1
+    fi
+
+    # PlatformIO keeps its toolchains and the ESP-IDF framework outside the
+    # repo; without this each fresh core dir re-downloads ~500 MB.
+    if [[ -z "${PLATFORMIO_CORE_DIR:-}" && -d /opt/data/esphome-pio ]]; then
+        export PLATFORMIO_CORE_DIR=/opt/data/esphome-pio
+    fi
+
+    local secrets="${SCRIPT_DIR}/device_code/demos/secrets.yaml"
+    local backup="" rc=0 had_secrets=0
+    if [[ -f "$secrets" ]]; then
+        backup="$(mktemp)"
+        cp "$secrets" "$backup"
+        had_secrets=1
+    fi
+    cat > "$secrets" <<'EOF_SECRETS'
+wifi_ssid: "ESP_TREE_TEST"
+wifi_password: "esp-tree-test-password"
+mqtt_broker: "127.0.0.1"
+mqtt_username: "test"
+mqtt_password: "test"
+ota_password: "esp-tree-test-ota"
+espnow_network_id: "esp-tree-test"
+espnow_psk: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+bridge_api_key: "esp-tree-test-api-key"
+EOF_SECRETS
+
+    echo "==> Local ESPHome compile: $(basename "$yml")"
+    "$esphome_bin" compile "$yml" "$@" || rc=$?
+
+    if [[ "$had_secrets" -eq 1 && -f "$backup" ]]; then
+        cp "$backup" "$secrets"
+        rm -f "$backup"
+    else
+        rm -f "$secrets"
+    fi
+
+    if [[ "$rc" -eq 0 ]]; then
+        local name outdir
+        name="$(awk '/^esphome:/{f=1;next} f && /^[[:space:]]{2}name:[[:space:]]*/{sub(/^[[:space:]]*name:[[:space:]]*/,"");gsub(/"/,"");print;exit}' "$yml")"
+        outdir="$(dirname "$yml")/.esphome/build/${name}/.pioenvs"
+        echo "==> Artifacts:"
+        ls -1 "$outdir"/*/firmware.bin "$outdir"/*/firmware.ota.bin 2>/dev/null | sed 's/^/    /'
+    fi
+    return "$rc"
 }
 
 do_smoke_compile() {
@@ -479,6 +572,10 @@ case "$1" in
     native-test)
         do_native_test
         ;;
+    compile-local)
+        shift
+        do_compile_local "$@"
+        ;;
     verify|test)
         shift
         do_verify "${1:-global}"
@@ -503,8 +600,9 @@ case "$1" in
         do_clean
         ;;
     *)
-        echo "Usage: dev.sh [compile|build-cpp|run-cpp|native-test|verify|qc|flash-usb|esplog|clean] [args...]"
+        echo "Usage: dev.sh [compile|compile-local|build-cpp|run-cpp|native-test|verify|qc|flash-usb|esplog|clean] [args...]"
         echo "       dev.sh verify [global|device|addon]      # run deployment gate only"
+        echo "       dev.sh compile-local <demo>             # ESPHome compile with a local venv, no Docker"
         echo "       dev.sh native-test                      # host tests for the native ESP-IDF bridge"
         echo "       dev.sh qc [quick] [global|device|addon]  # verify, then version/commit/push"
         exit 1

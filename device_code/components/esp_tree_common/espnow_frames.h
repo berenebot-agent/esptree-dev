@@ -372,17 +372,12 @@ static inline bool verify_network_id(const espnow_discover_t& discover,
   return memcmp(discover.network_id, expected_network_id.data(), discover.network_id_len) == 0;
 }
 
-static inline void derive_session_key(const uint8_t bridge_nonce[16],
-                                        const uint8_t remote_nonce[16],
-                                        uint8_t session_key_out[32]) {
-  espnow_crypto_derive_session_key(bridge_nonce, remote_nonce, session_key_out);
-}
-
-static inline void derive_session_key_from_join_ack(const espnow_join_ack_t& join_ack,
-                                                    const std::array<uint8_t, 16>& remote_nonce,
-                                                    uint8_t session_key_out[32]) {
-  derive_session_key(join_ack.bridge_nonce, remote_nonce.data(), session_key_out);
-}
+// The v3 key schedule replaced the single-session-key helpers that used to live
+// here (espnow_crypto_derive_session_key): callers go through
+// espnow_crypto_derive_session_keys() and hold one key per direction, so a
+// "derive one key from two nonces" helper no longer has a meaning. Nothing in
+// the tree calls it, but leaving it declared made every ESPHome build of this
+// component fail, because esphome.h includes every header here.
 
 }  // namespace esp_tree
 }  // namespace esphome

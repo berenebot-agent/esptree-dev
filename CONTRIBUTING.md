@@ -85,6 +85,27 @@ The menu also accepts `a` for all demos and `n` for none. `b` builds, `f` flashe
 
 Prefer a cached `.ota.bin` when flashing an already-built target. Never commit files under `cache/`, `logs/`, or generated local build output.
 
+### Firmware without Docker (local iteration)
+
+The ESPHome version pinned in `requirements-compile.txt` can run directly on this workstation, which is faster than a container round-trip for ordinary edit/compile loops:
+
+```bash
+/usr/bin/python3 -m venv /opt/data/venvs/esphome
+/opt/data/venvs/esphome/bin/pip install -r requirements-compile.txt
+
+ESPHOME_BIN=/opt/data/venvs/esphome/bin/esphome ./dev.sh compile-local espnow-bridge-c5-serial
+```
+
+`compile-local` swaps in throwaway secrets (and restores your `secrets.yaml` afterwards, so the real one is never used), reuses the cached PlatformIO packages in `/opt/data/esphome-pio` so ESP-IDF, the RISC-V toolchain and the managed components are not downloaded again, and prints the `firmware.bin` / `firmware.ota.bin` paths on success. Builds land in `device_code/demos/.esphome/` and are gitignored. Xtensa demos (`esp32`, `esp32s2`, `esp32s3`) fetch `toolchain-xtensa-esp` on first use.
+
+A schema check costs about five seconds and needs no build:
+
+```bash
+/opt/data/venvs/esphome/bin/esphome config device_code/demos/<demo>.yml
+```
+
+Docker remains the release path: `dev.sh verify device` and `device_code/scripts/ha_compile.sh` are still what a release is validated with, and they are the only ones that match the add-on's firmware image exactly.
+
 ### Native ESP-IDF serial bridge (experimental)
 
 `device_code/native_serial_bridge/` builds the same protocol sources with ESP-IDF
@@ -101,6 +122,8 @@ wizard consumes this firmware yet.
 ./dev.sh build-cpp
 ./dev.sh run-cpp
 ```
+
+The test targets link OpenSSL. Where the host has no OpenSSL headers installed, `dev.sh` falls back to the extracted Debian sysroot at `/opt/data/sysroot/openssl-prefix` (headers and libraries unpacked from `libssl-dev` + `libssl3t64`); set `OPENSSL_ROOT_DIR` to override. A `device_code/tests/build/` tree copied from another checkout is detected and recreated, because `CMakeCache.txt` records an absolute source path.
 
 ### Native bridge host tests
 
