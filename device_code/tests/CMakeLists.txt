@@ -55,6 +55,19 @@ find_package(OpenSSL REQUIRED)
 target_link_libraries(encryption_test PRIVATE OpenSSL::Crypto)
 add_test(NAME encryption_test COMMAND encryption_test)
 
+# Forces the software AES branch that the ESP32/ESP8266 builds use; on a host it
+# is otherwise compiled away in favour of OpenSSL, leaving the code the devices
+# actually run untested.
+add_executable(software_aes_test software_aes_test.cpp)
+target_include_directories(software_aes_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR}/../components)
+target_sources(software_aes_test PRIVATE ../components/esp_tree_common/espnow_crypto.cpp)
+target_compile_definitions(software_aes_test PRIVATE ESPNOW_CRYPTO_SOFTWARE_AES=1)
+# espnow_crypto.cpp still uses OpenSSL for HMAC-SHA256 on the host even when the
+# AES branch is forced, so the target needs the headers and the library.
+find_package(OpenSSL REQUIRED)
+target_link_libraries(software_aes_test PRIVATE OpenSSL::Crypto)
+add_test(NAME software_aes_test COMMAND software_aes_test)
+
 add_executable(hop_encoding_test hop_encoding_test.cpp)
 target_include_directories(hop_encoding_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR}/../components)
 add_test(NAME hop_encoding_test COMMAND hop_encoding_test)
@@ -103,6 +116,49 @@ target_sources(bridge_api_proto_messages_test PRIVATE
   ../components/esp_tree_bridge/bridge_api_proto_messages.cpp
 )
 add_test(NAME bridge_api_proto_messages_test COMMAND bridge_api_proto_messages_test)
+
+# Session-table contract for the bridge: MAX_SESSIONS is enforced, and the
+# low-RAM eviction walks a full table without running past its buffers.
+add_executable(bridge_session_cap_test bridge_session_cap_test.cpp)
+target_include_directories(bridge_session_cap_test PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}
+  ${CMAKE_CURRENT_LIST_DIR}/mocks
+  ${CMAKE_CURRENT_LIST_DIR}/..
+  ${CMAKE_CURRENT_LIST_DIR}/../components
+)
+target_sources(bridge_session_cap_test PRIVATE
+  ../components/esp_tree_bridge/bridge_protocol.cpp
+  ../components/esp_tree_common/espnow_crypto.cpp
+  mocks/test_time.cpp
+)
+find_package(OpenSSL REQUIRED)
+target_link_libraries(bridge_session_cap_test PRIVATE OpenSSL::Crypto)
+add_test(NAME bridge_session_cap_test COMMAND bridge_session_cap_test)
+
+# End-to-end join between a real leaf protocol and a real bridge protocol over
+# in-memory queues: discovery, schema exchange, state sync, join completion and
+# the replay gate. The only test that compiles both protocol files together.
+add_executable(protocol_join_test protocol_join_test.cpp)
+target_include_directories(protocol_join_test PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}
+  ${CMAKE_CURRENT_LIST_DIR}/mocks
+  ${CMAKE_CURRENT_LIST_DIR}/..
+  ${CMAKE_CURRENT_LIST_DIR}/../components
+)
+target_sources(protocol_join_test PRIVATE
+  ../components/esp_tree_remote/remote_protocol.cpp
+  ../components/esp_tree_remote/remote_file_receiver.cpp
+  ../components/esp_tree_bridge/bridge_protocol.cpp
+  ../components/esp_tree_common/espnow_crypto.cpp
+  mocks/test_time.cpp
+  mocks/mock_device.cpp
+)
+# The protocol selects its chip model at compile time and errors out for an
+# unknown target, so name one.
+target_compile_definitions(protocol_join_test PRIVATE CONFIG_IDF_TARGET_ESP32=1)
+find_package(OpenSSL REQUIRED)
+target_link_libraries(protocol_join_test PRIVATE OpenSSL::Crypto)
+add_test(NAME protocol_join_test COMMAND protocol_join_test)
 
 add_executable(cobs_codec_test cobs_codec_test.cpp)
 target_include_directories(cobs_codec_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR}/../components)

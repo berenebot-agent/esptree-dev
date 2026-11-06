@@ -11,6 +11,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdarg>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include <array>
@@ -389,12 +390,25 @@ std::string BridgeProtocol::schema_cache_key_(const BridgeSession &session) cons
 
 BridgeSession *BridgeProtocol::ensure_session_(const uint8_t *leaf_mac) {
   if (leaf_mac == nullptr) return nullptr;
-  auto &session = sessions_[mac_to_key_(leaf_mac)];
-  if (session.mac_hex_key.empty()) {
-    session.mac_hex_key = mac_hex(leaf_mac);
+  const uint64_t key = mac_to_key_(leaf_mac);
+  auto it = sessions_.find(key);
+  if (it == sessions_.end()) {
+    // MAX_SESSIONS is the supported node count, not just a name for 128: the
+    // RAM eviction path sizes its candidate list from it, and every other
+    // per-session allocation is bounded by how many sessions can exist. Refuse
+    // here so that bound is actually enforced rather than assumed.
+    if (sessions_.size() >= MAX_SESSIONS) {
+      ESP_LOGW(TAG, "Refusing session for %s: session table full (%u nodes)",
+               mac_hex(leaf_mac).c_str(), static_cast<unsigned>(MAX_SESSIONS));
+      return nullptr;
+    }
+    // Default-construct in place: BridgeSession holds std::atomic members, so it
+    // is neither copyable nor movable and cannot be emplaced from a temporary.
+    it = sessions_.emplace(std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple()).first;
+    it->second.mac_hex_key = mac_hex(leaf_mac);
   }
-  memcpy(session.leaf_mac.data(), leaf_mac, session.leaf_mac.size());
-  return &session;
+  memcpy(it->second.leaf_mac.data(), leaf_mac, it->second.leaf_mac.size());
+  return &it->second;
 }
 
 BridgeSession *BridgeProtocol::get_session(const uint8_t *leaf_mac) {
@@ -1549,15 +1563,6 @@ bool BridgeProtocol::send_state_ack_(const uint8_t *sender_mac, BridgeSession &s
   return send_encrypted_(sender_mac, session, PKT_ACK, downstream_hop_count_session(session), reinterpret_cast<const uint8_t *>(&ack), sizeof(ack), ACK_STATE);
 }
 
-bool BridgeProtocol::send_command_ack_(const uint8_t *sender_mac, BridgeSession &session, uint8_t field_index, uint8_t result) {
-  (void)field_index;
-  espnow_ack_t ack{};
-  ack.ack_type = ACK_COMMAND;
-  ack.result = result;
-  ack.ref_tx_counter = session.tx_counter;
-  return send_encrypted_(sender_mac, session, PKT_ACK, downstream_hop_count_session(session), reinterpret_cast<const uint8_t *>(&ack), sizeof(ack), ACK_COMMAND);
-}
-
 bool BridgeProtocol::send_schema_request_(const uint8_t *sender_mac, BridgeSession &session, uint8_t descriptor_type,
                                           uint8_t descriptor_index) {
   const uint8_t hop_count = downstream_hop_count_session(session);
@@ -1635,18 +1640,6 @@ bool BridgeProtocol::send_deauth_(const uint8_t *sender_mac, BridgeSession &sess
   espnow_crypto_psk_tag(reinterpret_cast<const uint8_t *>(&trigger), request_payload, request_payload_len, deauth.request_fingerprint);
   return send_plain_psk_(sender_mac, session.leaf_mac.data(), PKT_DEAUTH, downstream_hop_count_session(session), session.tx_counter++,
                          reinterpret_cast<const uint8_t *>(&deauth), sizeof(deauth));
-}
-
-BridgeProtocol::request_fingerprint_t BridgeProtocol::compute_request_fingerprint_(uint8_t response_type, uint32_t response_tx,
-                                                                                  const uint8_t *request_payload,
-                                                                                  size_t request_payload_len) const {
-  request_fingerprint_t fingerprint{};
-  espnow_frame_header_t trigger{};
-  trigger.protocol_version = ESPNOW_PROTOCOL_VER;
-  trigger.packet_type = response_type;
-  trigger.tx_counter = response_tx;
-  espnow_crypto_psk_tag(reinterpret_cast<const uint8_t *>(&trigger), request_payload, request_payload_len, fingerprint.data());
-  return fingerprint;
 }
 
 bool BridgeProtocol::send_encrypted_(const uint8_t *sender_mac, BridgeSession &session, espnow_packet_type_t type, uint8_t hop_count,
@@ -1890,26 +1883,30 @@ bool BridgeProtocol::evict_sessions_for_ram_(bool aggressive) {
   ESP_LOGW(TAG, "%sRAM %s: %.1f%% free, evicting sessions", aggressive ? COLOR_RED : COLOR_YELLOW,
            aggressive ? "critical" : "warning", free_pct * 100);
 
-  // Build candidate list from current sessions
-  std::array<std::pair<uint64_t, uint32_t>, MAX_SESSIONS> candidates{};
-  size_t candidate_count = 0;
+  // Build candidate list from current sessions. Heap-backed: the map is capped
+  // at MAX_SESSIONS but a fixed stack array here would corrupt the stack if
+  // that cap were ever raised or bypassed.
+  std::vector<std::pair<uint64_t, uint32_t>> candidates;
+  candidates.reserve(sessions_.size());
   for (auto &entry : sessions_) {
-    candidates[candidate_count++] = {entry.first, entry.second.last_seen_bridge_uptime_s};
+    candidates.emplace_back(entry.first, entry.second.last_seen_bridge_uptime_s);
   }
 
   // Sort by last_seen_ms ascending (oldest first)
-  std::sort(candidates.begin(), candidates.begin() + candidate_count,
+  std::sort(candidates.begin(), candidates.end(),
             [](const auto &a, const auto &b) { return a.second < b.second; });
 
   uint32_t evicted_count = 0;
   const uint32_t start_free = free_heap;
 
-  for (size_t i = 0; i < candidate_count; ++i) {
+  for (size_t i = 0; i < candidates.size(); ++i) {
     // Recheck free heap dynamically
     if (esp_get_free_heap_size() >= target_free) {
       break;
     }
-    if (sessions_.size() - evicted_count <= MIN_SESSIONS_TO_PROTECT) {
+    // sessions_.size() already shrinks as we erase, so subtracting evicted_count
+    // as well stopped eviction at twice this floor (16 sessions for a floor of 8).
+    if (sessions_.size() <= MIN_SESSIONS_TO_PROTECT) {
       break;
     }
 
@@ -1967,7 +1964,10 @@ void BridgeProtocol::loop() {
   if (now - last_session_cleanup_ms_ >= SESSION_CLEANUP_INTERVAL_MS) {
     last_session_cleanup_ms_ = now;
     evict_sessions_for_ram_(false);
-    if (sessions_.size() > MAX_SESSIONS) {
+    // At the cap, make room by dropping sessions that are already offline: a
+    // node that left the network must not keep a slot that a joining node
+    // cannot use. (ensure_session_ refuses new sessions once the table is full.)
+    if (sessions_.size() >= MAX_SESSIONS) {
       for (auto it = sessions_.begin(); it != sessions_.end();) {
         if (!it->second.online) {
           // Clear entities and erase — already offline, no availability transition
@@ -1981,7 +1981,7 @@ void BridgeProtocol::loop() {
           schema_cache_.erase(cache_key);
           schema_hash_cache_.erase(cache_key);
           it = sessions_.erase(it);
-          if (sessions_.size() <= MAX_SESSIONS) break;
+          if (sessions_.size() < MAX_SESSIONS) break;
         } else {
           ++it;
         }

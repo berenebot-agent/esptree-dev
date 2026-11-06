@@ -1,44 +1,20 @@
 #pragma once
 
+// Shared host test clock. The declarations and the millis()/esp_random()/
+// delay() shims live in esphome/core/hal.h, which is the header the component
+// code includes; this file is the include point for tests that do not pull that
+// header in themselves. Keeping one copy means the two cannot drift, and
+// including both no longer redefines millis().
+#include "esphome/core/hal.h"
+
 #include <cstdint>
-#include <cstddef>
-#include <cstdlib>
-#include <cstdio>
-#include <functional>
-
-#ifndef ESP_LOGD
-#define ESP_LOGD(tag, format, ...) ((void)0)
-#endif
-
-#ifndef ESP_LOGI
-#define ESP_LOGI(tag, format, ...) fprintf(stdout, "[I] " format "\n", ##__VA_ARGS__)
-#endif
-
-#ifndef ESP_LOGW
-#define ESP_LOGW(tag, format, ...) fprintf(stdout, "[W] " format "\n", ##__VA_ARGS__)
-#endif
-
-#ifndef ESP_LOGE
-#define ESP_LOGE(tag, format, ...) fprintf(stderr, "[E] " format "\n", ##__VA_ARGS__)
-#endif
-
-#ifndef ESP_LOGV
-#define ESP_LOGV(tag, format, ...) ((void)0)
-#endif
-
-#define pdMS_TO_TICKS(ms) (0)
-#define vTaskDelay(x) ((void)0)
 
 namespace test {
 
-uint32_t mock_time_ms();
-uint32_t mock_random();
-void set_mock_time_ms(uint32_t t);
-void advance_mock_time_ms(uint32_t delta);
-void set_mock_random_seed(uint32_t seed);
-void reset_mock_state();
+// Heap sizes reported by the esp_heap_caps.h mock, so tests can force the
+// bridge's low-RAM eviction paths.
+void set_mock_heap_sizes(uint32_t free_bytes, uint32_t total_bytes);
+uint32_t mock_free_heap();
+uint32_t mock_total_heap();
 
-}
-
-static inline uint32_t millis() { return test::mock_time_ms(); }
-static inline uint32_t esp_random() { return test::mock_random(); }
+}  // namespace test

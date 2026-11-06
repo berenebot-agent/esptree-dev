@@ -158,7 +158,6 @@ class BridgeProtocol {
   using send_ota_frame_fn_t = std::function<esp_err_t(const uint8_t *leaf_mac, espnow_packet_type_t type,
                                                       const uint8_t *payload, size_t len,
                                                       uint32_t *tx_counter_out)>;
-  using request_fingerprint_t = std::array<uint8_t, 4>;
   using config_ack_fn_t = std::function<void(const ConfigAckResult &result)>;
 
   BridgeProtocol();
@@ -242,7 +241,6 @@ class BridgeProtocol {
   bool get_joining_leaf_mac(uint8_t *mac_out) const;
   bool get_joining_in_progress() const { return joining_in_progress_; }
   bool send_state_ack_(const uint8_t *sender_mac, BridgeSession &session, uint32_t rx_counter, uint8_t result);
-  bool send_command_ack_(const uint8_t *sender_mac, BridgeSession &session, uint8_t field_index, uint8_t result);
   bool send_schema_request_(const uint8_t *sender_mac, BridgeSession &session, uint8_t descriptor_type,
                             uint8_t descriptor_index);
   bool send_command_(const uint8_t *sender_mac, BridgeSession &session, uint8_t field_index,
@@ -252,8 +250,6 @@ class BridgeProtocol {
                                uint8_t retry_count = 0);
   bool send_deauth_(const uint8_t *sender_mac, BridgeSession &session, uint8_t response_type, uint32_t response_tx,
                     const uint8_t *request_payload, size_t request_payload_len);
-  request_fingerprint_t compute_request_fingerprint_(uint8_t response_type, uint32_t response_tx,
-                                                     const uint8_t *request_payload, size_t request_payload_len) const;
 
   bool send_encrypted_(const uint8_t *sender_mac, BridgeSession &session, espnow_packet_type_t type,
                         uint8_t hop_count, const uint8_t *plaintext, size_t plaintext_len,
