@@ -261,7 +261,6 @@ bool FileReceiver::handle_blast_complete_(const espnow_file_blast_complete_t &bc
   }
 
   bool is_complete = increment_buf_.is_complete();
-  bool has_gaps = !increment_buf_.is_complete();
 
   if (is_complete) {
     state_ = State::WRITING;
@@ -407,7 +406,6 @@ bool FileReceiver::write_increment_to_flash_() {
     size_t offset_in_buffer = static_cast<size_t>(i) * chunk_payload_size_;
     size_t slice_len = chunk_payload_size_;
     if (i == num_chunks - 1) {
-      uint32_t total_buf_len = static_cast<uint32_t>(num_chunks) * chunk_payload_size_;
       uint64_t file_offset_done = static_cast<uint64_t>(current_increment_) *
                                   static_cast<uint64_t>(chunks_per_increment_) *
                                   chunk_payload_size_;
@@ -426,36 +424,22 @@ bool FileReceiver::write_increment_to_flash_() {
         static_cast<uint32_t>(current_increment_) * chunks_per_increment_ + i,
         increment_buf_.data.data() + offset_in_buffer, slice_len);
     if (!response.accepted) {
-      ESP_LOGE(TAG, "Flash write failed for increment %u chunk %u, retrying once",
+      // Retry this chunk only. The OTA backend appends (esp_ota_write /
+      // ESP8266OTABackend), so re-writing the chunks that precede it would
+      // duplicate bytes in the image and the transfer could never verify; and a
+      // partially written image cannot be rewound, so a second failure has to
+      // abort the whole transfer rather than report the increment as written.
+      ESP_LOGE(TAG, "Flash write failed for increment %u chunk %u, retrying that chunk once",
                static_cast<unsigned>(current_increment_), static_cast<unsigned>(i));
-
-      for (uint16_t j = 0; j < num_chunks; ++j) {
-        size_t retry_offset = static_cast<size_t>(j) * chunk_payload_size_;
-        size_t retry_len = chunk_payload_size_;
-        if (j == num_chunks - 1) {
-          uint64_t file_off = static_cast<uint64_t>(current_increment_) *
-                              static_cast<uint64_t>(chunks_per_increment_) *
-                              chunk_payload_size_;
-          file_off += retry_offset;
-          if (file_off + retry_len > file_size_) {
-            retry_len = static_cast<size_t>(file_size_ - file_off);
-          }
-        }
-        if (retry_len == 0) break;
-        if (retry_offset + retry_len > increment_buf_.data.size()) break;
-
-        ChunkResponse retry_resp = active_handler_->on_data(
-            static_cast<uint32_t>(current_increment_) * chunks_per_increment_ + j,
-            increment_buf_.data.data() + retry_offset, retry_len);
-        if (!retry_resp.accepted) {
-          ESP_LOGE(TAG, "Flash write retry also failed for increment %u chunk %u",
-                   static_cast<unsigned>(current_increment_), static_cast<unsigned>(j));
-          this->abort(ESPNOW_FILE_ABORT_FLASH_ERROR, true);
-          return false;
-        }
-        delay(0);
+      response = active_handler_->on_data(
+          static_cast<uint32_t>(current_increment_) * chunks_per_increment_ + i,
+          increment_buf_.data.data() + offset_in_buffer, slice_len);
+      if (!response.accepted) {
+        ESP_LOGE(TAG, "Flash write retry failed for increment %u chunk %u, aborting transfer",
+                 static_cast<unsigned>(current_increment_), static_cast<unsigned>(i));
+        this->abort(ESPNOW_FILE_ABORT_FLASH_ERROR, true);
+        return false;
       }
-      break;
     }
     delay(0);
   }

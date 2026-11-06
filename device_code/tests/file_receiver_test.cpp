@@ -479,7 +479,7 @@ void test_flash_write_retry_recovers() {
   test::reset_mock_state();
 
   TestRig rig;
-  rig.handler.fail_only_call = 1;  // first attempt fails, the whole-increment retry succeeds
+  rig.handler.fail_only_call = 1;  // first attempt fails, the retry of that same chunk succeeds
 
   rig.announce_with_accept(884, 221);
 
@@ -489,18 +489,47 @@ void test_flash_write_retry_recovers() {
 
   rig.send_blast_complete(0);
 
-  // write_increment_to_flash_() retries the entire increment (line 417-443) and then continues;
-  // the last increment finishes in WAITING_END with an all-clear GAPS ACK (line 450-452).
+  // write_increment_to_flash_() retries only the chunk that failed and then keeps
+  // walking the rest of the increment; the last increment finishes in WAITING_END
+  // with an all-clear GAPS ACK.
   expect(rig.acks.size() == 2, "one GAPS ACK after the successful retry");
   expect(rig.count_acks_with_result(ESPNOW_FILE_ACK_ABORT) == 0, "no abort when the retry succeeds");
   expect(ack_bitmap_len(rig.last_ack()) == 0, "increment complete after retry");
-  expect(rig.handler.call_count == 5, "1 failed attempt + 4 retried chunks");
+  // Chunk 0 fails, is retried, then chunks 1..3 follow. (This shape is the same
+  // as the old whole-increment retry because the failure is on the first chunk;
+  // test_flash_write_retry_only_failed_chunk is the one that tells them apart.)
+  expect(rig.handler.call_count == 5, "1 failed attempt + 1 retry + the remaining 3 chunks");
   expect(rig.handler.delivered_sequences == std::vector<uint32_t>({0, 0, 1, 2, 3}),
-         "failed chunk and the retried chunks all reached the handler");
+         "the failed chunk is retried before the walk continues");
 
   rig.send_end();
   AckRecord complete_ack = rig.last_ack();
   expect(complete_ack.header.result == ESPNOW_FILE_ACK_COMPLETE, "END accepted after recovery");
+}
+
+// The OTA backend appends (esp_ota_write / ESP8266OTABackend). A retry that
+// re-walked the increment from chunk 0 would append already-written bytes a
+// second time and the image could never verify, so the retry must be limited to
+// the chunk that failed.
+void test_flash_write_retry_only_failed_chunk() {
+  test::reset_mock_state();
+
+  TestRig rig;
+  rig.handler.fail_only_call = 3;  // chunk 0 and 1 land, chunk 2 fails once
+
+  rig.announce_with_accept(884, 221);
+
+  for (uint32_t seq = 0; seq < 4; ++seq) {
+    rig.send_chunk(seq, static_cast<uint8_t>(seq * 10));
+  }
+
+  rig.send_blast_complete(0);
+
+  expect(rig.handler.call_count == 5, "4 chunks plus one retry of the failed chunk");
+  expect(rig.handler.delivered_sequences == std::vector<uint32_t>({0, 1, 2, 2, 3}),
+         "chunks before the failure are written exactly once");
+  expect(rig.count_acks_with_result(ESPNOW_FILE_ACK_ABORT) == 0, "no abort when the retry succeeds");
+  expect(ack_bitmap_len(rig.last_ack()) == 0, "increment complete after retry");
 }
 
 void test_radio_silence_abort() {
@@ -644,6 +673,7 @@ int main() {
   test_last_increment_end_flow();
   test_flash_write_failure_retry_abort();
   test_flash_write_retry_recovers();
+  test_flash_write_retry_only_failed_chunk();
   test_radio_silence_abort();
   test_duplicate_chunk_ignored();
   test_disabled_ota_reject();
