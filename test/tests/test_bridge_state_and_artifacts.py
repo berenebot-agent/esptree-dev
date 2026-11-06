@@ -51,7 +51,11 @@ def test_migration_collapses_legacy_multi_enabled_bridges(db: Database) -> None:
     second = db.add_bridge("10.0.0.2", 80, api_key="k2")
     with db.connect() as conn:
         conn.execute("DROP INDEX IF EXISTS idx_bridges_single_enabled")
-        conn.execute("UPDATE bridges SET enabled = 1")
+        # Both rows enabled and created inside the same wall-clock second, which
+        # is what a bulk import produces. created_at cannot order them, so the
+        # migration has to fall back to insertion order (rowid). Pinning the
+        # timestamp keeps the test off the clock and makes the tie explicit.
+        conn.execute("UPDATE bridges SET enabled = 1, created_at = 1000")
         assert conn.execute("SELECT COUNT(*) FROM bridges WHERE enabled = 1").fetchone()[0] == 2
 
         migration_019_single_enabled_bridge(conn)

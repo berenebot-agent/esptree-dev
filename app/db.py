@@ -1174,13 +1174,17 @@ def migration_019_single_enabled_bridge(conn: sqlite3.Connection) -> None:
     # Older databases can hold several enabled rows (each activation only set its
     # own flag), which started a client per row and made every "active bridge"
     # answer depend on creation order. Keep the newest and forbid a second.
+    #
+    # created_at has one-second resolution and a bulk import can add several rows
+    # inside the same second, so it cannot order them on its own. Rowid is the
+    # insertion order and breaks the tie in the direction "newest" means.
     conn.execute(
         """
         UPDATE bridges SET enabled = 0
         WHERE enabled = 1
           AND uuid NOT IN (
             SELECT uuid FROM bridges WHERE enabled = 1
-            ORDER BY created_at DESC, uuid DESC LIMIT 1
+            ORDER BY created_at DESC, rowid DESC LIMIT 1
           )
         """
     )
