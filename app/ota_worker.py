@@ -77,6 +77,10 @@ class OTAWorker:
         self.rejoin_timeout_s = rejoin_timeout_s
         self.transfer_timeout_s = transfer_timeout_s
         self.bridge_manager = bridge_manager
+        # Set by create_app once the compiler exists (the worker is constructed first).
+        # Only the bridge-target branch needs it: a remote's image goes over ESP-NOW
+        # through the bridge, never through a local ESPHome upload.
+        self.compiler: Any | None = None
         self._wake_event = asyncio.Event()
         self._stop_event = asyncio.Event()
         self._task: asyncio.Task | None = None
@@ -229,7 +233,144 @@ class OTAWorker:
         if not path.exists():
             self._fail(current["id"], "firmware file is missing")
             return
+        if self._bridge_row_for_mac(str(current.get("mac") or "")) is not None:
+            await self._process_bridge(current, path)
+            return
         await self._process_v2(current, path)
+
+    def _bridge_row_for_mac(self, mac: str) -> dict[str, Any] | None:
+        """The bridges row this MAC belongs to, when the target IS a bridge itself.
+
+        A bridge cannot relay an image to itself: `ota_start` on the bridge resolves a
+        *remote session* for the target MAC and answers "remote not found or offline"
+        for its own. So a flash job whose target is a bridge takes the ESPHome-upload
+        path instead of the ESP-NOW relay path.
+        """
+        nm = normalize_mac(mac)
+        if not nm:
+            return None
+        for row in self.db.list_bridges():
+            if normalize_mac(str(row.get("mac") or "")) == nm:
+                return row
+        # list_bridges() hides a bridge that is still provisioning. A flash job can
+        # still target it (the placeholder MAC), and treating that as a *remote* is the
+        # wrong branch - it must reach the bridge path and be refused with a reason.
+        prov = self.db.get_provisioning_bridge()
+        if prov and normalize_mac(str(prov.get("mac") or "")) == nm:
+            return prov
+        return None
+
+    async def _process_bridge(self, job: dict[str, Any], path: Path) -> None:
+        current = self.db.get_job(int(job["id"]))
+        if not current:
+            return
+        job_id = int(current["id"])
+        bridge = self._bridge_row_for_mac(str(current.get("mac") or "")) or {}
+        esphome_name = str(current.get("esphome_name") or bridge.get("name") or "")
+        host = str(bridge.get("host") or "").strip()
+        transport = str(bridge.get("transport") or "wifi").strip().lower()
+
+        if not esphome_name:
+            self._fail(job_id, "bridge has no ESPHome name, so it cannot be rebuilt")
+            return
+        if transport == "serial":
+            self._fail(
+                job_id,
+                "this bridge is on the serial transport: it has no network to push an "
+                "image over. Reflash it over USB from the device page.",
+            )
+            return
+        if int(bridge.get("flash_wizard_pending") or 0) or not host or host in {"0.0.0.0", "::"}:
+            self._fail(
+                job_id,
+                "this bridge has not joined the network yet, so there is nothing to "
+                "upload to. Finish the flash wizard first.",
+            )
+            return
+        if self.compiler is None:
+            self._fail(job_id, "compiler is not available to the OTA worker")
+            return
+
+        initial_uptime_s: float | None = None
+        initial_build_date = ""
+        try:
+            topo = await self.bridge_manager.topology() if self.bridge_manager else []
+            node = find_node_by_mac(topo, normalize_mac(str(current.get("mac") or "")))
+            if node:
+                initial_uptime_s = node.get("uptime_s")
+                initial_build_date = str(node.get("firmware_build_date") or "").strip()
+        except Exception:
+            pass
+
+        self.db.update_job(
+            job_id,
+            status=TRANSFERRING,
+            started_at=now_ts(),
+            percent=0,
+            error_msg=None,
+            bridge_state="Uploading",
+        )
+        self.db.append_job_event(
+            job_id,
+            "flash_starting",
+            mechanism="esphome_ota",
+            host=host,
+            current_build_date=initial_build_date,
+            md5=str(current.get("firmware_md5") or ""),
+        )
+
+        error = await self._ota_upload_with_timeout(
+            esphome_name,
+            host,
+            path,
+            str(bridge.get("ota_password") or ""),
+        )
+        if error:
+            # ota_upload already phrases the actionable cause; do not wrap it in a
+            # generic "flash failed" that hides which of the three it was.
+            self._fail(job_id, error)
+            return
+
+        self.db.update_job(job_id, status=WAITING_REJOIN, percent=100, bridge_state="Rebooting")
+        self.db.append_job_event(job_id, "flash_rejoin_waiting", mechanism="esphome_ota")
+        latest = self.db.get_job(job_id) or current
+        await self._wait_for_rejoin(
+            latest,
+            initial_uptime_s=initial_uptime_s,
+            expect_changed_build_date=initial_build_date or None,
+        )
+
+    async def _ota_upload_with_timeout(
+        self,
+        esphome_name: str,
+        host: str,
+        path: Path,
+        ota_password: str,
+    ) -> str | None:
+        """Run the upload under the transfer timeout; return the failure reason or None.
+
+        An upload that never returns is the failure mode this guards: the worker would
+        hold the single-flash lock forever and every later job would queue behind it.
+        """
+        try:
+            result = await asyncio.wait_for(
+                self.compiler.ota_upload(  # type: ignore[union-attr]
+                    esphome_name,
+                    host,
+                    firmware_path=path,
+                    ota_password=ota_password,
+                ),
+                timeout=max(60, int(self.transfer_timeout_s)),
+            )
+        except asyncio.TimeoutError:
+            try:
+                await self.compiler.cancel_bridge_ota()  # type: ignore[union-attr]
+            except Exception:
+                pass
+            return "The OTA upload timed out before the bridge accepted the image."
+        if result.success:
+            return None
+        return str(result.error or "OTA upload failed")
 
     async def _process_v2(self, job: dict[str, Any], path: Path) -> None:
         current = self.db.get_job(int(job["id"]))
@@ -462,6 +603,7 @@ class OTAWorker:
         job: dict[str, Any],
         *,
         initial_uptime_s: float | None = None,
+        expect_changed_build_date: str | None = None,
     ) -> None:
         target_mac = normalize_mac(str(job["mac"]))
         deadline = now_ts() + self.rejoin_timeout_s
@@ -492,6 +634,27 @@ class OTAWorker:
 
                 if initial_uptime_s is None or current_uptime < initial_uptime_s:
                     self.db.append_job_event(job_id, "flash_rejoined")
+                    if expect_changed_build_date:
+                        # A bridge has no firmware MD5 in its identity and no project
+                        # version (no scaffold emits `esphome: project:`), so the build
+                        # date is the only evidence that the image it booted is the one
+                        # just uploaded. Same value as before the upload means the push
+                        # landed on a device that did not switch partitions.
+                        actual_build_date = str(node.get("firmware_build_date") or "").strip()
+                        if actual_build_date and actual_build_date == expect_changed_build_date:
+                            self.db.append_job_event(
+                                job_id,
+                                "flash_version_mismatch",
+                                expected_build_date=expect_changed_build_date,
+                                actual_build_date=actual_build_date,
+                            )
+                            self._finish(
+                                job_id,
+                                VERSION_MISMATCH,
+                                "bridge rejoined but still reports its previous firmware "
+                                "build date — the upload did not take effect",
+                            )
+                            return
                     latest_job = self.db.get_job(job_id) or job
                     expected_version = (latest_job.get("parsed_version") or "").strip()
                     actual_version = (node.get("firmware_version") or "").strip()

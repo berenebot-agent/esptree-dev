@@ -26,6 +26,7 @@ from pydantic import BaseModel
 from google.protobuf.message import DecodeError
 
 from .bridge_constants import API_VERSION, CLIENT_KIND, PLACEHOLDER_MAC, PROTOCOL, REMOTE_PLACEHOLDER_MAC
+from .bridge_firmware import BRIDGE_OTA_PORT, OtaPortProbe, ota_unreachable_reason, update_blocker
 from .bridge_v2_client import BridgeV2Manager
 from .network_discovery import NetworkDiscovery
 from .compile_store import CompileStore
@@ -322,6 +323,10 @@ class BridgeUpdateRequest(BaseModel):
     host: str | None = None
     port: int | None = None
     api_key: str | None = None
+    # The ESPHome OTA password this bridge was compiled with. Editable so an existing
+    # bridge (provisioned before the add-on stored one) can be updated in place
+    # instead of needing a USB reflash just to learn its own password.
+    ota_password: str | None = None
 
 
 class BridgeSelectRequest(BaseModel):
@@ -398,7 +403,7 @@ def create_app() -> FastAPI:
         bridge_manager=bridge_manager,
     )
 
-    app = FastAPI(title="ESP Tree Add-on", version="0.1.336")
+    app = FastAPI(title="ESP Tree Add-on", version="0.1.337")
     # HA ingress authenticates the user, but host networking otherwise exposes
     # this unauthenticated API on the LAN. Restrict the actual socket peer.
     app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
@@ -482,6 +487,10 @@ def create_app() -> FastAPI:
     app.state.compile_store = compile_store
     app.state.compiler = compiler
     app.state.compile_worker = compile_worker
+    # The OTA worker is built before the compiler exists; hand it over now so its
+    # bridge-target branch can push an image over ESPHome OTA. A remote's image never
+    # takes that path (it goes over ESP-NOW through the bridge).
+    ota_worker.compiler = compiler
 
     async def log_health_periodically() -> None:
         while True:
@@ -1894,6 +1903,12 @@ def create_app() -> FastAPI:
                 transport=transport,
                 serial_port=body.serial_port.strip(),
                 baud=int(body.baud or 460800),
+                # Keep the OTA password on the bridge record as well as in secrets.yaml.
+                # secrets.yaml holds ONE ota_password for the whole network, so
+                # provisioning another bridge overwrites it - and a bridge only accepts
+                # the password it was compiled with. Without this the first bridge could
+                # never be updated over the air again.
+                ota_password=ota_password,
             )
             logger.info("flash_wizard_submit: created bridge record uuid=%s", bridge["uuid"])
 
@@ -2176,6 +2191,8 @@ def create_app() -> FastAPI:
             updates["port"] = req.port
         if req.api_key is not None:
             updates["api_key"] = req.api_key
+        if req.ota_password is not None:
+            updates["ota_password"] = req.ota_password
         if not updates:
             return existing
         needs_validate = "host" in updates or "port" in updates or "api_key" in updates
@@ -2242,6 +2259,129 @@ def create_app() -> FastAPI:
         db.clear_active_bridge(bridge_uuid)
         await reconnect_bridge()
         return db.get_bridge(bridge_uuid) or {}
+
+    # ── Bridge firmware update (rebuild from the add-on's own components) ──
+    #
+    # A bridge cannot receive an image from itself: the protobuf OTA leg resolves a
+    # remote session for the target MAC and answers "remote not found or offline".
+    # So a bridge flash is the ESPHome OTA push to the bridge's own OTA port, fed by a
+    # fresh compile of the bridge's stored YAML against the components in this image.
+    # The policy (what blocks an update, whether the port answers) is in
+    # app/bridge_firmware.py so it is testable without this closure.
+
+    ota_probe = OtaPortProbe()
+
+    def _bridge_update_blocker(bridge: dict[str, Any]) -> str | None:
+        return update_blocker(
+            bridge,
+            has_config=yaml_store.has_config(str(bridge.get("name") or "")),
+        )
+
+    @app.get("/api/bridges/{bridge_uuid}/firmware")
+    async def bridge_firmware_status(bridge_uuid: str) -> dict[str, Any]:
+        bridge = db.get_bridge(bridge_uuid)
+        if not bridge:
+            raise HTTPException(status_code=404, detail="bridge not found")
+        nm = normalize_mac(str(bridge.get("mac") or ""))
+        node: dict[str, Any] | None = None
+        if nm:
+            try:
+                node = find_node_by_mac(await bridge_manager.topology(), nm)
+            except Exception:
+                node = None
+        blocker = _bridge_update_blocker(bridge)
+        ota_reachable: bool | None = None
+        if blocker is None:
+            ota_reachable = await ota_probe.is_open(str(bridge.get("host") or ""))
+            if not ota_reachable:
+                blocker = ota_unreachable_reason()
+        job = db.active_job_for_device(nm) if nm else None
+        if job:
+            blocker = f"a job is already {job['status']} for this bridge"
+        last_build = db.get_latest_compile_job_for_device(nm) if nm else None
+        return {
+            "uuid": bridge_uuid,
+            "mac": nm,
+            "name": str(bridge.get("name") or ""),
+            "transport": str(bridge.get("transport") or "wifi"),
+            "host": str(bridge.get("host") or ""),
+            "ota_port": BRIDGE_OTA_PORT,
+            "ota_reachable": ota_reachable,
+            "config_present": bool(str(bridge.get("name") or "")) and yaml_store.has_config(str(bridge.get("name") or "")),
+            "online": bool(node.get("online")) if node else False,
+            "running": {
+                "version": (node or {}).get("firmware_version") or "",
+                "build_date": (node or {}).get("firmware_build_date") or "",
+                "chip_name": (node or {}).get("chip_name") or "",
+            } if node else None,
+            "last_build": {
+                "job_id": last_build.get("id"),
+                "build_date": last_build.get("parsed_build_date") or "",
+                "version": last_build.get("parsed_version") or "",
+                "status": last_build.get("status"),
+            } if last_build else None,
+            "job": job,
+            "can_update": blocker is None,
+            "blocked_reason": blocker,
+        }
+
+    @app.post("/api/bridges/{bridge_uuid}/firmware-update")
+    async def bridge_firmware_update(bridge_uuid: str) -> dict[str, Any]:
+        bridge = db.get_bridge(bridge_uuid)
+        if not bridge:
+            raise HTTPException(status_code=404, detail="bridge not found")
+        blocker = _bridge_update_blocker(bridge)
+        if blocker:
+            raise HTTPException(status_code=409, detail=blocker)
+        nm = normalize_mac(str(bridge.get("mac") or ""))
+        if not nm:
+            raise HTTPException(status_code=409, detail="this bridge has no MAC on record yet")
+        active = db.active_job_for_device(nm)
+        if active:
+            raise HTTPException(
+                status_code=409,
+                detail=f"this bridge already has a job ({active['status']}); wait for it to finish",
+            )
+        esphome_name = str(bridge.get("name") or "")
+        # Always a fresh compile: "update in place" means "rebuild it from the
+        # components in the add-on image the user is running", not "re-push whatever
+        # binary happens to be lying around". auto_flash hands the artefact straight to
+        # the flash queue, where the worker routes a bridge MAC to the OTA push.
+        job = db.create_job(
+            {
+                "mac": nm,
+                "status": COMPILE_QUEUED,
+                "esphome_name": esphome_name,
+                "firmware_name": f"{esphome_name}.ota.bin",
+                "percent": 0,
+                "auto_flash": 1,
+            }
+        )
+        compile_worker.wake()
+        logger.info(
+            "bridge_firmware_update: queued rebuild of bridge %s (%s) job id=%s",
+            bridge.get("name"), nm, job["id"],
+        )
+        return {
+            "job": db.get_job(int(job["id"])) or job,
+            "queue_position": db.count_compile_queued_before(int(job["id"])) + 1,
+            "esphome_name": esphome_name,
+            "host": str(bridge.get("host") or ""),
+        }
+
+    @app.get("/api/bridges/{bridge_uuid}/firmware-update/logs")
+    async def bridge_firmware_update_logs(bridge_uuid: str) -> StreamingResponse:
+        bridge = db.get_bridge(bridge_uuid)
+        if not bridge:
+            raise HTTPException(status_code=404, detail="bridge not found")
+        esphome_name = str(bridge.get("name") or "")
+        if not esphome_name:
+            raise HTTPException(status_code=404, detail="bridge has no ESPHome name")
+        return StreamingResponse(
+            compiler.stream_bridge_ota_logs(esphome_name),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+        )
 
     @app.post("/api/bridge/select")
     async def select_discovered_bridge(req: BridgeSelectRequest) -> dict[str, Any]:

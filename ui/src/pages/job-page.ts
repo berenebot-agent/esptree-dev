@@ -164,6 +164,8 @@ export class EspJobPage extends LitElement {
           ${ev.error ? html`<span class="event-error">${ev.error}</span>` : nothing}
           ${ev.reason ? html`<span class="event-detail">${ev.reason}</span>` : nothing}
           ${ev.esphome_name ? html`<span class="event-detail">${ev.esphome_name}</span>` : nothing}
+          ${ev.host ? html`<span class="event-detail">at ${ev.host}</span>` : nothing}
+          ${ev.current_build_date ? html`<span class="event-detail">running build: ${ev.current_build_date}</span>` : nothing}
           ${ev.firmware_name ? html`<span class="event-detail">${ev.firmware_name}</span>` : nothing}
           ${ev.duration_s != null ? html`<span class="event-detail">took ${fmtDuration(ev.duration_s as number)}</span>` : nothing}
           ${ev.current_md5 ? html`<span class="event-detail">current running firmware MD5: ${ev.current_md5}</span>` : nothing}

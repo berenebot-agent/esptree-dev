@@ -1,6 +1,6 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { ConfigStatus, OtaJob, TopologyNode, fmtDuration, normalizeMac } from '../api/client';
+import { BridgeFirmwareStatus, ConfigStatus, OtaJob, TopologyNode, fmtDuration, normalizeMac } from '../api/client';
 
 @customElement('esp-topology-node')
 export class EspTopologyNode extends LitElement {
@@ -9,6 +9,8 @@ export class EspTopologyNode extends LitElement {
   @property({ attribute: false }) childMap: Map<string, TopologyNode[]> = new Map();
   @property({ attribute: false }) jobForMac: (mac: string) => OtaJob | null = () => null;
   @property({ attribute: false }) configForMac: (mac: string) => ConfigStatus | null = () => null;
+  @property({ attribute: false }) firmwareForMac: (mac: string) => BridgeFirmwareStatus | null = () => null;
+  @property({ attribute: false }) onUpdateFirmware: (mac: string) => void = () => {};
   @property({ attribute: false }) onHideDevice: (mac: string) => void = () => {};
   @property({ type: Boolean }) isRoot = false;
   @property({ type: Boolean, reflect: true }) isLast = false;
@@ -36,6 +38,65 @@ export class EspTopologyNode extends LitElement {
 
   private childKey(node: TopologyNode): string {
     return normalizeMac(node.mac || '');
+  }
+
+  private bridgeFirmware(): BridgeFirmwareStatus | null {
+    return this.firmwareForMac(this.node.mac);
+  }
+
+  private bridgeJobLabel(status: string, percent: number | null | undefined, position: number | null | undefined): string {
+    switch (status) {
+      case 'compile_queued':
+        return `⏳ build #${position ?? 1}`;
+      case 'compiling':
+        return '⚙ building';
+      case 'queued':
+        return `⏳ #${position ?? 1}`;
+      case 'starting':
+      case 'announcing':
+        return '⚙ connecting';
+      case 'transferring':
+        return percent ? `📡 ${percent}%` : '📡 uploading';
+      case 'verifying':
+        return '✓ verifying';
+      case 'transfer_success_waiting_rejoin':
+        return '⟳ rebooting';
+      default:
+        return '⚙ updating';
+    }
+  }
+
+  /**
+   * Firmware control for the bridge itself.
+   *
+   * A bridge cannot receive an image over the ESP-NOW link it carries, so updating it
+   * is a rebuild of its stored YAML plus an ESPHome OTA push to its own OTA port. The
+   * button is always offered (there is no version stamp to compare against yet); the
+   * server refuses with the reason when the bridge cannot take one, and the label
+   * states what is running so the user can see the result.
+   */
+  private renderBridgeFirmware() {
+    const fw = this.bridgeFirmware();
+    const job = fw?.job ?? null;
+    const status = job?.status ?? '';
+    const terminal = ['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout'];
+    const busy = !!status && !terminal.includes(status);
+    const canUpdate = !busy && (fw ? fw.can_update : true);
+    const blocker = fw?.blocked_reason || '';
+    const build = fw?.running?.build_date || this.node.firmware_build_date || '';
+    const title = blocker
+      || (build ? `Running firmware built ${build}. Rebuild from this add-on and upload over the air.`
+               : 'Rebuild this bridge from this add-on and upload it over the air.');
+    return html`
+      <span class="bridge-fw" title=${title}>${build ? `fw ${build}` : 'fw unknown'}</span>
+      ${busy
+        ? html`<span class="ota-badge active" title=${`Bridge update: ${status}`}
+               @click=${(e: Event) => { e.stopPropagation(); this.navigateTo(`/device/${encodeURIComponent(this.node.mac)}`); }}>
+               ${this.bridgeJobLabel(status, job?.percent, job?.queue_position)}</span>`
+        : html`<button class="icon-btn bridge-update" ?disabled=${!canUpdate}
+                 title=${title}
+                 @click=${(e: Event) => { e.stopPropagation(); this.onUpdateFirmware(this.node.mac); }}>Update firmware</button>`}
+    `;
   }
 
   render() {
@@ -80,6 +141,7 @@ export class EspTopologyNode extends LitElement {
             }
             <span class="chip-name">${this.node.chip_name || '-'}</span>
           </span>
+          ${this.isRoot ? this.renderBridgeFirmware() : nothing}
           ${isRemote ? html`
             ${this.node.online
               ? html`
@@ -102,7 +164,7 @@ export class EspTopologyNode extends LitElement {
               : html`<button class="icon-btn" title="View device"
                      @click=${(e: Event) => { e.stopPropagation(); this.navigateTo(`/device/${encodeURIComponent(this.node.mac)}`); }}>⚙ Settings</button>`
             }
-          ` : html`<span></span>`}
+          ` : (this.isRoot ? nothing : html`<span></span>`)}
           ${isRemote ? html`
             <span class="action-buttons">
               <button class="icon-btn" title="Edit YAML config" @click=${(e: Event) => { e.stopPropagation(); this.navigateTo(`/device/${encodeURIComponent(this.node.mac)}/config`); }}>Edit YAML${needsConfig ? html`<span class="config-dot" title="No configuration yet"></span>` : nothing}</button>
@@ -121,6 +183,8 @@ export class EspTopologyNode extends LitElement {
                     .childMap=${this.childMap}
                     .jobForMac=${this.jobForMac}
                     .configForMac=${this.configForMac}
+                    .firmwareForMac=${this.firmwareForMac}
+                    .onUpdateFirmware=${this.onUpdateFirmware}
                     .onHideDevice=${this.onHideDevice}
                     .isLast=${i === this.childNodesData.length - 1}
                   ></esp-topology-node>
@@ -287,6 +351,27 @@ export class EspTopologyNode extends LitElement {
       background: #0d5f58;
       border-color: #0d5f58;
       transform: translateY(-1px);
+    }
+
+    .icon-btn:disabled {
+      background: #1e293b;
+      border-color: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* What the bridge is actually running. Sits where a remote's job badge does, so
+       the row keeps one fixed-width action slot on both sides of the tree. */
+    .bridge-fw {
+      flex: 0 0 112px;
+      width: 112px;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .identity {
@@ -528,6 +613,16 @@ export class EspTopologyNode extends LitElement {
       }
       .action-buttons {
         display: none;
+      }
+      /* The bridge's firmware label and button are one full-width row on mobile,
+         where the two 112px action columns no longer exist. */
+      .bridge-fw,
+      .bridge-update {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        width: 100%;
+        flex: 1 1 auto;
+        text-align: center;
       }
     }
   `;

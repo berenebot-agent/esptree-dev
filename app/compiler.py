@@ -55,6 +55,11 @@ class ESPHomeCompiler:
         self._serial_esphome_name: str | None = None
         self._serial_lock = asyncio.Lock()
         self._serial_reserved = False
+        # The WiFi-bridge OTA push shares _serial_lock with the serial flasher: only
+        # one of them may own a device's build dir and staged secrets at a time.
+        self._ota_upload_proc: asyncio.subprocess.Process | None = None
+        self._ota_upload_esphome_name: str | None = None
+        self._ota_upload_reserved = False
         # Two entry points bootstrap the ESPHome venv (compile and chip detect, plus
         # concurrent compiles). The bootstrap deletes and reinstalls the same
         # directory, so without a shared lock one caller can remove files another is
@@ -204,6 +209,12 @@ class ESPHomeCompiler:
 
     def _serial_status_path(self, esphome_name: str) -> Path:
         return self.devices_root / esphome_name / "serial_flash_status.json"
+
+    def _bridge_ota_log_path(self, esphome_name: str) -> Path:
+        return self.devices_root / esphome_name / "bridge_ota.log"
+
+    def _bridge_ota_status_path(self, esphome_name: str) -> Path:
+        return self.devices_root / esphome_name / "bridge_ota_status.json"
 
     def _find_artifact(self, esphome_name: str, filename: str, suffix: str) -> Path | None:
         expected = self._artifact_dir(esphome_name) / filename
@@ -393,7 +404,12 @@ class ESPHomeCompiler:
         return True
 
     def serial_flash_active(self) -> bool:
-        return self._serial_reserved or self._serial_lock.locked() or self._serial_proc is not None
+        return (
+            self._serial_reserved
+            or self._ota_upload_reserved
+            or self._serial_lock.locked()
+            or self._serial_proc is not None
+        )
 
     def reserve_serial_flash(self) -> bool:
         if self.serial_flash_active():
@@ -576,6 +592,220 @@ class ESPHomeCompiler:
                 self._serial_reserved = False
 
 
+    # --- Bridge OTA upload -------------------------------------------------
+    #
+    # A WiFi bridge runs ESPHome's own OTA server (the wizard's scaffold emits
+    # `ota: - platform: esphome`), so upgrading it in place is a TCP push to the
+    # bridge's OTA port. That path is independent of the protobuf link the bridge
+    # carries, which matters: the bridge cannot relay an image to itself, and the
+    # transfer leg in ota_worker refuses a bridge MAC by design.
+    #
+    # The bridge reboots once it accepts the image, so the caller is responsible for
+    # waiting for it to rejoin - this method only reports whether the push landed.
+
+    def bridge_ota_active(self) -> bool:
+        return self._ota_upload_reserved or self._ota_upload_proc is not None
+
+    def reserve_bridge_ota(self) -> bool:
+        # One flash at a time, across both mechanisms: a serial flash and an OTA push
+        # both own the device's build directory and its secrets.yaml.
+        if self.bridge_ota_active() or self.serial_flash_active():
+            return False
+        self._ota_upload_reserved = True
+        return True
+
+    def bridge_ota_status(self, esphome_name: str) -> dict[str, Any]:
+        path = self._bridge_ota_status_path(esphome_name)
+        if not path.exists():
+            return {"status": "idle", "esphome_name": esphome_name, "host": None, "error": None}
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"status": "idle", "esphome_name": esphome_name, "host": None, "error": None}
+
+    def _set_bridge_ota_status(self, esphome_name: str, status: str, **kwargs: Any) -> None:
+        path = self._bridge_ota_status_path(esphome_name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"status": status, "esphome_name": esphome_name, **kwargs}), encoding="utf-8")
+
+    async def stream_bridge_ota_logs(self, esphome_name: str) -> AsyncGenerator[str, None]:
+        status = self.bridge_ota_status(esphome_name).get("status", "idle")
+        yield f"event: status\ndata: {status}\n\n"
+        log_path = self._bridge_ota_log_path(esphome_name)
+        position = 0
+        if log_path.exists():
+            content = log_path.read_text(encoding="utf-8", errors="replace")
+            position = len(content.encode("utf-8"))
+            for line in content.splitlines():
+                yield f"data: {line}\n\n"
+
+        while True:
+            current_status = str(self.bridge_ota_status(esphome_name).get("status", "idle"))
+            active = (
+                self._ota_upload_esphome_name == esphome_name
+                and self._ota_upload_proc is not None
+            ) or current_status in {"starting", "uploading"}
+            if not active:
+                break
+            await asyncio.sleep(0.5)
+            if not log_path.exists():
+                continue
+            with log_path.open("rb") as handle:
+                handle.seek(position)
+                chunk = handle.read()
+                position = handle.tell()
+            if not chunk:
+                continue
+            for line in chunk.decode("utf-8", errors="replace").splitlines():
+                yield f"data: {line}\n\n"
+
+        final_status = self.bridge_ota_status(esphome_name).get("status", "idle")
+        yield f"event: status\ndata: {final_status}\n\n"
+
+    async def cancel_bridge_ota(self) -> bool:
+        proc = self._ota_upload_proc
+        esphome_name = self._ota_upload_esphome_name
+        if proc is None or esphome_name is None:
+            return False
+        try:
+            pgid = os.getpgid(proc.pid)
+            os.killpg(pgid, signal.SIGTERM)
+        except (ProcessLookupError, OSError):
+            pass
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=5.0)
+        except asyncio.TimeoutError:
+            try:
+                pgid = os.getpgid(proc.pid)
+                os.killpg(pgid, signal.SIGKILL)
+            except (ProcessLookupError, OSError):
+                pass
+            await proc.wait()
+        self._set_bridge_ota_status(esphome_name, "failed", host=None, error="cancelled by user")
+        return True
+
+    def _stage_ota_secrets(self, esphome_name: str, ota_password: str) -> Path | None:
+        """Copy secrets.yaml beside the config for the upload, overriding ota_password.
+
+        ESPHome resolves `!secret` while loading the YAML, so the upload needs a
+        secrets.yaml next to the config even though nothing is compiled. The
+        per-bridge password wins over the shared one: provisioning another bridge
+        overwrites secrets.yaml:ota_password, and a bridge only accepts the password
+        it was compiled with. The staged copy is removed by the caller.
+        """
+        src = self.devices_root / "secrets.yaml"
+        dest = self.devices_root / esphome_name / "secrets.yaml"
+        try:
+            text = src.read_text(encoding="utf-8") if src.exists() else ""
+        except OSError:
+            text = ""
+        if ota_password:
+            line = f"ota_password: {json.dumps(ota_password)}"
+            pattern = re.compile(r"^\s*ota_password\s*:.*$", re.MULTILINE)
+            if pattern.search(text):
+                text = pattern.sub(line, text)
+            else:
+                text = text.rstrip("\n") + ("\n" if text.strip() else "") + line + "\n"
+        if not text.strip():
+            return None
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(text, encoding="utf-8")
+        return dest
+
+    async def ota_upload(
+        self,
+        esphome_name: str,
+        host: str,
+        *,
+        firmware_path: Path | str | None = None,
+        ota_password: str = "",
+    ) -> FlashResult:
+        host = str(host or "").strip()
+        if not host:
+            return FlashResult(False, esphome_name, host, error="no bridge host to upload to")
+        if self._serial_lock.locked():
+            return FlashResult(False, esphome_name, host, error="another flash is already running")
+
+        async with self._serial_lock:
+            self._ota_upload_reserved = False
+            yaml_path = self.devices_root / esphome_name / f"{esphome_name}.yaml"
+            log_path = self._bridge_ota_log_path(esphome_name)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_text("", encoding="utf-8")
+            lines: list[str] = []
+
+            def fail(message: str, *, status: str = "failed") -> FlashResult:
+                self._set_bridge_ota_status(esphome_name, status, host=host, error=message)
+                return FlashResult(False, esphome_name, host, error=message, build_log="".join(lines))
+
+            if not yaml_path.exists():
+                return fail(f"No stored ESPHome config for '{esphome_name}' - it cannot be rebuilt")
+
+            binary: Path | None = None
+            if firmware_path and Path(firmware_path).exists():
+                binary = Path(firmware_path)
+            if binary is None:
+                binary = self._find_artifact(esphome_name, "firmware.ota.bin", ".ota.bin")
+            if binary is None:
+                return fail("No compiled OTA image available for this bridge")
+
+            self._fix_yaml_path(yaml_path)
+            self._set_bridge_ota_status(esphome_name, "starting", host=host, error=None)
+            secrets_path: Path | None = None
+            try:
+                await self._ensure_esphome(log_path)
+                secrets_path = self._stage_ota_secrets(esphome_name, ota_password)
+                self._set_bridge_ota_status(esphome_name, "uploading", host=host, error=None)
+                proc = await asyncio.create_subprocess_exec(
+                    self._esphome_bin(),
+                    "upload",
+                    str(yaml_path),
+                    "--device",
+                    host,
+                    "--file",
+                    str(binary),
+                    "--ota-platform",
+                    "esphome",
+                    env=self._compile_env(),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                    start_new_session=True,
+                )
+                self._ota_upload_proc = proc
+                self._ota_upload_esphome_name = esphome_name
+
+                assert proc.stdout is not None
+                with log_path.open("a", encoding="utf-8") as log_file:
+                    while True:
+                        raw = await proc.stdout.readline()
+                        if not raw:
+                            break
+                        decoded = raw.decode("utf-8", errors="replace")
+                        lines.append(decoded)
+                        log_file.write(decoded)
+                        log_file.flush()
+
+                await proc.wait()
+                build_log = "".join(lines)
+                if proc.returncode == 0:
+                    uploaded_bytes = binary.stat().st_size
+                    self._set_bridge_ota_status(
+                        esphome_name, "success", host=host, error=None, uploaded_bytes=uploaded_bytes
+                    )
+                    return FlashResult(True, esphome_name, host, build_log=build_log, flashed_bytes=uploaded_bytes)
+                error = _ota_failure_reason(proc.returncode or 0, build_log)
+                self._set_bridge_ota_status(esphome_name, "failed", host=host, error=error)
+                return FlashResult(False, esphome_name, host, error=error, build_log=build_log)
+            finally:
+                self._ota_upload_proc = None
+                self._ota_upload_esphome_name = None
+                self._ota_upload_reserved = False
+                try:
+                    if secrets_path is not None and secrets_path.exists():
+                        secrets_path.unlink()
+                except OSError:
+                    pass
+
     async def detect_chip_on_port(self, port: str, before: str | None = None) -> dict[str, Any]:
         log_path = self.devices_root / "_chip_detect" / "detect.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -632,6 +862,41 @@ class ESPHomeCompiler:
             return {"chip_name": "unknown", "board_info": None, "error": f"permission denied on port {port}"}
         except OSError as exc:
             return {"chip_name": "unknown", "board_info": None, "error": str(exc)}
+
+
+def _ota_failure_reason(exit_code: int, log: str) -> str:
+    """Turn ESPHome's upload output into the one sentence the UI should show.
+
+    The bare exit code is useless to a user: "refused" means the running firmware has
+    no OTA server (a bridge built before `ota:` was scaffolded, or one whose config
+    dropped it), "password" means the stored password is not the one compiled in, and
+    "timed out" means the bridge never answered - usually offline or on another VLAN.
+    """
+    text = (log or "").lower()
+    if "invalid password" in text or ("auth" in text and "password" in text):
+        return (
+            "The bridge rejected the OTA password. It only accepts the password its "
+            "current firmware was compiled with - set it on the bridge record, or "
+            "reflash this bridge once over USB."
+        )
+    if "connection refused" in text or "errno 111" in text:
+        return (
+            "The bridge is not listening for OTA updates on its OTA port. Its firmware "
+            "was built without `ota: platform: esphome`, so it needs one flash over USB."
+        )
+    if "timed out" in text or "timeout" in text:
+        return "The bridge did not answer the OTA upload - check it is powered on and reachable."
+    if "cannot upload over the air" in text or "ota configuration is not present" in text:
+        return (
+            "This bridge's stored config has no `ota:` block, so it cannot be updated "
+            "over the air. Add it and flash once over USB."
+        )
+    if "secret" in text and ("not found" in text or "could not find" in text or "does not contain" in text):
+        return (
+            "The stored config needs `!secret ota_password`, but no OTA password is on "
+            "record for this bridge. Set it on the bridge record and retry."
+        )
+    return f"OTA upload failed with exit code {exit_code}"
 
 
 def _rmtree_size(path: Path) -> int:

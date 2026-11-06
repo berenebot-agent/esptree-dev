@@ -212,6 +212,18 @@ the reported firmware version is confirmed when available; and retention makes
 reflash-as-rollback the recovery path — any retained binary can be reflashed
 from the job history.
 
+**Updating the bridge itself.** The bridge row on the topology carries the firmware
+it is running and an **Update firmware** button. That rebuilds the bridge's stored
+config against the components in the running add-on image and uploads the result over
+the air, so the bridge picks up current firmware without being unplugged. It needs the
+bridge to be a WiFi bridge whose firmware was built with `ota: platform: esphome` (the
+flash wizard emits it), and it reboots the bridge — the mesh is offline for about a
+minute. A serial bridge has no network to receive an image over, and a bridge that is
+not listening on its OTA port, or that answers with a password the add-on does not hold,
+has to be flashed once over USB instead. The OTA password is stored per bridge because
+`secrets.yaml` can only hold one for the whole network: provisioning a second bridge
+overwrites the shared value, and a bridge only accepts the password it was built with.
+
 ## Day-to-day management
 
 - **Topology and device pages** show the active bridge, retained/offline remotes,

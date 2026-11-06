@@ -1,6 +1,6 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { ConfigStatus, OtaJob, QueueResponse, TopologyNode, api, normalizeMac, streamTopology, TopologyStreamHandle, WsTopologyMessage } from '../api/client';
+import { BridgeFirmwareStatus, ConfigStatus, OtaJob, QueueResponse, TopologyNode, api, normalizeMac, streamTopology, TopologyStreamHandle, WsTopologyMessage } from '../api/client';
 import './topology-node';
 
 @customElement('esp-topology-map')
@@ -9,10 +9,12 @@ export class EspTopologyMap extends LitElement {
   @state() private currentJob: OtaJob | null = null;
   @state() private queueData: QueueResponse | null = null;
   @state() private configStatuses: Map<string, ConfigStatus> = new Map();
+  @state() private firmwareStatus: BridgeFirmwareStatus | null = null;
   @state() private loading = true;
   @state() private error = '';
   @state() private hiddenExpanded = false;
   private stream: TopologyStreamHandle | undefined;
+  private firmwareTimer: ReturnType<typeof setInterval> | null = null;
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -26,7 +28,74 @@ export class EspTopologyMap extends LitElement {
 
   disconnectedCallback(): void {
     this.stream?.close();
+    this.stopFirmwarePolling();
     super.disconnectedCallback();
+  }
+
+  private stopFirmwarePolling(): void {
+    if (this.firmwareTimer) {
+      clearInterval(this.firmwareTimer);
+      this.firmwareTimer = null;
+    }
+  }
+
+  /**
+   * Fetch the bridge's own firmware state (what it runs, whether an update can land).
+   *
+   * Kept off the topology poll: the endpoint probes the bridge's OTA port, which costs
+   * a TCP timeout when the bridge is unreachable. It is read once per load, and on a
+   * short timer only while an update is actually running so the badge advances through
+   * build -> upload -> reboot without waiting for a topology event.
+   */
+  private async loadBridgeFirmware(topology: TopologyNode[]): Promise<void> {
+    const bridge = topology.find((n) => n.is_bridge && n.bridge_uuid);
+    if (!bridge?.bridge_uuid) {
+      this.firmwareStatus = null;
+      this.stopFirmwarePolling();
+      return;
+    }
+    try {
+      this.firmwareStatus = await api.bridgeFirmware(bridge.bridge_uuid);
+    } catch {
+      this.firmwareStatus = null;
+    }
+    const status = this.firmwareStatus?.job?.status ?? '';
+    const running = !!status && !['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout'].includes(status);
+    if (running && !this.firmwareTimer) {
+      this.firmwareTimer = setInterval(() => void this.load(false, true), 3000);
+    } else if (!running) {
+      this.stopFirmwarePolling();
+    }
+  }
+
+  private firmwareForMac(mac: string): BridgeFirmwareStatus | null {
+    if (!this.firmwareStatus) return null;
+    return normalizeMac(this.firmwareStatus.mac) === normalizeMac(mac) ? this.firmwareStatus : null;
+  }
+
+  private async handleUpdateFirmware(mac: string): Promise<void> {
+    const bridge = this.topology.find((n) => normalizeMac(n.mac) === normalizeMac(mac));
+    const uuid = this.firmwareStatus?.uuid || bridge?.bridge_uuid;
+    if (!uuid) return;
+    const label = bridge?.friendly_name || bridge?.esphome_name || bridge?.label || mac;
+    const running = this.firmwareStatus?.running?.build_date;
+    if (!window.confirm(
+      `Rebuild and upload firmware to ${label}?\n\n` +
+      'This recompiles its stored config against the components in this add-on, ' +
+      'uploads the image over WiFi, and reboots the bridge — the ESP-NOW mesh goes ' +
+      'offline for about a minute.\n\n' +
+      (running ? `Currently running: built ${running}.\n\n` : '') +
+      'If the new image cannot boot, the bridge has to be reflashed over USB.',
+    )) {
+      return;
+    }
+    try {
+      await api.updateBridgeFirmware(uuid);
+      await this.load(false, true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.error = `Could not update ${label}: ${message}`;
+    }
   }
 
   private async load(showLoading = true, bypassCache = false): Promise<void> {
@@ -47,6 +116,7 @@ export class EspTopologyMap extends LitElement {
         if (r) cs.set(normalizeMac(r.mac), r);
       });
       this.configStatuses = cs;
+      void this.loadBridgeFirmware(topology);
     } catch (error) {
       this.error = error instanceof Error ? error.message : String(error);
     } finally {
@@ -179,6 +249,8 @@ export class EspTopologyMap extends LitElement {
                     .childMap=${visibleChildMap}
                     .jobForMac=${(mac: string) => this.jobForMac(mac)}
                     .configForMac=${(mac: string) => this.configForMac(mac)}
+                    .firmwareForMac=${(mac: string) => this.firmwareForMac(mac)}
+                    .onUpdateFirmware=${(mac: string) => void this.handleUpdateFirmware(mac)}
                     .onHideDevice=${(mac: string) => this.handleHideDevice(mac)}
                     .isRoot=${true}
                   ></esp-topology-node>

@@ -18,6 +18,10 @@ export class EspSettings extends LitElement {
   @state() private artifactsMessage = '';
   @state() private editingBridgeId: string | null = null;
   @state() private editApiKey = '';
+  // The ESPHome OTA password this bridge was compiled with. Editable here because
+  // secrets.yaml keeps only one for the whole network: after another bridge is
+  // provisioned, an older bridge can only be updated if its own password is known.
+  @state() private editOtaPassword = '';
   @state() private newBridgeApiKey = '';
   @state() private showManualEntry = false;
   @state() private manualHost = '';
@@ -334,7 +338,7 @@ export class EspSettings extends LitElement {
     }
   }
 
-  private async updateBridgeApiKey(bridge: ConfiguredBridge): Promise<void> {
+  private async saveBridgeCredentials(bridge: ConfiguredBridge): Promise<void> {
     if (!this.editApiKey.trim()) {
       this.error = 'API key is required';
       return;
@@ -342,10 +346,18 @@ export class EspSettings extends LitElement {
     this.saving = true;
     this.error = '';
     try {
-      await api.updateBridge(bridge.uuid, undefined, undefined, undefined, this.editApiKey);
-      this.saved = `API key updated for ${bridge.name || bridge.host}`;
+      await api.updateBridge(
+        bridge.uuid,
+        undefined,
+        undefined,
+        undefined,
+        this.editApiKey,
+        this.editOtaPassword,
+      );
+      this.saved = `Credentials updated for ${bridge.name || bridge.host}`;
       this.editingBridgeId = null;
       this.editApiKey = '';
+      this.editOtaPassword = '';
       await this.load();
     } catch (error) {
       this.error = error instanceof Error ? error.message : String(error);
@@ -357,11 +369,13 @@ export class EspSettings extends LitElement {
   private startEditingBridge(bridge: ConfiguredBridge): void {
     this.editingBridgeId = bridge.uuid;
     this.editApiKey = bridge.api_key || '';
+    this.editOtaPassword = bridge.ota_password || '';
   }
 
   private cancelEditing(): void {
     this.editingBridgeId = null;
     this.editApiKey = '';
+    this.editOtaPassword = '';
   }
 
   private async cleanArtifacts(): Promise<void> {
@@ -547,13 +561,20 @@ export class EspSettings extends LitElement {
                           .value=${this.editApiKey}
                           @input=${(e: Event) => this.editApiKey = (e.target as HTMLInputElement).value}
                         />
-                        <button class="btn btn-primary" ?disabled=${this.saving} @click=${() => this.updateBridgeApiKey(bridge)}>Save</button>
+                        <input
+                          type="password"
+                          placeholder="OTA password"
+                          title="The ESPHome OTA password this bridge was compiled with — required to update it over the air"
+                          .value=${this.editOtaPassword}
+                          @input=${(e: Event) => this.editOtaPassword = (e.target as HTMLInputElement).value}
+                        />
+                        <button class="btn btn-primary" ?disabled=${this.saving} @click=${() => this.saveBridgeCredentials(bridge)}>Save</button>
                         <button class="btn" ?disabled=${this.saving} @click=${this.cancelEditing}>Cancel</button>
                       ` : html`
                         ${this.isBridgeActive(bridge)
                           ? html`<button class="btn" ?disabled=${this.saving} @click=${() => this.deactivateBridge(bridge)}>Deactivate</button>`
                           : html`<button class="btn btn-primary" ?disabled=${this.saving} @click=${() => this.activateBridge(bridge)}>Activate</button>`}
-                        <button class="btn" ?disabled=${this.saving} @click=${() => this.startEditingBridge(bridge)}>Edit API Key</button>
+                        <button class="btn" ?disabled=${this.saving} @click=${() => this.startEditingBridge(bridge)}>Edit credentials</button>
                         <button class="btn btn-danger" ?disabled=${this.saving} @click=${() => this.deleteBridge(bridge)}>Delete</button>
                       `}
                     </td>

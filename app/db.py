@@ -230,7 +230,7 @@ class Database:
         with self.connect() as conn:
             return self._bridge_row(conn.execute("SELECT * FROM bridges WHERE uuid = ?", (bridge_uuid,)).fetchone())
 
-    def add_bridge(self, host: str, port: int, name: str | None = None, discovered_via: str = "manual", api_key: str = "", network_id: str = "", hostname: str = "", mac: str = "", flash_wizard_pending: int = 0, enabled: int = 1, transport: str = "wifi", serial_port: str = "", baud: int = 460800) -> dict[str, Any]:
+    def add_bridge(self, host: str, port: int, name: str | None = None, discovered_via: str = "manual", api_key: str = "", network_id: str = "", hostname: str = "", mac: str = "", flash_wizard_pending: int = 0, enabled: int = 1, transport: str = "wifi", serial_port: str = "", baud: int = 460800, ota_password: str = "") -> dict[str, Any]:
         ts = now_ts()
         bridge_uuid = str(uuid.uuid4())
         with self.connect() as conn:
@@ -241,10 +241,10 @@ class Database:
                 conn.execute("UPDATE bridges SET enabled = 0")
             conn.execute(
                 """
-                INSERT INTO bridges (uuid, name, host, port, discovered_via, api_key, network_id, hostname, mac, flash_wizard_pending, enabled, last_connected_at, created_at, transport, serial_port, baud)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO bridges (uuid, name, host, port, discovered_via, api_key, network_id, hostname, mac, flash_wizard_pending, enabled, last_connected_at, created_at, transport, serial_port, baud, ota_password)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (bridge_uuid, name, host, port, discovered_via, api_key, network_id, hostname, mac, flash_wizard_pending, enabled, ts if api_key else None, ts, transport, serial_port, baud),
+                (bridge_uuid, name, host, port, discovered_via, api_key, network_id, hostname, mac, flash_wizard_pending, enabled, ts if api_key else None, ts, transport, serial_port, baud, ota_password),
             )
             conn.execute("COMMIT")
         return self.get_bridge(bridge_uuid) or {}
@@ -1192,3 +1192,12 @@ def migration_019_single_enabled_bridge(conn: sqlite3.Connection) -> None:
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_bridges_single_enabled "
         "ON bridges(enabled) WHERE enabled = 1"
     )
+
+
+@register_migration(version=20, description="Add ota_password to bridges table")
+def migration_020_add_ota_password(conn: sqlite3.Connection) -> None:
+    # The ESPHome OTA password an existing bridge was compiled with. Without it the
+    # add-on can only guess, and provisioning a second bridge overwrites the single
+    # shared secrets.yaml:ota_password - after which the first bridge rejects every
+    # over-the-air upload with a password error and nothing is on record to retry with.
+    _add_column_if_not_exists(conn, "bridges", "ota_password", "TEXT DEFAULT ''")

@@ -25,6 +25,7 @@ export interface TopologyNode {
   direct_child_count?: number;
   total_child_count?: number;
   is_bridge?: boolean;
+  bridge_uuid?: string;
   network_id?: string;
   hidden?: boolean;
   ha_device_id?: string;
@@ -232,10 +233,30 @@ export interface ConfiguredBridge {
   transport?: string;
   serial_port?: string;
   baud?: number;
+  // The ESPHome OTA password this bridge was compiled with. Kept per bridge because
+  // secrets.yaml holds only one for the whole network.
+  ota_password?: string;
   // Per-bridge transport state from GET /api/bridges. Absent on older add-on
   // payloads, in which case the UI must fall back to its previous check.
   client_connected?: boolean;
   client_skipped_reason?: string;
+}
+
+export interface BridgeFirmwareStatus {
+  uuid: string;
+  mac: string;
+  name: string;
+  transport: string;
+  host: string;
+  ota_port: number;
+  ota_reachable: boolean | null;
+  config_present: boolean;
+  online: boolean;
+  running: { version: string; build_date: string; chip_name: string } | null;
+  last_build: { job_id: number; build_date: string; version: string; status: string } | null;
+  job: OtaJob | null;
+  can_update: boolean;
+  blocked_reason: string | null;
 }
 
 export interface AppConfig {
@@ -427,11 +448,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ host, port, name, api_key, hostname, transport, serial_port, baud })
     }),
-  updateBridge: (uuid: string, name?: string, host?: string, port?: number, api_key?: string) =>
+  updateBridge: (uuid: string, name?: string, host?: string, port?: number, api_key?: string, ota_password?: string) =>
     request<ConfiguredBridge>(`/api/bridges/${uuid}`, {
       method: 'PUT',
-      body: JSON.stringify({ name, host, port, api_key })
+      body: JSON.stringify({ name, host, port, api_key, ota_password })
     }),
+  bridgeFirmware: (uuid: string) => request<BridgeFirmwareStatus>(`/api/bridges/${uuid}/firmware`),
+  updateBridgeFirmware: (uuid: string) =>
+    request<{ job: OtaJob; queue_position?: number; esphome_name: string; host: string }>(
+      `/api/bridges/${uuid}/firmware-update`,
+      { method: 'POST' },
+    ),
+  bridgeFirmwareLogsUrl: (uuid: string) =>
+    apiPath(`/api/bridges/${uuid}/firmware-update/logs`),
   deleteBridge: (uuid: string) =>
     request<{ deleted: boolean; uuid: string }>(`/api/bridges/${uuid}`, { method: 'DELETE' }),
   activateBridge: (uuid: string) =>
