@@ -533,7 +533,12 @@ bool ESPTreeBridge::add_peer_(const uint8_t *mac) {
   }
   esp_now_peer_info_t peer{};
   memcpy(peer.peer_addr, mac, 6);
-  peer.channel = current_wifi_channel_();
+  // Channel 0 means "the interface's current channel". Pinning the channel here
+  // would freeze whatever the AP had us on the first time this peer was added;
+  // after an AP channel change every send to an existing peer would be refused
+  // by the driver until the peer was deleted. The leaves register with 0 for
+  // the same reason (esp_tree_remote.cpp add_peer_).
+  peer.channel = 0;
   peer.encrypt = false;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
   peer.ifidx = WIFI_IF_STA;
@@ -2694,8 +2699,9 @@ void ESPTreeBridge::register_v2_auth_handlers_() {
       std::string cookie = "espnow_session=" + token + "; Path=/; Max-Age=86400; SameSite=Lax";
       httpd_resp_set_hdr(req, "Set-Cookie", cookie.c_str());
 
-      request->send(200, "application/json",
-                    ("{\"status\":\"ok\",\"api_key\":\"" + key + "\"}").c_str());
+      // Never echo the key back: the page keeps what the user typed, and a key
+      // in a response body ends up in browser history, screenshots and logs.
+      request->send(200, "application/json", "{\"status\":\"ok\"}");
     }
 
     void handleUpload(AsyncWebServerRequest *, const std::string &, size_t, uint8_t *, size_t, bool) override {}
@@ -2817,26 +2823,20 @@ void ESPTreeBridge::register_v2_auth_handlers_() {
 }
 
 bool ESPTreeBridge::v2_http_authenticate_(void *req) {
+  // No key configured: refuse instead of allowing everyone. The protobuf
+  // WebSocket already refuses to start in this state, and an HTTP endpoint must
+  // not be the way around that. (/topology.json and /bridge.json stay open —
+  // they are served to the standalone topology page.)
   if (api_key_.empty()) {
-    return true;
+    return false;
   }
   auto *request = static_cast<AsyncWebServerRequest *>(req);
-  if (request->hasArg("api_key")) {
-    const std::string &configured = api_key_;
-    std::string key = request->arg("api_key").c_str();
-    if (key.size() != configured.size()) return false;
-    uint8_t diff = 0;
-    for (size_t i = 0; i < configured.size(); ++i) {
-      diff |= static_cast<uint8_t>(configured[i] ^ key[i]);
-    }
-    return diff == 0;
-  }
   return v2_verify_session_(request);
 }
 
 bool ESPTreeBridge::v2_verify_session_(void *req) {
   if (api_key_.empty()) {
-    return true;
+    return false;
   }
 
   auto *request = static_cast<AsyncWebServerRequest *>(req);
