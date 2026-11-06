@@ -130,6 +130,24 @@ jobs:
         working-directory: /tmp/cpp-build
         run: ctest --output-on-failure
 
+  doc-anchors:
+    name: Documentation citations resolve
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      # Docs cite code as `file.ext:123`. The line numbers rot silently when
+      # code moves above them, so this check refuses a citation whose file is
+      # gone or whose line no longer exists.
+      - name: Check documentation citations
+        run: python3 scripts/check_doc_anchors.py
+
   required:
     name: CI Required
     runs-on: ubuntu-latest
@@ -138,6 +156,7 @@ jobs:
       - ui-dist
       - regression-tests
       - cpp-tests
+      - doc-anchors
 
     steps:
       - name: Verify required jobs passed
@@ -145,13 +164,16 @@ jobs:
           UI_DIST_RESULT: ${{ needs.ui-dist.result }}
           REGRESSION_RESULT: ${{ needs.regression-tests.result }}
           CPP_RESULT: ${{ needs.cpp-tests.result }}
+          DOC_ANCHORS_RESULT: ${{ needs.doc-anchors.result }}
         shell: bash
         run: |
           set -euo pipefail
           echo "UI dist: $UI_DIST_RESULT"
           echo "Regression tests: $REGRESSION_RESULT"
           echo "Firmware C++ tests: $CPP_RESULT"
+          echo "Documentation citations: $DOC_ANCHORS_RESULT"
 
           [[ "$UI_DIST_RESULT" == "success" ]]
           [[ "$REGRESSION_RESULT" == "success" ]]
           [[ "$CPP_RESULT" == "success" ]]
+          [[ "$DOC_ANCHORS_RESULT" == "success" ]]

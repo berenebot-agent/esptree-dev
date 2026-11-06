@@ -96,11 +96,13 @@ config with both, and rejects one with neither:
 
 ### Behaviour notes
 
-**`network_id`** is the network discriminator. On the wire it is a 32-byte field
-with a separate length byte (`esp_tree_common/espnow_types.h:259-260`). The bridge
-drops a DISCOVER whose length byte differs from its own, then drops one whose bytes
-differ (`bridge_protocol.cpp:764-771`). The comparison is exact and therefore
-case-sensitive; the demo states "1-32 chars, case-sensitive"
+**`network_id`** is the network discriminator. On the wire it is the 32-byte
+`network_id` field plus a separate `network_id_len` byte in `espnow_discover_t`
+(`esp_tree_common/espnow_types.h`). `BridgeProtocol::handle_discover_()` drops a
+DISCOVER whose length byte differs from its own (debug line
+`[DROP] L4 discover net_id_len`), then drops one whose bytes differ (`[DROP] L4
+discover net_id`). The comparison is exact and therefore case-sensitive; the demo
+states "1-32 chars, case-sensitive"
 (`espnow-bridge-c5.yml:66`). The schema itself only requires a non-empty string —
 there is no length validator in `__init__.py`.
 
@@ -111,8 +113,8 @@ anything else is stretched into a key with HKDF-SHA256 over the string (info
 (`esp_tree_common/espnow_crypto.cpp:189-204`). The demo's guidance to use
 `openssl rand -hex 32` and the 64-hex-character comment
 (`espnow-bridge-c5.yml:68`, `secrets.example.yaml:18-20`) choose the first path
-deliberately. The bridge marks the protocol unusable when init fails
-(`bridge_protocol.cpp:311`, `:336`).
+deliberately. The bridge marks the protocol unusable when init fails:
+`BridgeProtocol::init()` leaves `psk_valid_` false and returns `-1`.
 
 **`espnow_mode`** selects the 2.4 GHz protocol mask: `lr` →
 `WIFI_PROTOCOL_LR`, otherwise `WIFI_PROTOCOL_11B | 11G | 11N`
@@ -124,8 +126,8 @@ code negotiates or repairs a mismatch.
 A session is marked offline when bridge uptime exceeds
 `max(interval * 1000 + 5000 ms, expected_contact_interval_s * 3000 + 5000 ms)`,
 falling back to `interval * 3000 + 5000 ms` when the remote reports no expected
-contact interval (`bridge_protocol.cpp:2016-2021`;
-`OFFLINE_TIMEOUT_GRACE_MS = 5000` at `bridge_protocol.h:316`). The remote reports
+contact interval (the offline sweep in `BridgeProtocol::loop()`;
+`OFFLINE_TIMEOUT_GRACE_MS = 5000` in `bridge_protocol.h`). The remote reports
 its own interval in HEARTBEAT (`esp_tree_remote/remote_protocol.cpp:1632`), so the two values
 should match to get predictable offline detection.
 
@@ -340,9 +342,10 @@ both set `heartbeat_interval_seconds: 30` rather than the default 60.
 
 - **`network_id`, `psk` and `espnow_mode` must be identical on the bridge and every
   remote.** Nothing negotiates them. A mismatched `network_id` is dropped at the
-  DISCOVER layer with a length check then a byte comparison
-  (`bridge_protocol.cpp:764-771`); a mismatched `psk` fails the PSK-tag check with
-  the log line `"%s[DROP] L2 psk_fail"` (`bridge_protocol.cpp:584-586`).
+  DISCOVER layer with a length check then a byte comparison, both in
+  `BridgeProtocol::handle_discover_()` (`[DROP] L4 discover net_id_len`,
+  `[DROP] L4 discover net_id`); a mismatched `psk` fails the PSK-tag check in
+  `BridgeProtocol::parse_frame_()` with the log line `"%s[DROP] L2 psk_fail"`.
 - **A remote may not author these credentials.** The add-on refuses a remote
   flash whose `network_id` or `psk` disagrees with the configured network rather
   than silently overwriting, because the failure mode is firmware that compiles but

@@ -224,12 +224,12 @@ nothing, or only low-level `[DROP]` lines at debug level.
 
 **Cause (in order of likelihood).**
 
-1. **`network_id` mismatch.** The bridge drops a DISCOVER whose length byte differs
-   from its own (`esp_tree_bridge.cpp`-side handler,
-   `device_code/components/esp_tree_bridge/bridge_protocol.cpp:764-771`), then drops
-   one whose bytes differ. Comparison is exact and case-sensitive.
-2. **`psk` mismatch.** The PSK tag fails with the debug line
-   `"%s[DROP] L2 psk_fail"` (`bridge_protocol.cpp:584-586`).
+1. **`network_id` mismatch.** `BridgeProtocol::handle_discover_()` drops a DISCOVER
+   whose length byte differs from its own (`[DROP] L4 discover net_id_len`), then
+   drops one whose bytes differ (`[DROP] L4 discover net_id`). Comparison is exact
+   and case-sensitive.
+2. **`psk` mismatch.** `BridgeProtocol::parse_frame_()` fails the PSK tag with the
+   debug line `"%s[DROP] L2 psk_fail"`.
 3. **`espnow_mode` mismatch.** `lr` selects `WIFI_PROTOCOL_LR` and anything else
    selects `WIFI_PROTOCOL_11B|11G|11N` (`esp_tree_bridge.cpp:488-493`,
    `esp_tree_remote.cpp:310`). Nothing negotiates this; a bridge in LR and a remote
