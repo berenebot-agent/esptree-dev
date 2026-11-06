@@ -331,7 +331,11 @@ int espnow_crypto_crypt(const uint8_t* session_key,
         return -1;
     }
 
-#if defined(ESP_PLATFORM) || defined(ARDUINO_ARCH_ESP8266)
+#if defined(ESP_PLATFORM) || defined(ARDUINO_ARCH_ESP8266) || defined(ESPNOW_CRYPTO_SOFTWARE_AES)
+    // The AES implementation above is what every ESP32/ESP8266 node runs. On a
+    // host it is only reachable with ESPNOW_CRYPTO_SOFTWARE_AES, which
+    // tests/software_aes_test.cpp sets so this branch is exercised against
+    // OpenSSL instead of being compiled away.
     aes256_ctr_crypt(session_key, tx_counter, payload_in, payload_out, payload_len);
 #else
     uint8_t nonce_counter[16] = {0};
