@@ -99,6 +99,40 @@ async def test_flash_job_routes_by_target_type(tmp_path: Path, monkeypatch) -> N
     assert seen["remote"] == (remote_job["id"], str(remote_image))
 
 
+@pytest.mark.asyncio
+async def test_a_repurposed_board_is_not_its_old_bridge_record(tmp_path: Path, monkeypatch) -> None:
+    """A superseded bridge row keeps its MAC, but must not keep the bridge route.
+
+    Provisioning a new bridge disables the old row instead of deleting it, so the
+    table can hold a *disabled* bridge record for a board that now runs remote
+    firmware. Routing by MAC alone sent that leaf's OTA job down the ESPHome-upload
+    branch, pointed at the dead bridge host, where it failed at config load because
+    a leaf's YAML has no `ota:` block.
+    """
+    worker, db = _worker(tmp_path)
+    _bridge_row(db, mac="11:22:33:44:55:66", host="10.1.1.147")
+    _bridge_row(db, mac="AA:BB:CC:DD:EE:02", host="10.1.1.165")  # supersedes the first
+
+    assert worker._bridge_row_for_mac("11:22:33:44:55:66") is None
+    assert worker._bridge_row_for_mac("AA:BB:CC:DD:EE:02") is not None
+
+    leaf_job, leaf_image = _flash_job(db, tmp_path, mac="11:22:33:44:55:66", esphome_name="esp32")
+    seen: list[str] = []
+
+    async def fake_bridge(proc_job, path):  # noqa: ANN001
+        seen.append("bridge")
+
+    async def fake_remote(proc_job, path):  # noqa: ANN001
+        seen.append("remote")
+
+    monkeypatch.setattr(worker, "_process_bridge", fake_bridge)
+    monkeypatch.setattr(worker, "_process_v2", fake_remote)
+
+    await worker._process(leaf_job)
+
+    assert seen == ["remote"]
+
+
 # ── the transfer itself ────────────────────────────────────────────────────
 
 

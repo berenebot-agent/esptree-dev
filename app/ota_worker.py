@@ -250,6 +250,13 @@ class OTAWorker:
         if not nm:
             return None
         for row in self.db.list_bridges():
+            # A superseded bridge record keeps its MAC after the board has been
+            # repurposed (or replaced): it is still in the table, just disabled.
+            # Matching it would route that device's OTA job down the ESPHome-upload
+            # branch against a host that may no longer exist, instead of the
+            # ESP-NOW relay it actually needs.
+            if not row.get("enabled"):
+                continue
             if normalize_mac(str(row.get("mac") or "")) == nm:
                 return row
         # list_bridges() hides a bridge that is still provisioning. A flash job can
