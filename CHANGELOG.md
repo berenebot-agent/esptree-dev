@@ -8,6 +8,8 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+## 0.1.338
+
 - **The bridge can now be updated in place from the topology page.** The bridge row shows the firmware build date it is running and an **Update firmware** button, which recompiles the bridge's stored config against the components in the running add-on image and pushes the result with ESPHome OTA. A bridge cannot deliver an image to itself — `ota_start` resolves a *remote* session for the target MAC — so a flash job whose MAC belongs to a bridge now takes the ESPHome-upload path instead of the ESP-NOW relay, and the job still counts as successful only once the bridge rejoins with a *different* build date. A serial-transport bridge, a bridge that is not listening on its OTA port, and one that has not joined the network yet are refused with the reason and the route that does work (a USB flash) rather than being attempted.
 - **The bridge OTA password is stored per bridge.** `secrets.yaml` holds one `ota_password` for the whole network, so provisioning a second bridge silently overwrote the password the first one was compiled with and every later over-the-air update to it failed with a password error. The wizard now records it on the bridge row (`bridges.ota_password`, migration 20), the upload prefers it over the shared value, and `PUT /api/bridges/{uuid}` can set it on an existing bridge without re-provisioning.
 - **A bridge flash no longer ends in "bridge for remote is not connected".** The device page already offered an `.ota.bin` upload for a bridge, which could only ever fail at the ESP-NOW transfer leg.
