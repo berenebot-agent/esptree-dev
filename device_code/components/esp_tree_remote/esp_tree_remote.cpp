@@ -748,9 +748,13 @@ void ESPNowLRRemote::register_text_sensor_entity(text_sensor::TextSensor *a_text
 
 bool ESPNowLRRemote::process_command_target_(uint8_t field_index, uint8_t, const uint8_t *value, size_t value_len) {
   if (value == nullptr) return false;
+  // A COMMAND frame may legitimately carry an empty value: parse_entity_payload
+  // accepts value_len == 0. Every type that reads value[0] must check the length
+  // first, or it reads one byte past the decrypted buffer.
 #ifdef USE_SWITCH
   for (auto &target : command_targets_) {
     if (target.field_index != field_index) continue;
+    if (value_len < 1) return false;
     value[0] ? target.a_switch->turn_on() : target.a_switch->turn_off();
     return true;
   }
@@ -766,8 +770,10 @@ bool ESPNowLRRemote::process_command_target_(uint8_t field_index, uint8_t, const
         case POSITION_COMMAND_STOP: call.set_command_stop(); break;
         default: call.set_position(percent_to_normalized(value[1])); break;
       }
-    } else {
+    } else if (value_len >= 1) {
       call.set_position(percent_to_normalized(value[0]));
+    } else {
+      return false;
     }
     call.perform();
     return true;
@@ -776,6 +782,7 @@ bool ESPNowLRRemote::process_command_target_(uint8_t field_index, uint8_t, const
 #ifdef USE_LOCK
   for (auto &target : lock_command_targets_) {
     if (target.field_index != field_index) continue;
+    if (value_len < 1) return false;
     auto call = target.a_lock->make_call();
     call.set_state(value[0] == 1 ? lock::LOCK_STATE_LOCKED : lock::LOCK_STATE_UNLOCKED);
     call.perform();
@@ -803,8 +810,10 @@ bool ESPNowLRRemote::process_command_target_(uint8_t field_index, uint8_t, const
         case POSITION_COMMAND_STOP: call.set_command_stop(); break;
         default: call.set_position(percent_to_normalized(value[1])); break;
       }
-    } else {
+    } else if (value_len >= 1) {
       call.set_position(percent_to_normalized(value[0]));
+    } else {
+      return false;
     }
     call.perform();
     return true;
@@ -813,6 +822,7 @@ bool ESPNowLRRemote::process_command_target_(uint8_t field_index, uint8_t, const
 #ifdef USE_ALARM_CONTROL_PANEL
   for (auto &target : alarm_command_targets_) {
     if (target.field_index != field_index) continue;
+    if (value_len < 1) return false;
     auto call = target.a_alarm->make_call();
     if (value_len > 1) call.set_code(reinterpret_cast<const char *>(value + 1), value_len - 1);
     switch (value[0]) {
@@ -844,6 +854,7 @@ bool ESPNowLRRemote::process_command_target_(uint8_t field_index, uint8_t, const
 #ifdef USE_LIGHT
   for (auto &target : light_command_targets_) {
     if (target.field_index != field_index) continue;
+    if (value_len < 1) return false;
     auto call = target.a_light->make_call();
     call.set_state(value[0] != 0);
     if (value_len > 1) call.set_brightness(static_cast<float>(value[1]) / 255.0f);
