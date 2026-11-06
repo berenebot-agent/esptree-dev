@@ -11,6 +11,7 @@
 
 #include "mocks/test_time.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -62,6 +63,7 @@ struct Rig {
   uint8_t last_published_type{0};
   std::string last_published_name;
   int discovery_publishes{0};
+  std::vector<uint8_t> discovery_types;
   bool remote_online_seen{false};
 
   Rig() {
@@ -86,7 +88,10 @@ struct Rig {
     });
 
     bridge.set_publish_discovery_fn(
-        [this](const uint8_t *, const BridgeEntitySchema &, uint8_t, bool) { ++discovery_publishes; });
+        [this](const uint8_t *, const BridgeEntitySchema &entity, uint8_t, bool) {
+          ++discovery_publishes;
+          discovery_types.push_back(entity.entity_type);
+        });
     bridge.set_publish_state_fn([this](const uint8_t *mac, const BridgeEntitySchema &entity,
                                        const std::vector<uint8_t> &value, espnow_field_type_t type,
                                        const std::string &, uint32_t message_tx_base,
@@ -199,11 +204,40 @@ void test_replayed_state_frame_is_not_published_twice() {
   expect(rig.published_states == before, "a replayed STATE frame does not publish again");
 }
 
+// The bridge publishes discovery only for entity types it can render. A leaf
+// that sends a reserved-but-unimplemented code (HUMIDIFIER, 0x0F) or a code
+// this build has never seen (0x99) must not reach Home Assistant: there is no
+// state encoder or command decoder behind either, so publishing it would create
+// an entity that can only ever read back "null".
+void test_unsupported_entity_types_are_not_published() {
+  test::reset_mock_state();
+  Rig rig;
+  rig.remote.register_entity(static_cast<espnow_field_type_t>(FIELD_TYPE_HUMIDIFIER), "Humidity", "", "", "hum");
+  rig.remote.register_entity(static_cast<espnow_field_type_t>(0x99), "Mystery", "", "", "mystery");
+  rig.run_until_normal();
+
+  const BridgeSession *session = rig.bridge.get_session(kRemoteMac.data());
+  expect(session != nullptr, "bridge has a session for a leaf with unsupported entities");
+  if (session != nullptr) {
+    expect(session->schema_entities.size() == 3, "all three schema entities reach the bridge");
+  }
+  const bool only_sensor = std::all_of(rig.discovery_types.begin(), rig.discovery_types.end(),
+                                       [](uint8_t type) { return type == FIELD_TYPE_SENSOR; });
+  expect(!rig.discovery_types.empty(), "the supported entity still gets discovery");
+  expect(only_sensor, "discovery is never published for an unsupported entity type");
+  expect(std::find(rig.discovery_types.begin(), rig.discovery_types.end(), FIELD_TYPE_HUMIDIFIER) ==
+             rig.discovery_types.end(),
+         "the reserved HUMIDIFIER code is skipped");
+  expect(std::find(rig.discovery_types.begin(), rig.discovery_types.end(), 0x99) == rig.discovery_types.end(),
+         "an unknown type code is skipped");
+}
+
 }  // namespace
 
 int main() {
   test_join_reaches_normal_and_publishes_state();
   test_replayed_state_frame_is_not_published_twice();
+  test_unsupported_entity_types_are_not_published();
 
   if (g_failures != 0) {
     std::cerr << g_failures << " protocol_join test(s) failed\n";

@@ -49,6 +49,35 @@ static uint8_t downstream_hop_count_plain(uint8_t bridge_flags) {
   return ESPNOW_HOPS_MAKE(ESPNOW_HOPS_DIR_DOWN, 0);
 }
 
+// Discovery is published only for entity types this bridge can render. The
+// protocol reserves codes this build does not implement (CLIMATE, HUMIDIFIER,
+// DEHUMIDIFIER, TIME, DATETIME) and a leaf built against a newer spec can send
+// a code that does not exist here at all; either would land an entity in Home
+// Assistant with no state encoder or command decoder behind it. Gate with an
+// allowlist so an unknown code is skipped rather than published as a sensor.
+static bool entity_type_publishable_(espnow_field_type_t type) {
+  switch (type) {
+    case FIELD_TYPE_SENSOR:
+    case FIELD_TYPE_SWITCH:
+    case FIELD_TYPE_BINARY:
+    case FIELD_TYPE_BUTTON:
+    case FIELD_TYPE_NUMBER:
+    case FIELD_TYPE_TEXT:
+    case FIELD_TYPE_TEXT_SENSOR:
+    case FIELD_TYPE_COVER:
+    case FIELD_TYPE_LIGHT:
+    case FIELD_TYPE_FAN:
+    case FIELD_TYPE_LOCK:
+    case FIELD_TYPE_ALARM:
+    case FIELD_TYPE_SELECT:
+    case FIELD_TYPE_EVENT:
+    case FIELD_TYPE_VALVE:
+      return true;
+    default:
+      return false;
+  }
+}
+
 static void reset_fragment_assembly_(espnow_fragment_assembly_t &assembly) {
   assembly = {};
 }
@@ -1786,16 +1815,9 @@ void BridgeProtocol::publish_discovery_for_entity_(BridgeSession &session, uint8
   auto &entity = session.schema_entities[entity_index];
   if (entity.entity_type == 0) return;
   const auto type = static_cast<espnow_field_type_t>(entity.entity_type);
-  switch (type) {
-    case FIELD_TYPE_CLIMATE:
-    case FIELD_TYPE_HUMIDIFIER:
-    case FIELD_TYPE_DEHUMIDIFIER:
-    case FIELD_TYPE_TIME:
-    case FIELD_TYPE_DATETIME:
-      ESP_LOGD(TAG, "Skipping unimplemented entity type 0x%02X for entity %u", type, entity.entity_index);
-      return;
-    default:
-      break;
+  if (!entity_type_publishable_(type)) {
+    ESP_LOGD(TAG, "Skipping discovery for entity %u: unsupported type 0x%02X", entity.entity_index, entity.entity_type);
+    return;
   }
   const bool is_commandable = !(type == FIELD_TYPE_SENSOR || type == FIELD_TYPE_BINARY || type == FIELD_TYPE_BUTTON ||
                                 type == FIELD_TYPE_EVENT || type == FIELD_TYPE_TEXT_SENSOR);
@@ -1807,16 +1829,9 @@ void BridgeProtocol::publish_all_entities_(BridgeSession &session) {
   for (const auto &entity : session.schema_entities) {
     if (entity.entity_type == 0) continue;
     const auto type = static_cast<espnow_field_type_t>(entity.entity_type);
-    switch (type) {
-      case FIELD_TYPE_CLIMATE:
-      case FIELD_TYPE_HUMIDIFIER:
-      case FIELD_TYPE_DEHUMIDIFIER:
-      case FIELD_TYPE_TIME:
-      case FIELD_TYPE_DATETIME:
-        ESP_LOGD(TAG, "Skipping unimplemented entity type 0x%02X for entity %u", type, entity.entity_index);
-        continue;
-      default:
-        break;
+    if (!entity_type_publishable_(type)) {
+      ESP_LOGD(TAG, "Skipping discovery for entity %u: unsupported type 0x%02X", entity.entity_index, entity.entity_type);
+      continue;
     }
     const bool is_commandable = !(type == FIELD_TYPE_SENSOR || type == FIELD_TYPE_BINARY || type == FIELD_TYPE_BUTTON ||
                                   type == FIELD_TYPE_EVENT || type == FIELD_TYPE_TEXT_SENSOR);
