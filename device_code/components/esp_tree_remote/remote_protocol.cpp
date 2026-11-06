@@ -1308,7 +1308,10 @@ bool RemoteProtocol::handle_command_(const uint8_t *, const espnow_frame_header_
     ESP_LOGW(TAG, "Dropping COMMAND fragments for entity %u: invalid fragment assembly", command.entity_index);
     return false;
   }
-  last_seen_counter_ = std::max(last_seen_counter_, header.tx_counter);
+  // Packed header field: copy to a value so std::max does not bind a reference
+  // to a misaligned uint32_t.
+  const uint32_t counter = header.tx_counter;
+  last_seen_counter_ = std::max(last_seen_counter_, counter);
   if (!fragment_assembly_complete_(assembly)) return true;
 
   std::vector<uint8_t> assembled_value = assemble_fragment_payload_(assembly, max_entity_fragment_);

@@ -1058,7 +1058,11 @@ bool BridgeProtocol::handle_schema_push_(const uint8_t *sender_mac, const espnow
              sender_mac[0], sender_mac[1], sender_mac[2], sender_mac[3], sender_mac[4], sender_mac[5]);
     return false;
   }
-  session.last_seen_counter = std::max(session.last_seen_counter, header.tx_counter);
+  // Read the packed header field into a value first: binding a reference to it
+  // (std::max does) yields a misaligned uint32_t, which UBSan flags and an
+  // Xtensa load can fault.
+  const uint32_t schema_tx_counter = header.tx_counter;
+  session.last_seen_counter = std::max(session.last_seen_counter, schema_tx_counter);
   session.last_seen_bridge_uptime_s = now / 1000;
   session.pending_schema_index = schema_view.entity_index;
   session.schema_request_retries = 0;
@@ -1248,7 +1252,10 @@ bool BridgeProtocol::handle_state_(const uint8_t *sender_mac, const espnow_frame
              sender_mac[0], sender_mac[1], sender_mac[2], sender_mac[3], sender_mac[4], sender_mac[5]);
     return false;
   }
-  session.last_seen_counter = std::max(session.last_seen_counter, header.tx_counter);
+  // Packed header field, so take a value rather than a reference (see the same
+  // note in handle_schema_push_).
+  const uint32_t state_tx_counter = header.tx_counter;
+  session.last_seen_counter = std::max(session.last_seen_counter, state_tx_counter);
   session.last_seen_bridge_uptime_s = now / 1000;
   if (!fragment_assembly_complete_(assembly)) return true;
 
