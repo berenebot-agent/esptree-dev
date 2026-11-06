@@ -70,11 +70,19 @@ class EspTreeRuntime:
             remote.last_seen_bridge_uptime_s = effective
             remote.last_seen_observed_at = time.time()
 
-    def register_platform(self, platform: str, cb: EntityCallback, entry_id: str | None = None) -> None:
-        self.entity_callbacks.setdefault(platform, []).append((cb, entry_id))
+    def register_platform(self, platform: str, cb: EntityCallback, entry_id: str | None = None) -> Callable[[], None]:
+        registration = (cb, entry_id)
+        self.entity_callbacks.setdefault(platform, []).append(registration)
         for entity in list(self.entities.values()):
             if entity.platform == platform:
                 self._maybe_fire_callback(cb, entry_id, entity)
+
+        def unsub() -> None:
+            callbacks = self.entity_callbacks.get(platform)
+            if callbacks and registration in callbacks:
+                callbacks.remove(registration)
+
+        return unsub
 
     def _maybe_fire_callback(self, cb: EntityCallback, entry_id: str | None, entity: EntityModel) -> None:
         remote_mac = norm_mac(entity.remote_mac)
@@ -83,6 +91,23 @@ class EspTreeRuntime:
                 cb(entity)
         elif entry_id is None:
             cb(entity)
+
+    @callback
+    def mark_link_down(self) -> None:
+        """The add-on websocket dropped: every reading is now unverified.
+
+        Without this the entities keep reporting their last values as available for
+        the whole outage -- a frozen 21.4 degrees looks exactly like a live one.
+        """
+        for remote in list(self.remotes.values()):
+            was_online = remote.online
+            remote.online = False
+            if was_online:
+                remote.offline_started_at = int(time.time())
+            for entity in remote.entities.values():
+                entity.available = False
+                self._notify(entity)
+            self._notify_remote(remote.remote_mac)
 
     def register_remote_entry(self, remote_mac: str, entry_id: str) -> None:
         remote_mac = norm_mac(remote_mac)
@@ -194,6 +219,7 @@ class EspTreeRuntime:
             token=token,
             frame_handler=self.handle_frame,
             known_schema_provider=self.known_remote_schemas,
+            on_disconnect=self.mark_link_down,
         )
         await self.client.start()
 
@@ -216,6 +242,15 @@ class EspTreeRuntime:
         return _via_device_id(registry, (DOMAIN, norm_mac(bridge_mac)), self._hub_entry_id)
 
     async def remove_entry(self, entry: ConfigEntry) -> None:
+        # Platform registrations are per entry. Leaving them behind meant every
+        # reload appended another async_add_entities closure, and a later schema
+        # change built entities through the callbacks of unloaded platforms.
+        for platform, callbacks in list(self.entity_callbacks.items()):
+            remaining = [item for item in callbacks if item[1] != entry.entry_id]
+            if remaining:
+                self.entity_callbacks[platform] = remaining
+            else:
+                self.entity_callbacks.pop(platform, None)
         if entry.data.get(CONF_TYPE) == "remote":
             remote_mac = entry.data.get("remote_mac")
             if remote_mac:
@@ -473,13 +508,14 @@ class EspTreeRuntime:
                 self._schedule_device_id_map_send()
 
         seen: set[str] = set()
+        created: list[EntityModel] = []
         for desc in snapshot.descriptor_set.entities:
             object_id = desc.object_id
             if not object_id:
                 continue
             seen.add(object_id)
-            entity = self.entities.get((remote_mac, object_id))
-            if entity is None:
+            existing = self.entities.get((remote_mac, object_id))
+            if existing is None:
                 entity = EntityModel(
                     remote_mac=remote_mac,
                     object_id=object_id,
@@ -488,8 +524,9 @@ class EspTreeRuntime:
                 )
                 self.entities[(remote_mac, object_id)] = entity
                 remote.entities[object_id] = entity
-                for cb, entry_id in self.entity_callbacks.get(entity.platform, []):
-                    self._maybe_fire_callback(cb, entry_id, entity)
+                created.append(entity)
+            else:
+                entity = existing
             entity.name = desc.friendly_name or object_id
             entity.native_type = desc.native_type
             entity.unit = desc.unit_of_measurement
@@ -499,6 +536,12 @@ class EspTreeRuntime:
             entity.writable = desc.writable
             entity.available = remote.online
             entity.missing_from_schema = False
+        # Fire creation callbacks only once the descriptor is populated: platforms
+        # read capabilities (colour modes, speed_count, event types) in __init__, so
+        # announcing the entity first gave it an empty options string for life.
+        for entity in created:
+            for cb, entry_id in self.entity_callbacks.get(entity.platform, []):
+                self._maybe_fire_callback(cb, entry_id, entity)
         for object_id, entity in remote.entities.items():
             if object_id not in seen:
                 entity.available = False
@@ -523,9 +566,12 @@ class EspTreeRuntime:
                     remote.last_live_observed_ms = ev.observed_unix_ms
                     remote.online = True
                     self._touch_last_seen(remote, norm_mac(ev.bridge_mac))
-                for state in ev.states:
-                    self._apply_state(remote_mac, state)
-                self._notify_remote(remote_mac)
+                    # Only an accepted batch may write values: applying the states of
+                    # a rejected (older counter/session) event rolled readings back and
+                    # could mark an entity available while its remote was offline.
+                    for state in ev.states:
+                        self._apply_state(remote_mac, state)
+                    self._notify_remote(remote_mac)
             elif kind == "remote_availability":
                 ev = event.remote_availability
                 remote_mac = norm_mac(ev.remote_mac)
@@ -756,11 +802,10 @@ class EspTreeRuntime:
             remote_mac = norm_mac(remote.remote_mac)
             bridge_uptime_s = self._effective_bridge_uptime(remote.bridge_mac)
             lsbu = remote.last_seen_bridge_uptime_s
-            lsbu_at = remote.last_seen_observed_at
-            if lsbu > 0 and lsbu_at > 0 and bridge_uptime_s > 0:
-                effective_lsbu = lsbu + max(0, int(now - lsbu_at))
-                elapsed = bridge_uptime_s - effective_lsbu
-                last_seen_ago = max(0, elapsed)
+            if lsbu > 0 and bridge_uptime_s > 0:
+                # Same cancellation as the add-on's topology: extrapolating the
+                # stamp and the clock together froze "last seen" at its first value.
+                last_seen_ago = max(0, bridge_uptime_s - lsbu)
             elif remote.last_live_observed_ms > 0:
                 last_seen_ago = remote.last_live_observed_ms // 1000
             else:

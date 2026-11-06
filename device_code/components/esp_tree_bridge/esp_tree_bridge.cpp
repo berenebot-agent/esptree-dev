@@ -3165,7 +3165,12 @@ bool ESPTreeBridge::decode_command_payload_(const BridgeEntitySchema &entity, Co
     }
     case FIELD_TYPE_LIGHT:
       if (!payload.empty() && payload[0] == '{') {
+        // Seed from the last known value. The remote applies every byte of this
+        // payload unconditionally, so a command that names only "state" or
+        // "brightness" would otherwise zero colour, effect and temperature -- a
+        // plain turn-on went out as brightness 0.
         value.assign(9, 0);
+        for (size_t i = 0; i < 9 && i < current_value.size(); i++) value[i] = current_value[i];
         bool ok = false, has_state = false, has_non_state_update = false;
         const auto parsed_options = parse_options_map(entity.entity_options);
         const auto effects = option_list(parsed_options, "effects");
@@ -3195,7 +3200,7 @@ bool ESPTreeBridge::decode_command_payload_(const BridgeEntitySchema &entity, Co
             if (value[1] == 0) value[1] = static_cast<uint8_t>(std::lround(max_v * 255.0f));
             has_non_state_update = true; ok = true;
           }
-          if (root["color_temp"].is<float>()) {
+          if (!root["color_temp"].isNull()) {
             const uint16_t ct = static_cast<uint16_t>(std::max(0.0f, std::min(65535.0f, root["color_temp"].as<float>())));
             value[6] = ct & 0xFF; value[7] = (ct >> 8) & 0xFF;
             has_non_state_update = true; ok = true;

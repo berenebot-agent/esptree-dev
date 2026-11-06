@@ -32,8 +32,11 @@ class TopologyBroadcast:
     def __init__(self) -> None:
         self._clients: set[asyncio.Queue[str]] = set()
 
-    def add_client(self) -> asyncio.Queue[str]:
-        q: asyncio.Queue[str] = asyncio.Queue()
+    def add_client(self, maxsize: int = 64) -> asyncio.Queue[str]:
+        # Bounded on purpose. A browser tab that stops reading (suspended laptop,
+        # throttled background tab) would otherwise grow the queue without limit:
+        # every event batch and topology snapshot is put here for every viewer.
+        q: asyncio.Queue[str] = asyncio.Queue(maxsize=maxsize)
         self._clients.add(q)
         return q
 
@@ -46,7 +49,16 @@ class TopologyBroadcast:
             try:
                 client.put_nowait(msg)
             except asyncio.QueueFull:
-                pass
+                # Keep the newest state: a stale topology frame is worth less than
+                # the one behind it, and dropping the client would need a reconnect.
+                try:
+                    client.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+                try:
+                    client.put_nowait(msg)
+                except asyncio.QueueFull:
+                    pass
 
 
 WS_PATH = "/esp-tree/v2/pb"
@@ -577,7 +589,33 @@ class BridgeV2Manager:
         }
 
     async def replay_snapshots(self, q: asyncio.Queue[bytes]) -> None:
-        for snapshot in self._snapshots.values():
+        """Give a newly connected integration client current data.
+
+        The cached snapshot was taken when the add-on last connected to the bridge
+        and is never refreshed by the event path, so replaying it on every HA
+        reconnect rolled schemas and availability back to that moment (and hid any
+        node that joined since). Ask a live bridge for a fresh full snapshot
+        instead, and fall back to the cache only for a bridge that cannot answer.
+        """
+        refreshed: set[str] = set()
+        for bridge_uuid, client in list(self._clients.items()):
+            if not client.connected:
+                continue
+            # A serial refresh closes and re-handshakes the UART session
+            # (bridge_serial_client.refresh_snapshot), which reports every remote
+            # offline for the length of the handshake. Doing that on each integration
+            # connect would flap the whole fleet, so serial replays its cache (taken
+            # at the last handshake and kept current by the event stream) instead.
+            if not isinstance(client, BridgeV2Client):
+                continue
+            try:
+                await client.refresh_snapshot()
+                refreshed.add(bridge_uuid)
+            except Exception as exc:
+                logger.info("bridge v2 %s: snapshot refresh on integration connect failed: %s", bridge_uuid, exc)
+        for bridge_uuid, snapshot in self._snapshots.items():
+            if bridge_uuid in refreshed:
+                continue
             await q.put(pb.Envelope(api_version=API_VERSION, full_snapshot=snapshot).SerializeToString())
 
     async def handle_integration_frame(self, data: bytes, source: asyncio.Queue[bytes] | None = None) -> bytes:
@@ -753,16 +791,15 @@ class BridgeV2Manager:
             bridge_uptime_s = self._effective_bridge_uptime(bridge_mac)
             lsbu = node.get("last_seen_bridge_uptime_s") or 0
             lsbu_at = node.get("_last_seen_observed_at") or 0
-            if lsbu > 0 and lsbu_at > 0 and bridge_uptime_s > 0:
-                effective_lsbu = lsbu + max(0, int(now - lsbu_at))
-                elapsed = bridge_uptime_s - effective_lsbu
-                node["last_seen_ago"] = max(0, elapsed)
+            if lsbu > 0 and bridge_uptime_s > 0:
+                # lsbu is an absolute bridge-uptime stamp and bridge_uptime_s
+                # advances with wall time. Adding elapsed time to both cancelled
+                # out, so "last seen" froze at whatever it read when the node was
+                # last heard from -- a dead node reported as freshly seen forever.
+                node["last_seen_ago"] = max(0, bridge_uptime_s - lsbu)
                 node["bridge_uptime_s"] = bridge_uptime_s
             elif node.get("is_bridge"):
                 node["last_seen_ago"] = None
-            elif lsbu > 0 and bridge_uptime_s > 0:
-                node["last_seen_ago"] = max(0, bridge_uptime_s - lsbu)
-                node["bridge_uptime_s"] = bridge_uptime_s
             elif lsbu_at > 0:
                 node["last_seen_ago"] = max(0, int(now - lsbu_at))
                 node["bridge_uptime_s"] = bridge_uptime_s

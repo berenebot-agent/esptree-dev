@@ -211,7 +211,11 @@ class OTAWorker:
             self.db.append_job_event(job_id, "dequeue_moved_back", reason=f"{reason} (3 retries, no other jobs)")
             return
         new_order = len(queued_jobs) - 1
-        self.db.update_job(job_id, queue_order=new_order, error_msg=f"{reason} (retried 3x, moved to back of queue)")
+        # Assigning queue_order directly does not renumber the others: a job
+        # retried when the queue is numbered 10, 11 would land on 1 and stay first
+        # forever, so the online job behind it never starts.
+        self.db.reorder_queue(job_id, new_order)
+        self.db.update_job(job_id, error_msg=f"{reason} (retried 3x, moved to back of queue)")
         self.db.append_job_event(job_id, "dequeue_moved_back", reason=reason)
 
     async def _process(self, job: dict[str, Any]) -> None:

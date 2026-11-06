@@ -11,6 +11,7 @@ from typing import Any
 import aiohttp
 from google.protobuf.message import DecodeError
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import API_VERSION, INTEGRATION_VERSION
 from .activity_logger import ActivityLogger
@@ -22,6 +23,23 @@ FrameHandler = Callable[[pb.Envelope], Awaitable[None]]
 KnownSchemaProvider = Callable[[], Iterable[tuple[str, str]]]
 
 
+def command_result_error(result: pb.CommandResult) -> str | None:
+    """Return a human-readable failure for a command result, or None if it went out.
+
+    DELIVERED needs no explanation; ACCEPTED means the bridge took it, unless it
+    carries a detail like ``timeout``/``busy``/``rejected`` in error_message.
+    """
+    status = int(result.status)
+    if status == pb.COMMAND_STATUS_DELIVERED:
+        return None
+    if status == pb.COMMAND_STATUS_ACCEPTED:
+        detail = str(result.error_message or "").strip()
+        if detail.lower() in ("", "ok", "accepted"):
+            return None
+        return detail
+    return str(result.error_message or result.error_code or "command was not accepted")
+
+
 class IntegrationWSClient:
     def __init__(
         self,
@@ -31,12 +49,14 @@ class IntegrationWSClient:
         token: str,
         frame_handler: FrameHandler,
         known_schema_provider: KnownSchemaProvider | None = None,
+        on_disconnect: Callable[[], None] | None = None,
     ) -> None:
         self.hass = hass
         self.addon_url = addon_url.rstrip("/")
         self.token = token
         self._frame_handler = frame_handler
         self._known_schema_provider = known_schema_provider
+        self._on_disconnect = on_disconnect
         self._session: aiohttp.ClientSession | None = None
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._task: asyncio.Task[None] | None = None
@@ -132,27 +152,37 @@ class IntegrationWSClient:
             await self._send_client_hello()
             self.connected = True
             ActivityLogger.get().info("connected to add-on websocket %s", url)
-            async for msg in ws:
-                if msg.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
-                    break
-                if msg.type == aiohttp.WSMsgType.ERROR:
-                    break
-                if msg.type != aiohttp.WSMsgType.BINARY:
-                    continue
-                env = pb.Envelope()
-                try:
-                    env.ParseFromString(msg.data)
-                except DecodeError as exc:
-                    raise RuntimeError("invalid add-on protobuf frame") from exc
-                fut = self._pending.pop(env.request_id, None) if env.request_id else None
-                if fut and not fut.done():
-                    fut.set_result(env)
-                    continue
-                await self._frame_handler(env)
-            self.connected = False
-            ActivityLogger.get().info("add-on websocket disconnected")
-            self._ws = None
-            self._fail_pending(ConnectionError("addon websocket disconnected"))
+            try:
+                async for msg in ws:
+                    if msg.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
+                        break
+                    if msg.type == aiohttp.WSMsgType.ERROR:
+                        break
+                    if msg.type != aiohttp.WSMsgType.BINARY:
+                        continue
+                    env = pb.Envelope()
+                    try:
+                        env.ParseFromString(msg.data)
+                    except DecodeError as exc:
+                        raise RuntimeError("invalid add-on protobuf frame") from exc
+                    fut = self._pending.pop(env.request_id, None) if env.request_id else None
+                    if fut and not fut.done():
+                        fut.set_result(env)
+                        continue
+                    await self._frame_handler(env)
+            finally:
+                self.connected = False
+                ActivityLogger.get().info("add-on websocket disconnected")
+                self._ws = None
+                self._fail_pending(ConnectionError("addon websocket disconnected"))
+                # Every reading was pushed by this link; without telling the runtime
+                # the entities stay available and repeat their last values for the
+                # whole outage, which looks exactly like a live sensor.
+                if self._on_disconnect is not None:
+                    try:
+                        self._on_disconnect()
+                    except Exception:
+                        _LOGGER.exception("ESP Tree disconnect handler failed")
 
     async def _send(self, envelope: pb.Envelope) -> None:
         if not self._ws:
@@ -221,7 +251,15 @@ class IntegrationWSClient:
                 )
             )
         )
-        return env.command_result
+        result = env.command_result
+        error = command_result_error(result)
+        if error:
+            # The add-on answers with a status, not an exception. Returning it meant
+            # a switch/lock/cover action raised nothing in HA while nothing was sent.
+            raise HomeAssistantError(
+                f"ESP Tree command '{command}' on {object_id} failed: {error}"
+            )
+        return result
 
     async def config_command(self, remote_mac: str, command: str, **params: Any) -> pb.ConfigCommandResult:
         request = pb.ConfigCommandRequest(remote_mac=remote_mac, command=command)

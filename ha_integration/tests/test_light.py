@@ -160,7 +160,8 @@ class TestEspTreeLight:
         await entity.async_turn_on(color_temp_kelvin=4000)
         payload = json.loads(runtime._commands[0][3]["payload"])
         assert payload["state"] == "ON"
-        assert payload["color_temp"] == 4000
+        # The firmware's color_temp byte is mireds; 4000 K is 250 mireds.
+        assert payload["color_temp"] == 250
 
     @pytest.mark.asyncio
     async def test_async_turn_on_with_white(self):
@@ -191,8 +192,29 @@ class TestEspTreeLight:
         assert payload["state"] == "ON"
         assert payload["brightness"] == 200
         assert payload["color"] == {"r": 128, "g": 64, "b": 32}
-        assert payload["color_temp"] == 3000
+        assert payload["color_temp"] == 333
         assert payload["effect"] == "pulse"
+
+    @pytest.mark.asyncio
+    async def test_turn_on_without_brightness_uses_full_brightness(self):
+        # A bare turn_on used to send brightness 0, which the remote applied.
+        entity, runtime = self._make()
+        await entity.async_turn_on()
+        payload = json.loads(runtime._commands[0][3]["payload"])
+        assert payload["brightness"] == 255
+
+    @pytest.mark.asyncio
+    async def test_turn_on_keeps_the_known_brightness(self):
+        entity, runtime = self._make(value=json.dumps({"state": True, "brightness": 140}))
+        await entity.async_turn_on()
+        payload = json.loads(runtime._commands[0][3]["payload"])
+        assert payload["brightness"] == 140
+
+    def test_state_populated_before_construction_is_applied(self):
+        entity, _ = self._make(value=json.dumps({"state": True, "brightness": 90, "color_temp": 250}))
+        assert entity.is_on is True
+        assert entity.brightness == 90
+        assert entity.color_temp_kelvin == 4000
 
     @pytest.mark.asyncio
     async def test_async_turn_off(self):

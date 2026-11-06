@@ -880,9 +880,21 @@ def create_app() -> FastAPI:
 
         version = integration_version(src) or None
 
+        # Copy beside the destination and verify, then swap. Removing the installed
+        # tree first meant a failed copy (disk full, interrupted) left Home Assistant
+        # with no integration at all, and a partial copy whose manifest matched the
+        # source version was thereafter treated as current.
+        staging = dst.with_name(dst.name + ".new")
+        if staging.exists():
+            shutil.rmtree(staging)
+        shutil.copytree(src, staging)
+        for required in ("manifest.json", "__init__.py", "config_flow.py"):
+            if not (staging / required).exists():
+                shutil.rmtree(staging, ignore_errors=True)
+                raise RuntimeError(f"integration copy is incomplete: {required} missing")
         if dst.exists():
             shutil.rmtree(dst)
-        shutil.copytree(src, dst)
+        staging.rename(dst)
         write_shared_integration_config()
         marker_path = dst / ".restart_required.json"
         marker_path.write_text(
@@ -3513,6 +3525,10 @@ def create_app() -> FastAPI:
             firmware_path = str(compile_job.get("firmware_path") or "")
             if not firmware_path or not Path(firmware_path).exists():
                 raise HTTPException(status_code=410, detail="compiled OTA firmware is no longer available")
+            # The flash job gets its own copy: OTA retention moves the file it is
+            # given, so reusing the compile job's path made the compile artefact
+            # disappear the moment the flash finished.
+            firmware_path = str(firmware_store.clone_retained(firmware_path))
 
             status = QUEUED if _flash_work_pending(db) else STARTING
             flash_job = db.create_job(

@@ -55,6 +55,11 @@ class ESPHomeCompiler:
         self._serial_esphome_name: str | None = None
         self._serial_lock = asyncio.Lock()
         self._serial_reserved = False
+        # Two entry points bootstrap the ESPHome venv (compile and chip detect, plus
+        # concurrent compiles). The bootstrap deletes and reinstalls the same
+        # directory, so without a shared lock one caller can remove files another is
+        # still executing.
+        self._bootstrap_lock = asyncio.Lock()
 
     def _lazy_venv_root(self) -> Path:
         return Path(os.environ.get("ESP_TREE_DATA_DIR", "/data")) / "esphome_venv"
@@ -144,20 +149,23 @@ class ESPHomeCompiler:
             lf.write("ESPHome installation complete.\n")
 
     async def _ensure_esphome(self, log_path: Path) -> None:
-        pinned = self._pinned_esphome_version()
-        installed = self._installed_esphome_version()
-        if installed is not None and installed == pinned:
-            esphome_bin = self._lazy_venv_root() / "bin" / "esphome"
-            if esphome_bin.exists():
-                os.environ["ESP_TREE_ESPHOME_BIN"] = str(esphome_bin)
-                os.environ["ESP_TREE_ESPTOOL_BIN"] = str(self._lazy_venv_root() / "bin" / "esptool")
-                return
-        await asyncio.to_thread(self._bootstrap_esphome_sync, log_path, installed, pinned)
-        venv_root = self._lazy_venv_root()
-        if pinned:
-            (venv_root / "ESP_TREE_ESPHOME_VERSION").write_text(pinned, encoding="utf-8")
-        os.environ["ESP_TREE_ESPHOME_BIN"] = str(venv_root / "bin" / "esphome")
-        os.environ["ESP_TREE_ESPTOOL_BIN"] = str(venv_root / "bin" / "esptool")
+        async with self._bootstrap_lock:
+            # Re-read inside the lock: a second caller may have installed it while
+            # this one waited, and reinstalling would delete a venv in active use.
+            pinned = self._pinned_esphome_version()
+            installed = self._installed_esphome_version()
+            if installed is not None and installed == pinned:
+                esphome_bin = self._lazy_venv_root() / "bin" / "esphome"
+                if esphome_bin.exists():
+                    os.environ["ESP_TREE_ESPHOME_BIN"] = str(esphome_bin)
+                    os.environ["ESP_TREE_ESPTOOL_BIN"] = str(self._lazy_venv_root() / "bin" / "esptool")
+                    return
+            await asyncio.to_thread(self._bootstrap_esphome_sync, log_path, installed, pinned)
+            venv_root = self._lazy_venv_root()
+            if pinned:
+                (venv_root / "ESP_TREE_ESPHOME_VERSION").write_text(pinned, encoding="utf-8")
+            os.environ["ESP_TREE_ESPHOME_BIN"] = str(venv_root / "bin" / "esphome")
+            os.environ["ESP_TREE_ESPTOOL_BIN"] = str(venv_root / "bin" / "esptool")
 
     @staticmethod
     def _fix_yaml_path(yaml_path: Path) -> None:

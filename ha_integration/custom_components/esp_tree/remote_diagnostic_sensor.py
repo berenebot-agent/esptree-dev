@@ -123,11 +123,11 @@ class RemoteDiagnosticSensor(SensorEntity):
         if self._object_id == "last_seen_s":
             bridge_uptime_s = runtime._effective_bridge_uptime(remote.bridge_mac)
             last_seen_bridge_uptime_s = remote.last_seen_bridge_uptime_s
-            last_seen_observed_at = remote.last_seen_observed_at
-            if bridge_uptime_s <= 0 or last_seen_bridge_uptime_s <= 0 or last_seen_observed_at <= 0:
+            if bridge_uptime_s <= 0 or last_seen_bridge_uptime_s <= 0:
                 return None
-            effective_last_seen = last_seen_bridge_uptime_s + max(0, int(time.time() - last_seen_observed_at))
-            return max(0, bridge_uptime_s - effective_last_seen)
+            # Both values are absolute bridge-uptime stamps; adding wall-clock
+            # elapsed to each cancelled out and pinned the sensor at its first value.
+            return max(0, bridge_uptime_s - last_seen_bridge_uptime_s)
         if self._object_id == "chip_name":
             return normalize_chip_name(remote.chip_name)
         return None

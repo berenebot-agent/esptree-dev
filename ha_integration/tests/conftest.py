@@ -102,6 +102,7 @@ def _setup_mocks():
     ha.helpers.storage.Store = MagicMock
     ha.exceptions = types.ModuleType("homeassistant.exceptions")
     ha.exceptions.ConfigEntryNotReady = type("ConfigEntryNotReady", (Exception,), {})
+    ha.exceptions.HomeAssistantError = type("HomeAssistantError", (Exception,), {})
     ha.const = types.ModuleType("homeassistant.const")
     ha.data_entry_flow = types.ModuleType("homeassistant.data_entry_flow")
     ha.data_entry_flow.FlowResult = dict

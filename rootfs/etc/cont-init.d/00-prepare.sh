@@ -45,9 +45,23 @@ PY
     fi
   fi
 
-  rm -rf "$DST"
-  cp -a "$SRC" /homeassistant/custom_components/
-  if [ "$NEEDS_RESTART" = "1" ]; then
+  # Build the replacement beside the live tree, verify it, and only then swap. The
+  # previous rm -rf + cp -a left HA with no integration whenever the copy failed,
+  # and a partial copy carrying manifest.json was then treated as current forever.
+  INSTALL_OK=0
+  if rm -rf "${DST}.new" \
+     && cp -a "$SRC" "${DST}.new" \
+     && [ -f "${DST}.new/manifest.json" ] \
+     && [ -f "${DST}.new/__init__.py" ] \
+     && [ -f "${DST}.new/config_flow.py" ]; then
+    rm -rf "$DST"
+    mv "${DST}.new" "$DST"
+    INSTALL_OK=1
+  else
+    echo "ERROR: integration copy failed; leaving the installed copy untouched" >&2
+    rm -rf "${DST}.new"
+  fi
+  if [ "$INSTALL_OK" = "1" ] && [ "$NEEDS_RESTART" = "1" ]; then
     python3 - "$DST/.restart_required.json" "$NEW_VERSION" <<'PY'
 import json
 import sys
@@ -66,7 +80,9 @@ Path(sys.argv[1]).write_text(
 )
 PY
   fi
-  echo "Installed esp_tree integration into /homeassistant/custom_components"
+  if [ "$INSTALL_OK" = "1" ]; then
+    echo "Installed esp_tree integration into /homeassistant/custom_components"
+  fi
 
   if [ "$NEEDS_RESTART" = "1" ]; then
     echo "Integration version changed ($OLD_VERSION -> $NEW_VERSION), will request HA restart notification"

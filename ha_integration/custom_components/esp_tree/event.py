@@ -43,6 +43,7 @@ class EspTreeEvent(EspTreeEntity, EventEntity):
         super().__init__(model)
         self._event_types = _parse_event_types(model.options_json)
         self._last_event_type: str | None = None
+        self._last_observed_ms: int = 0
 
     @property
     def event_types(self) -> list[str]:
@@ -53,11 +54,25 @@ class EspTreeEvent(EspTreeEntity, EventEntity):
         self.async_on_remove(
             runtime.subscribe_entity(self.model.remote_mac, self.model.object_id, self._process_event)
         )
+        # Record the value we already hold without firing it: subscribing must not
+        # replay an event that happened before the entity existed.
+        self._last_event_type = self.model.value if isinstance(self.model.value, str) else None
+        self._last_observed_ms = int(self.model.observed_unix_ms or 0)
 
     @callback
     def _process_event(self) -> None:
         event_type = self.model.value
-        if isinstance(event_type, str) and event_type and event_type != self._last_event_type:
-            self._last_event_type = event_type
-            self._trigger_event(event_type)
+        observed_ms = int(self.model.observed_unix_ms or 0)
+        if isinstance(event_type, str) and event_type:
+            if observed_ms > self._last_observed_ms:
+                # A new observation is a new event even when its type repeats: a
+                # button whose only type is "pressed" used to fire exactly once.
+                self._last_observed_ms = observed_ms
+                self._last_event_type = event_type
+                self._trigger_event(event_type)
+            elif observed_ms == 0 and event_type != self._last_event_type:
+                # No timestamp to compare (older firmware): fall back to type change
+                # so distinct events still surface, without replaying availability.
+                self._last_event_type = event_type
+                self._trigger_event(event_type)
         self.async_write_ha_state()

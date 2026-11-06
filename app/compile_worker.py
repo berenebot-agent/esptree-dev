@@ -116,6 +116,20 @@ class CompileWorker:
 
         result = await self.compiler.compile(esphome_name)
 
+        # The job row is the authority on whether this compile still matters. A
+        # cancel during the ESPHome bootstrap (or a supersede) has no process to
+        # kill, so it only lands in the database -- and without this recheck the
+        # worker would publish COMPILE_SUCCESS over the cancellation and could
+        # queue an automatic flash from it.
+        current = self.db.get_job(job["id"])
+        if not current or current["status"] != COMPILING:
+            logger.info(
+                "compile_worker: job %s is %s after compile, discarding result",
+                job["id"], current["status"] if current else "missing",
+            )
+            self.compiler.compile_store.clear_status(esphome_name)
+            return
+
         if result.success:
             active_path = self.settings.firmware_dir / "active" / f"{uuid.uuid4().hex}.bin"
             active_path.parent.mkdir(parents=True, exist_ok=True)
@@ -135,6 +149,13 @@ class CompileWorker:
             if active_path.exists():
                 size = active_path.stat().st_size
                 md5 = hashlib.md5(active_path.read_bytes()).hexdigest()
+
+            # Retain the build immediately: a compile artefact with no expiry was
+            # never swept (the cleanup query requires retained_until), so every
+            # recompile leaked a binary until /data filled. Retention also gives the
+            # job a stable path that a flash job can copy from instead of sharing.
+            retained_path, retained_until = self.firmware_store.retain(str(active_path), job["id"])
+            firmware_path = retained_path or str(active_path)
 
             if result.factory_bin_path:
                 factory_src = Path(result.factory_bin_path)
@@ -172,7 +193,8 @@ class CompileWorker:
                 job["id"],
                 status=COMPILE_SUCCESS,
                 queue_order=new_order,
-                firmware_path=str(active_path),
+                firmware_path=firmware_path,
+                retained_until=retained_until,
                 firmware_name=f"{esphome_name}.ota.bin",
                 firmware_size=size,
                 firmware_md5=md5,
@@ -188,11 +210,16 @@ class CompileWorker:
             )
 
             if auto_flash:
+                # The flash job owns its own copy: retention moves the file it points
+                # at, so sharing one path meant a completed OTA left the compile job
+                # pointing at a file that no longer existed (404 on download, 410 on
+                # a second start-flash).
+                flash_path = str(self.firmware_store.clone_retained(firmware_path) if Path(firmware_path).exists() else active_path)
                 self.db.create_job(
                     {
                         "mac": job["mac"],
                         "status": QUEUED,
-                        "firmware_path": str(active_path),
+                        "firmware_path": flash_path,
                         "firmware_name": f"{esphome_name}.ota.bin",
                         "firmware_size": size,
                         "firmware_md5": md5,
@@ -212,6 +239,7 @@ class CompileWorker:
                 if self.ota_worker:
                     self.ota_worker.wake()
 
+            self._discard_previous_compile_artifacts(job["mac"], int(job["id"]), firmware_path)
             self.compiler.compile_store.clear_status(esphome_name)
         else:
             error_msg = result.error or "compilation failed"
@@ -220,6 +248,25 @@ class CompileWorker:
             if compile_output:
                 self.db.append_job_event(job["id"], "compile_output", output=compile_output)
             self.db.mark_terminal(job["id"], FAILED, error_msg=error_msg)
+
+    def _discard_previous_compile_artifacts(self, mac: str, keep_job_id: int, keep_path: str) -> None:
+        """Delete older compile binaries for this device, keeping the newest.
+
+        Only compile rows are considered, and only when no other queued or
+        in-flight job still points at the file. A flashed copy is separate (the
+        flash job clones it), so this never removes the image a rollback needs.
+        """
+        keep = Path(str(keep_path or ""))
+        for previous in self.db.successful_compile_jobs_for_mac(mac):
+            if int(previous["id"]) == keep_job_id:
+                continue
+            path = str(previous.get("firmware_path") or "")
+            if not path or Path(path) == keep:
+                continue
+            if self.db.job_uses_firmware_path(path, int(previous["id"])):
+                continue
+            self.firmware_store.delete_file(path)
+            self.db.clear_job_firmware(int(previous["id"]))
 
     async def _dequeue_next(self) -> None:
         if self.db.active_compile_job():

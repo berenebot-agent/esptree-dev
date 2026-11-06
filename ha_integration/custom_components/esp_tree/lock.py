@@ -27,11 +27,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class EspTreeLock(EspTreeEntity, LockEntity):
     def __init__(self, model: EntityModel) -> None:
         super().__init__(model)
-        self._lock_state = LockState.UNLOCKED
+        self._lock_state: LockState | None = None
+        self._apply_model_value()
 
     @property
-    def is_locked(self) -> bool:
-        return self._lock_state == LockState.LOCKED
+    def is_locked(self) -> bool | None:
+        return None if self._lock_state is None else self._lock_state == LockState.LOCKED
 
     @property
     def state(self):
@@ -42,16 +43,22 @@ class EspTreeLock(EspTreeEntity, LockEntity):
         self.async_on_remove(
             runtime.subscribe_entity(self.model.remote_mac, self.model.object_id, self._process_state)
         )
+        self._process_state()
+
+    def _apply_model_value(self) -> None:
+        raw = self.model.value
+        if raw == "LOCKED":
+            self._lock_state = LockState.LOCKED
+        elif raw == "JAMMED":
+            self._lock_state = LockState.JAMMED
+        elif isinstance(raw, str) and raw:
+            self._lock_state = LockState.UNLOCKED
+        else:
+            # No state yet: report unknown rather than claiming an unlocked door.
+            self._lock_state = None
 
     def _process_state(self) -> None:
-        raw = self.model.value
-        if isinstance(raw, str):
-            if raw == "LOCKED":
-                self._lock_state = LockState.LOCKED
-            elif raw == "JAMMED":
-                self._lock_state = LockState.JAMMED
-            else:
-                self._lock_state = LockState.UNLOCKED
+        self._apply_model_value()
         self.async_write_ha_state()
 
     async def async_lock(self, **kwargs) -> None:

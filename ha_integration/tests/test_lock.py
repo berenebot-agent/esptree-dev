@@ -21,10 +21,15 @@ class TestEspTreeLock:
         entity.hass = hass
         return entity, runtime
 
-    def test_default_state_unlocked(self):
+    def test_default_state_is_unknown(self):
+        # Nothing heard yet is not "unlocked": that claim opens a door in the UI.
         entity, _ = self._make()
-        assert entity.is_locked is False
-        assert entity.state == LockState.UNLOCKED
+        assert entity.is_locked is None
+        assert entity.state is None
+
+    def test_state_populated_before_construction_is_applied(self):
+        entity, _ = self._make(value="LOCKED")
+        assert entity.is_locked is True
 
     def test_process_state_locked(self):
         entity, _ = self._make()

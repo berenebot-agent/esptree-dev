@@ -32,6 +32,19 @@ _COLOR_MODE_MAP = {
 }
 
 
+def kelvin_to_mireds(kelvin: float) -> int:
+    """HA speaks Kelvin; the bridge payload and the firmware use mireds."""
+    if not kelvin or kelvin <= 0:
+        return 0
+    return int(round(1_000_000 / kelvin))
+
+
+def mireds_to_kelvin(mireds: float | int | None) -> int | None:
+    if not mireds or mireds <= 0:
+        return None
+    return int(round(1_000_000 / mireds))
+
+
 def _parse_options(raw: str) -> dict:
     result: dict = {"color_modes": [], "effects": [], "min_mireds": None, "max_mireds": None}
     for part in raw.split(";"):
@@ -85,6 +98,7 @@ class EspTreeLight(EspTreeEntity, LightEntity):
         self._color_temp: int | None = None
         self._white: int | None = None
         self._effect: str | None = None
+        self._apply_model_value()
 
     @property
     def is_on(self) -> bool:
@@ -111,12 +125,24 @@ class EspTreeLight(EspTreeEntity, LightEntity):
         return self._color_temp
 
     @property
+    def color_temp_kelvin(self) -> int | None:
+        return mireds_to_kelvin(self._color_temp)
+
+    @property
     def min_mireds(self):
         return self._min_mireds or 153
 
     @property
     def max_mireds(self):
         return self._max_mireds or 500
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        return mireds_to_kelvin(self.max_mireds) or 2000
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        return mireds_to_kelvin(self.min_mireds) or 6500
 
     @property
     def effect(self):
@@ -131,8 +157,11 @@ class EspTreeLight(EspTreeEntity, LightEntity):
         self.async_on_remove(
             runtime.subscribe_entity(self.model.remote_mac, self.model.object_id, self._process_state)
         )
+        # A model that already holds a value was never replayed to the entity, so a
+        # light that was on at setup reported off until its next state event.
+        self._process_state()
 
-    def _process_state(self) -> None:
+    def _apply_model_value(self) -> None:
         raw = self.model.value
         if isinstance(raw, str):
             try:
@@ -151,19 +180,28 @@ class EspTreeLight(EspTreeEntity, LightEntity):
                 self._state = bool(raw)
         elif isinstance(raw, (bool, int)):
             self._state = bool(raw)
+
+    def _process_state(self) -> None:
+        self._apply_model_value()
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         payload: dict = {"state": "ON"}
-        if ATTR_BRIGHTNESS in kwargs:
-            payload["brightness"] = kwargs[ATTR_BRIGHTNESS]
+        # The bridge seeds the bytes this payload omits from the last known state,
+        # so only send what actually changed. Brightness is the exception: ESPHome's
+        # own turn_on default is full brightness, and leaving the field out of a
+        # first-ever turn-on would keep whatever the zero-initialised byte held.
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+        if not brightness:
+            brightness = 255
+        payload["brightness"] = brightness
         if ATTR_COLOR_MODE in kwargs:
             payload["color_mode"] = kwargs[ATTR_COLOR_MODE]
         if ATTR_RGB_COLOR in kwargs:
             r, g, b = kwargs[ATTR_RGB_COLOR]
             payload["color"] = {"r": r, "g": g, "b": b}
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            payload["color_temp"] = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            payload["color_temp"] = kelvin_to_mireds(kwargs[ATTR_COLOR_TEMP_KELVIN])
         if ATTR_WHITE in kwargs:
             payload["white"] = kwargs[ATTR_WHITE]
         if ATTR_EFFECT in kwargs:

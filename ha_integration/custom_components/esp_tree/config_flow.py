@@ -73,6 +73,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_uninstall_confirm(self, user_input=None) -> ConfigFlowResult:
         if user_input is not None:
+            # The checkbox is a decision, not a formality: submitting the form with
+            # it cleared used to delete every entry, the retained store and the hub.
+            if not bool(user_input.get("confirm")):
+                return self.async_show_form(
+                    step_id="uninstall_confirm",
+                    data_schema=vol.Schema({vol.Required("confirm", default=False): bool}),
+                    errors={"base": "confirm_required"},
+                    description_placeholders={"name": "ESP Tree"},
+                    last_step=True,
+                )
             _LOGGER.warning("Uninstall confirmed, running cleanup")
             from . import cleanup_integration
             await cleanup_integration(self.hass, remove_hub=True)
@@ -81,9 +91,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="uninstall_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required("confirm", default=True): bool,
+                    vol.Required("confirm", default=False): bool,
                 }
             ),
+            errors={},
             description_placeholders={"name": "ESP Tree"},
             last_step=True,
         )

@@ -234,6 +234,11 @@ class Database:
         ts = now_ts()
         bridge_uuid = str(uuid.uuid4())
         with self.connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            # One active bridge, by construction: a second enabled row would start a
+            # second client and make get_active_bridge() depend on creation order.
+            if enabled:
+                conn.execute("UPDATE bridges SET enabled = 0")
             conn.execute(
                 """
                 INSERT INTO bridges (uuid, name, host, port, discovered_via, api_key, network_id, hostname, mac, flash_wizard_pending, enabled, last_connected_at, created_at, transport, serial_port, baud)
@@ -241,6 +246,7 @@ class Database:
                 """,
                 (bridge_uuid, name, host, port, discovered_via, api_key, network_id, hostname, mac, flash_wizard_pending, enabled, ts if api_key else None, ts, transport, serial_port, baud),
             )
+            conn.execute("COMMIT")
         return self.get_bridge(bridge_uuid) or {}
 
     def get_provisioning_bridge(self) -> dict[str, Any] | None:
@@ -273,10 +279,17 @@ class Database:
 
     def set_active_bridge(self, bridge_uuid: str) -> dict[str, Any] | None:
         with self.connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
             row = conn.execute("SELECT 1 FROM bridges WHERE uuid = ?", (bridge_uuid,)).fetchone()
             if not row:
+                conn.execute("ROLLBACK")
                 return None
+            # Only one bridge may run a client. Clearing the others happens in the
+            # same transaction as the enable, so a crash cannot leave two enabled
+            # rows behind and route half the fleet to the wrong radio.
+            conn.execute("UPDATE bridges SET enabled = 0 WHERE uuid != ?", (bridge_uuid,))
             conn.execute("UPDATE bridges SET enabled = 1, last_connected_at = ? WHERE uuid = ?", (now_ts(), bridge_uuid))
+            conn.execute("COMMIT")
         return self.get_bridge(bridge_uuid)
 
     def clear_active_bridge(self, bridge_uuid: str | None = None) -> None:
@@ -701,6 +714,27 @@ class Database:
                     (normalize_mac(mac), status),
                 ).fetchone()
             )
+
+    def successful_compile_jobs_for_mac(self, mac: str) -> list[dict[str, Any]]:
+        """Successful compile rows for a device, newest first."""
+        with self.connect() as conn:
+            return self.rows(
+                conn.execute(
+                    "SELECT * FROM ota_jobs WHERE mac = ? AND status = ? "
+                    "AND firmware_path IS NOT NULL ORDER BY created_at DESC, id DESC",
+                    (normalize_mac(mac), COMPILE_SUCCESS),
+                ).fetchall()
+            )
+
+    def job_uses_firmware_path(self, path: str, exclude_job_id: int) -> bool:
+        """Is another job still relying on this binary (queued or in flight)?"""
+        placeholders = ", ".join("?" for _ in ACTIVE_STATUSES)
+        with self.connect() as conn:
+            return conn.execute(
+                f"SELECT 1 FROM ota_jobs WHERE firmware_path = ? AND id != ? "
+                f"AND status IN ({placeholders}) LIMIT 1",
+                (path, int(exclude_job_id), *ACTIVE_STATUSES),
+            ).fetchone() is not None
 
     def get_latest_compile_job_for_device(self, mac: str) -> dict[str, Any] | None:
         compile_statuses = (COMPILE_QUEUED, COMPILING, COMPILE_SUCCESS)
@@ -1133,3 +1167,24 @@ def migrate_v18(conn: sqlite3.Connection) -> None:
     conn.execute("ALTER TABLE bridges ADD COLUMN transport TEXT DEFAULT 'wifi'")
     conn.execute("ALTER TABLE bridges ADD COLUMN serial_port TEXT DEFAULT ''")
     conn.execute("ALTER TABLE bridges ADD COLUMN baud INTEGER DEFAULT 460800")
+
+
+@register_migration(version=19, description="Enforce a single enabled bridge")
+def migration_019_single_enabled_bridge(conn: sqlite3.Connection) -> None:
+    # Older databases can hold several enabled rows (each activation only set its
+    # own flag), which started a client per row and made every "active bridge"
+    # answer depend on creation order. Keep the newest and forbid a second.
+    conn.execute(
+        """
+        UPDATE bridges SET enabled = 0
+        WHERE enabled = 1
+          AND uuid NOT IN (
+            SELECT uuid FROM bridges WHERE enabled = 1
+            ORDER BY created_at DESC, uuid DESC LIMIT 1
+          )
+        """
+    )
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_bridges_single_enabled "
+        "ON bridges(enabled) WHERE enabled = 1"
+    )
