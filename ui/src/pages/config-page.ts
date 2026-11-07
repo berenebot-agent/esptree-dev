@@ -1140,18 +1140,18 @@ export class EspConfigPage extends LitElement {
       color: var(--danger, var(--danger));
     }
     .warnings {
-      border-left: 4px solid var(--accent);
-      background: #fffbeb;
-      padding: 12px;
-      border-radius: 6px;
+      border: 1px solid #e5d3ae;
+      background: var(--accent-soft);
+      padding: 12px 14px;
+      border-radius: 8px;
       display: grid;
       gap: 8px;
       margin: 8px 0;
     }
     .warnings p {
       margin: 0;
-      font-size: 13px;
-      color: #7c3f00;
+      font-size: 12px;
+      color: #72531d;
     }
     .warnings label {
       font-weight: 500;
