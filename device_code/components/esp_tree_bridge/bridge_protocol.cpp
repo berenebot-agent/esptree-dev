@@ -27,6 +27,17 @@ static inline const char* drop_prefix(const uint8_t* mac) {
   return (mac != nullptr && memcmp(mac, ESP12_MAC_, 6) == 0) ? "!!!!!!ESP8266 " : "";
 }
 
+// A value at or below this is a sentinel, not a reading: a leaf leaves its
+// parent-link EMA at -127 until it hears its parent, a fresh BridgeSession
+// starts at -128, and a receive descriptor with no rx_ctrl reports 0. Any of
+// them reaching a publisher becomes a physically impossible signal strength in
+// the UI and in Home Assistant ("-127 dBm", one red bar, "weak").
+static constexpr int8_t RSSI_NO_READING_FLOOR_DBM = -110;
+
+static inline bool rssi_is_measurement(int8_t rssi) {
+  return rssi < 0 && rssi > RSSI_NO_READING_FLOOR_DBM;
+}
+
 // Yield after ESP-NOW sends to give FreeRTOS time to run the MQTT
 // and TCP/IP tasks. Prevents inbound MQTT event drops during
 // heavy ESP-NOW bursts such as discovery storms.
@@ -1387,7 +1398,14 @@ bool BridgeProtocol::handle_heartbeat_(const uint8_t *sender_mac, const espnow_f
   }
   session.direct_child_count = heartbeat->direct_child_count;
   session.total_child_count = heartbeat->total_child_count;
-  session.last_rssi = heartbeat->remote_rssi_dbm;
+  if (rssi_is_measurement(heartbeat->remote_rssi_dbm)) {
+    session.last_rssi = heartbeat->remote_rssi_dbm;
+  } else if (rssi_is_measurement(rssi)) {
+    // The leaf has no reading of its own link yet (its parent-link EMA is still
+    // at the -127 initialiser). Keep the level this frame actually arrived at
+    // instead of publishing the sentinel as a signal strength.
+    session.last_rssi = rssi;
+  }
   memcpy(session.next_hop_mac.data(), sender_mac, 6);
   if (session.remote_state != espnow_log_state_t::NORMAL) {
     session.remote_state = espnow_log_state_t::NORMAL;
@@ -1793,7 +1811,13 @@ void BridgeProtocol::mark_online_(BridgeSession &session, int8_t rssi, uint32_t 
   session.online = true;
   session.last_seen_counter = tx_counter;
   session.joined_ms = millis();
-  session.last_rssi = remote_reported_rssi != 0 ? remote_reported_rssi : rssi;
+  if (rssi_is_measurement(remote_reported_rssi)) {
+    session.last_rssi = remote_reported_rssi;
+  } else if (rssi_is_measurement(rssi)) {
+    // 0 means "not reported" on the wire, and -127/-128 are the leaf's and the
+    // session's initialisers, so neither may overwrite a real measurement.
+    session.last_rssi = rssi;
+  }
   session.last_offline_reason.clear();
   if (publish_availability_fn_) publish_availability_fn_(session.leaf_mac.data(), true, first_join ? "joined" : "rejoined");
   if (publish_topology_changed_fn_) publish_topology_changed_fn_(session.leaf_mac.data(), "node_joined");

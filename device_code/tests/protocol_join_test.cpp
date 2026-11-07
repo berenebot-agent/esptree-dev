@@ -54,6 +54,10 @@ struct Rig {
   std::deque<Frame> to_bridge;
   std::deque<Frame> to_remote;
   std::vector<std::vector<uint8_t>> sent_by_remote;
+  // Per-direction RF level. Kept separate so a test can make the leaf's view of
+  // its parent differ from the bridge's view of the leaf.
+  int8_t to_bridge_rssi{-55};
+  int8_t to_remote_rssi{-55};
 
   BridgeProtocol bridge;
   RemoteProtocol remote;
@@ -125,13 +129,13 @@ struct Rig {
       if (!to_bridge.empty()) {
         Frame frame = std::move(to_bridge.front());
         to_bridge.pop_front();
-        bridge.on_espnow_frame(kRemoteMac.data(), frame.data.data(), frame.data.size(), -55);
+        bridge.on_espnow_frame(kRemoteMac.data(), frame.data.data(), frame.data.size(), to_bridge_rssi);
         moved = true;
       }
       if (!to_remote.empty()) {
         Frame frame = std::move(to_remote.front());
         to_remote.pop_front();
-        remote.on_espnow_frame(kBridgeMac.data(), frame.data.data(), frame.data.size(), -55);
+        remote.on_espnow_frame(kBridgeMac.data(), frame.data.data(), frame.data.size(), to_remote_rssi);
         moved = true;
       }
       if (!moved) return;
@@ -232,12 +236,43 @@ void test_unsupported_entity_types_are_not_published() {
          "an unknown type code is skipped");
 }
 
+// A leaf that has never heard a frame from its parent leaves its parent-link
+// EMA at its -127 initialiser and has no reading of its own link. Neither that
+// sentinel nor the 0 it is now translated to may reach a publisher: the bridge
+// must fall back to the level the heartbeat itself arrived at, otherwise the UI
+// shows "-127 dBm" with a one-bar red icon and Home Assistant records a signal
+// strength no receiver can produce.
+void test_unseeded_parent_rssi_is_not_published() {
+  test::reset_mock_state();
+  Rig rig;
+  // The leaf hears its parent only at the sentinel value, so its EMA never
+  // leaves -127, while the bridge still measures the uplink normally at -55.
+  rig.to_remote_rssi = -127;
+  rig.run_until_normal();
+
+  // Run past a heartbeat interval so a heartbeat carrying "no reading" arrives.
+  for (uint32_t t = 30010; t <= 60000; t += 10) {
+    test::set_mock_time_ms(t);
+    rig.remote.loop();
+    rig.bridge.loop();
+    rig.pump();
+  }
+
+  const BridgeSession *session = rig.bridge.get_session(kRemoteMac.data());
+  expect(session != nullptr, "session exists after a heartbeat with no reading");
+  if (session != nullptr) {
+    expect(session->last_rssi == -55, "a heartbeat with no reading falls back to the measured uplink RSSI");
+    expect(session->last_rssi > -110, "a no-reading sentinel is never published as a signal strength");
+  }
+}
+
 }  // namespace
 
 int main() {
   test_join_reaches_normal_and_publishes_state();
   test_replayed_state_frame_is_not_published_twice();
   test_unsupported_entity_types_are_not_published();
+  test_unseeded_parent_rssi_is_not_published();
 
   if (g_failures != 0) {
     std::cerr << g_failures << " protocol_join test(s) failed\n";

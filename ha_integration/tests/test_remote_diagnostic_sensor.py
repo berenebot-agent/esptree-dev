@@ -54,6 +54,28 @@ def test_last_seen_sensor_keeps_growing_while_idle(monkeypatch):
     assert sensor.native_value == 60
 
 
+def test_rssi_sensor_hides_no_reading_sentinels(monkeypatch):
+    """-127 is a leaf that has not heard its parent yet, -128 is a fresh bridge
+    session and 0 is a receive descriptor with no rx_ctrl. None of them is a
+    signal strength, so the sensor must report unknown rather than an
+    impossible dBm value."""
+    module = import_entity("remote_diagnostic_sensor")
+    remote = SimpleNamespace(rssi=-127)
+    runtime = SimpleNamespace(remotes={"AA:BB:CC:DD:EE:FF": remote})
+    monkeypatch.setattr(module, "get_runtime", lambda hass: runtime)
+    sensor = module.RemoteDiagnosticSensor(
+        "AA:BB:CC:DD:EE:FF", "rssi", "RSSI", "signal_strength", "dBm", "measurement"
+    )
+    sensor.hass = MagicMock()
+
+    for sentinel in (-127, -128, 0, 7):
+        remote.rssi = sentinel
+        assert sensor.native_value is None
+
+    remote.rssi = -55
+    assert sensor.native_value == -55
+
+
 def test_last_seen_sensor_returns_none_without_bridge_timing():
     module = import_entity("remote_diagnostic_sensor")
     remote = SimpleNamespace(

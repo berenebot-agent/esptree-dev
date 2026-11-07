@@ -10,7 +10,7 @@ import './compile-history';
 import './compile-log-viewer';
 import { shared } from '../styles/shared';
 import { icon } from '../styles/icons';
-import { linkQuality, nodeName, offlineReason } from './topology-node';
+import { linkQuality, nodeName, offlineReason, readableRssi } from './topology-node';
 
 const ACTIVE_STATUSES = ['queued', 'starting', 'transferring', 'verifying', 'transfer_success_waiting_rejoin'];
 const COMPILE_ACTIVE_STATUSES = ['compile_queued', 'compiling'];
@@ -160,6 +160,7 @@ export class EspDeviceDetail extends LitElement {
     const parent = this.topology.find((n) => normalizeMac(n.mac) === normalizeMac(node.parent_mac || ''));
     const name = nodeName(node);
     const q = linkQuality(node);
+    const rssi = readableRssi(node.rssi);
     const qLabel = { strong: 'Strong', fair: 'Fair', weak: 'Weak', down: '', unknown: '' }[q];
     const haHref = `/config/devices/device/${node.ha_device_id}`;
     return html`
@@ -196,7 +197,7 @@ export class EspDeviceDetail extends LitElement {
           <dl class="facts summary">
             <div><dt>Last seen</dt><dd>${node.is_bridge ? 'Now' : node.last_seen_ago != null ? `${fmtDuration(node.last_seen_ago) || '0s'} ago` : '—'}</dd></div>
             <div><dt>Uptime</dt><dd>${fmtDuration(node.uptime_s) || '—'}</dd></div>
-            <div><dt>Signal</dt><dd>${node.rssi == null ? '—' : html`${node.rssi} dBm${qLabel ? html` <span class="q ${q}">${qLabel}</span>` : nothing}`}</dd></div>
+            <div><dt>Signal</dt><dd>${rssi == null ? '—' : html`${rssi} dBm${qLabel ? html` <span class="q ${q}">${qLabel}</span>` : nothing}`}</dd></div>
             <div><dt>Route</dt><dd>${node.is_bridge ? 'Root of the mesh' : parent ? html`via <a href=${`#/device/${encodeURIComponent(parent.mac)}`}>${nodeName(parent)}</a>${(node.hops ?? 0) > 0 ? html` · ${node.hops} hop${node.hops === 1 ? '' : 's'}` : nothing}` : 'Unknown (retained)'}</dd></div>
             <div><dt>Firmware</dt><dd>${node.project_version || node.firmware_version || '—'}</dd></div>
             <div><dt>Relay</dt><dd>${node.relay_enabled ? 'On' : node.can_relay ? 'Available, off' : 'Not supported'}</dd></div>

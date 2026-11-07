@@ -1585,7 +1585,10 @@ bool RemoteProtocol::send_heartbeat_() {
   memcpy(heartbeat.parent_mac, parent_mac_.data(), 6);
   heartbeat.direct_child_count = 0;
   heartbeat.total_child_count = 0;
-  heartbeat.remote_rssi_dbm = parent_link_rssi_ema_;
+  // 0 is the wire spelling of "no reading yet": the -127 initialiser is a local
+  // sentinel and must not leave the device, where it would render as a signal
+  // strength of -127 dBm.
+  heartbeat.remote_rssi_dbm = parent_link_rssi_ema_ == -127 ? 0 : parent_link_rssi_ema_;
   const uint32_t tx_counter = tx_counter_++;
   const bool sent = send_frame_(parent_mac_.data(), PKT_HEARTBEAT, ESPNOW_HOPS_MAKE(ESPNOW_HOPS_DIR_UP, hops_to_bridge_) | (parent_valid_ ? ESPNOW_HOPS_PARENT_CHECK_BIT : 0), tx_counter, reinterpret_cast<const uint8_t *>(&heartbeat), sizeof(heartbeat), true);
   if (sent) {

@@ -36,6 +36,20 @@ def normalize_chip_name(chip_name: str) -> str:
     return chip_name if chip_name in CHIP_NAMES else chip_name
 
 
+# A value at or below this is a sentinel, not a reading: a leaf reports -127
+# until it has heard its parent, a fresh bridge session starts at -128, and a
+# receive descriptor with no rx_ctrl reports 0. Publishing any of them shows a
+# physically impossible signal strength in Home Assistant.
+RSSI_NO_READING_FLOOR_DBM = -110
+
+
+def readable_rssi(rssi):
+    """Return the RSSI, or None when the value is a 'no reading' sentinel."""
+    if rssi is None:
+        return None
+    return rssi if 0 > rssi > RSSI_NO_READING_FLOOR_DBM else None
+
+
 REMOTE_DIAGNOSTIC_SENSORS = [
     ("rssi", "RSSI", SensorDeviceClass.SIGNAL_STRENGTH, "dBm", "measurement"),
     ("hops_to_bridge", "Hops to Bridge", None, "hops", "measurement"),
@@ -115,7 +129,7 @@ class RemoteDiagnosticSensor(SensorEntity):
             return None
 
         if self._object_id == "rssi":
-            return remote.rssi
+            return readable_rssi(remote.rssi)
         if self._object_id == "hops_to_bridge":
             return remote.hops_to_bridge
         if self._object_id == "uptime_s":

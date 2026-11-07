@@ -33,9 +33,21 @@ export function nodeName(node: TopologyNode): string {
   return node.friendly_name || node.esphome_name || node.label || node.mac;
 }
 
+/**
+ * Below this a number is a sentinel, not a measurement: a leaf that has not
+ * heard its parent reports its -127 initialiser, a fresh bridge session starts
+ * at -128, and a receive descriptor with no rx_ctrl reports 0. Drawing one of
+ * those as "1 bar, weak" is worse than showing nothing.
+ */
+export const RSSI_NO_READING_FLOOR = -110;
+
+export function readableRssi(rssi?: number | null): number | null {
+  return rssi != null && rssi < 0 && rssi > RSSI_NO_READING_FLOOR ? rssi : null;
+}
+
 export function linkQuality(node: TopologyNode): 'strong' | 'fair' | 'weak' | 'down' | 'unknown' {
   if (!node.online) return 'down';
-  const rssi = node.rssi;
+  const rssi = readableRssi(node.rssi);
   if (rssi == null) return 'unknown';
   if (rssi >= -67) return 'strong';
   if (rssi >= -80) return 'fair';
@@ -64,12 +76,13 @@ function ago(seconds?: number | null): string {
 function signal(node: TopologyNode, isRoot: boolean): TemplateResult {
   if (isRoot) return html`<span class="muted">—</span>`;
   const q = linkQuality(node);
+  const rssi = readableRssi(node.rssi);
   if (q === 'down') return html`<span class="muted">—</span>`;
   const level = q === 'strong' ? 4 : q === 'fair' ? 3 : q === 'weak' ? 1 : 0;
   return html`
-    <span class="signal ${q}" title=${node.rssi != null ? `${QUALITY_LABEL[q]} signal, ${node.rssi} dBm` : 'Signal not reported'}>
+    <span class="signal ${q}" title=${rssi != null ? `${QUALITY_LABEL[q]} signal, ${rssi} dBm` : 'Signal not reported'}>
       <span class="bars" aria-hidden="true">${[1, 2, 3, 4].map((i) => html`<i class=${i <= level ? 'on' : ''}></i>`)}</span>
-      <span class="dbm">${node.rssi != null ? `${node.rssi} dBm` : '—'}</span>
+      <span class="dbm">${rssi != null ? `${rssi} dBm` : '—'}</span>
     </span>
   `;
 }
