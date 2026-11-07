@@ -412,7 +412,7 @@ Components use the shared vocabulary in `ui/src/styles/shared.ts` and the job vo
 
 ### Icons
 - Authored 24px line icons in `ui/src/styles/icons.ts`, drawn with `currentColor`, one 1.8 stroke weight, round caps. Drawn at 16px in row actions, 18px in buttons, 20px in notices, 32px in empty states.
-- The ESP Tree mark is a bridge fanning out to remotes, in `toolbar-indicator`.
+- The ESP Tree mark follows the repo logo: a chip at the root with right-angle traces fanning out to round nodes. Chip and traces are `toolbar-indicator`; the three nodes carry fixed teal, green and amber fills (the one exception to the `currentColor` rule).
 - Icons are inline SVG. Emoji are not used.
 
 ### Buttons

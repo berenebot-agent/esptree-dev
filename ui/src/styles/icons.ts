@@ -65,10 +65,17 @@ export function icon(name: IconName, label?: string): TemplateResult {
   >${paths[name]}</svg>`;
 }
 
-/** ESP Tree mark: a bridge root fanning out to remotes. */
-export const brandMark = html`<svg class="brand-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="M16 27V16M16 16L8.5 9.5M16 16l7.5-6.5M16 16V7.5"/>
-  <circle cx="16" cy="6" r="2.3" fill="currentColor" stroke="none"/>
-  <circle cx="7.5" cy="8.5" r="2.3" fill="currentColor" stroke="none"/>
-  <circle cx="24.5" cy="8.5" r="2.3" fill="currentColor" stroke="none"/>
+/**
+ * ESP Tree mark, after the repo logo: a chip at the root, right-angle traces
+ * fanning out to round-ended nodes. Chip and traces draw in currentColor; the
+ * nodes carry the status colours (teal, green, amber).
+ */
+export const brandMark = html`<svg class="brand-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M16 21V6.5M14 21v-5l-5-3V10M18 21v-5l5-3V10"/>
+  <rect x="11" y="21" width="10" height="8" rx="1.6"/>
+  <rect x="14" y="23.5" width="4" height="3" rx=".6" fill="currentColor" stroke="none"/>
+  <path d="M8.5 23.5H11M8.5 26.5H11M21 23.5h2.5M21 26.5h2.5"/>
+  <circle cx="16" cy="5" r="2.6" fill="#4fc3d9"/>
+  <circle cx="9" cy="8.5" r="2.4" fill="#7ed56f"/>
+  <circle cx="23" cy="8.5" r="2.4" fill="#f5a623"/>
 </svg>`;

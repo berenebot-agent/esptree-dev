@@ -8,6 +8,10 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+## 0.1.348
+
+- **The toolbar mark follows the repo logo.** `brandMark` is now a chip with right-angle traces fanning out to round nodes (teal, green, amber) instead of a bare trunk with three dots; chip and traces still draw in `currentColor`.
+
 ## 0.1.347
 
 - **The whole device row opens the device.** Only the name was a link, so the other five cells were dead space; the name link's hit area now stretches over the row (`position: relative` row plus a `.title::after` overlay), making every cell open `#/device/<mac>`. Row actions (Update firmware, YAML, Hide) sit above the overlay and are unchanged; the row takes `cursor: pointer`, and keyboard focus on the name rings the whole row instead of the text. No click handler was added, so middle-click and ctrl-click still open the device in a new tab.
