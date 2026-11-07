@@ -29,6 +29,7 @@ The primary context is authenticated Home Assistant ingress, with a standalone d
 - Keep topology, device detail/configuration, setup and remote wizards, queues, job history, activity logs, settings, and secrets available.
 - Treat offline and retained nodes, loading, disconnected add-on/bridge states, failed jobs, destructive removal, and firmware recovery as first-class states.
 - Do not hide technical capability merely to simplify the interface; progressively disclose advanced detail where it improves frequent workflows.
+- **No left sidebar or rail navigation.** ESP Tree renders inside a Home Assistant ingress panel, and Home Assistant already owns the left sidebar. A second vertical navigation column beside it wastes width, duplicates the host's chrome, and reads as two competing apps. In-app navigation must be horizontal (a top bar or tabs within the panel) or contextual; this applies at every viewport width.
 - Browser-based USB flashing has browser and secure-context limitations; add-on-side serial flashing and downloads remain relevant alternatives.
 
 ## Brand Commitments

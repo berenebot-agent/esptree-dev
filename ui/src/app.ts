@@ -11,19 +11,14 @@ import './pages/activity-log-page';
 import './pages/setup-page';
 import './pages/remote-wizard';
 import { QueueResponse, CompileQueueResponse, api, streamBridgeState } from './api/client';
+import { themeTokens } from './styles/theme';
+import { shared } from './styles/shared';
+import { icon, brandMark } from './styles/icons';
 
 declare const __GIT_HASH__: string;
 declare const __GIT_DATE__: string;
 
 type Route = { name: 'topology' } | { name: 'device'; mac: string } | { name: 'device-config'; mac: string } | { name: 'settings' } | { name: 'queue' } | { name: 'secrets'; from: string } | { name: 'job'; jobId: number; from: string } | { name: 'activity-log' } | { name: 'setup' } | { name: 'remote-wizard' };
-
-const NAV_ICONS = {
-  network: html`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.3"/><circle cx="5" cy="18" r="2.3"/><circle cx="19" cy="18" r="2.3"/><path d="M12 7.3v3.4M6.4 16.6l4.3-4.3M17.6 16.6l-4.3-4.3"/></svg>`,
-  jobs: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"/><circle cx="3" cy="6.5" r=".9"/><circle cx="3" cy="12" r=".9"/><circle cx="3" cy="17.5" r=".9"/></svg>`,
-  activity: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.2-6 3.6 12 2.1-6H21"/></svg>`,
-  settings: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .35 1.87l.06.06-1.9 1.9-.06-.06a1.7 1.7 0 0 0-1.87-.35 1.7 1.7 0 0 0-1 1.55v.09h-2.7v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.35l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 0 0 7.4 15a1.7 1.7 0 0 0-1.55-1H5.76v-2.7h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.35-1.87l-.06-.06 1.9-1.9.06.06a1.7 1.7 0 0 0 1.87.35 1.7 1.7 0 0 0 1-1.55v-.09h2.7v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.35l.06-.06 1.9 1.9-.06.06a1.7 1.7 0 0 0-.35 1.87 1.7 1.7 0 0 0 1.55 1h.09v2.7h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>`,
-  plus: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`,
-};
 
 @customElement('espnow-app')
 export class EspnowApp extends LitElement {
@@ -37,13 +32,47 @@ export class EspnowApp extends LitElement {
   @state() private integrationConfigured = false;
   @state() private restartRequired = false;
   @state() private bridgeLabel = '';
-  @state() private addonVersion = '';
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private bridgeStreamHandle: { close: () => void } | null = null;
   private setupDismissed = false;
 
+  /**
+   * Follow Home Assistant's theme rather than only the OS. The panel runs in a
+   * same-origin ingress iframe, so HA's resolved background colour is readable;
+   * its luminance says whether HA is dark. Any failure falls back to the OS
+   * preference (no attribute).
+   */
+  private syncHaTheme = (): void => {
+    let mode: 'dark' | 'light' | null = null;
+    try {
+      if (window.parent !== window) {
+        const root = window.parent.document.documentElement;
+        const raw = window.parent.getComputedStyle(root).getPropertyValue('--primary-background-color').trim();
+        const probe = document.createElement('span');
+        probe.style.color = raw;
+        document.body.appendChild(probe);
+        const rgb = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g)?.map(Number);
+        probe.remove();
+        if (raw && rgb && rgb.length >= 3) {
+          const lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+          mode = lum < 0.5 ? 'dark' : 'light';
+        }
+      }
+    } catch {
+      mode = null;
+    }
+    if (mode) this.setAttribute('theme', mode);
+    else this.removeAttribute('theme');
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    meta?.setAttribute('content', mode ?? 'light dark');
+    document.documentElement.style.background = mode === 'dark' ? '#111414' : mode === 'light' ? '#f4f6f6' : '';
+  };
+  private themeTimer: ReturnType<typeof setInterval> | null = null;
+
   connectedCallback(): void {
     super.connectedCallback();
+    this.syncHaTheme();
+    this.themeTimer = setInterval(this.syncHaTheme, 5000);
     window.addEventListener('hashchange', this.onHashChange);
     this.addEventListener('setup-dismissed', this.onSetupDismissed as EventListener);
     this.bridgeStreamHandle = streamBridgeState((connected) => {
@@ -58,19 +87,7 @@ export class EspnowApp extends LitElement {
     }, 3000);
     void this.fetchConfig();
     void this.checkRestartRequired();
-    void this.fetchVersion();
     this.maybeRedirectToSetup();
-  }
-
-  /** The running add-on version, read live: a value compiled into the bundle is
-   *  always one release behind, because the bump lands after the build. */
-  private async fetchVersion(): Promise<void> {
-    try {
-      const health = await api.health();
-      if (health.version) this.addonVersion = health.version;
-    } catch {
-      // Leave the badge blank rather than showing a version that may be wrong.
-    }
   }
 
   private async checkRestartRequired(): Promise<void> {
@@ -103,13 +120,16 @@ export class EspnowApp extends LitElement {
       );
       this.addonConnected = true;
     } catch {
+      // An unreachable add-on is an outage, not a fresh install: keep the last
+      // known bridge state so the shell shows the outage instead of sending
+      // the user into first-run setup.
       this.addonConnected = false;
-      this.bridgeConfigured = false;
     }
     this.maybeRedirectToSetup();
   }
 
   private needsSetup(): boolean {
+    if (!this.addonConnected) return false;
     return this.bridgeConfigured === false
       || this.restartRequired
       || (!this.integrationConfigured && this.integrationLoaded === false);
@@ -126,6 +146,7 @@ export class EspnowApp extends LitElement {
   }
 
   disconnectedCallback(): void {
+    if (this.themeTimer) clearInterval(this.themeTimer);
     window.removeEventListener('hashchange', this.onHashChange);
     this.removeEventListener('setup-dismissed', this.onSetupDismissed as EventListener);
     if (this.pollTimer) {
@@ -217,18 +238,52 @@ export class EspnowApp extends LitElement {
     };
   }
 
-  private pageName(): string {
-    switch (this.route.name) {
-      case 'queue': return 'Jobs';
-      case 'job': return 'Job detail';
-      case 'settings': return 'Settings';
-      case 'activity-log': return 'Activity';
-      case 'secrets': return 'Secrets';
-      case 'device': return 'Device';
-      case 'device-config': return 'Configuration';
-      case 'remote-wizard': return 'Add remote';
-      default: return 'Network overview';
+  private renderTab(key: string, label: string, path: string, extra: unknown = nothing) {
+    const current = this.activeRoute() === key;
+    return html`
+      <a class="tab ${current ? 'current' : ''}" href="#${path}" aria-current=${current ? 'page' : 'false'}>
+        <span>${label}</span>${extra}
+      </a>
+    `;
+  }
+
+  private renderStatus() {
+    if (!this.addonConnected) {
+      return html`<span class="status bad" role="status"><span class="sdot"></span><span class="status-text">Add-on unreachable</span></span>`;
     }
+    if (this.bridgeConnected === false) {
+      return html`<span class="status bad" role="status"><span class="sdot"></span><span class="status-text">Bridge offline</span></span>`;
+    }
+    if (this.bridgeConfigured === false) {
+      return html`<span class="status warn" role="status"><span class="sdot"></span><span class="status-text">No bridge</span></span>`;
+    }
+    return html`<span class="status ok" role="status" title=${this.bridgeLabel ? `Connected to ${this.bridgeLabel}` : 'Bridge connected'}>
+      <span class="sdot"></span><span class="status-text">${this.bridgeLabel || 'Bridge connected'}</span>
+    </span>`;
+  }
+
+  private renderOutage() {
+    if (!this.addonConnected) {
+      return html`<div class="outage" role="alert">
+        ${icon('alert')}
+        <span><strong>Can't reach the ESP Tree add-on.</strong> Retrying every few seconds. If this continues, check the add-on is running in Home Assistant under Settings → Add-ons.</span>
+      </div>`;
+    }
+    if (this.bridgeConnected === false) {
+      return html`<div class="outage" role="status">
+        ${icon('alert')}
+        <span><strong>The add-on can't reach the bridge.</strong> Remotes keep running, but status is stale and jobs are paused until it reconnects.</span>
+        <a class="outage-link" href="#/settings">Bridge settings</a>
+      </div>`;
+    }
+    if (this.restartRequired) {
+      return html`<div class="outage notice-warn" role="status">
+        ${icon('info')}
+        <span><strong>Home Assistant needs a restart</strong> to load the updated ESP Tree integration.</span>
+        <a class="outage-link" href="#/setup">Finish setup</a>
+      </div>`;
+    }
+    return nothing;
   }
 
   render() {
@@ -237,312 +292,203 @@ export class EspnowApp extends LitElement {
     }
 
     const q = this.queueSummary();
-    const bridgeState = !this.addonConnected ? 'offline' : this.bridgeConnected === false ? 'bridge-offline' : 'online';
-    const statusText = !this.addonConnected
-      ? 'Add-on unreachable'
-      : bridgeState === 'bridge-offline'
-        ? 'Bridge unreachable'
-        : this.restartRequired
-          ? 'Restart required'
-          : this.bridgeConfigured === false
-            ? 'No bridge configured'
-            : 'Network connected';
+    const jobsBadge = q.count > 0 || q.active
+      ? html`<span class="tab-count ${q.active ? 'live' : ''}" aria-label=${`${q.count} queued${q.active ? ', one running' : ''}${q.paused ? ', paused' : ''}`}>${q.paused ? icon('pause') : nothing}${q.count + (q.active ? 1 : 0)}</span>`
+      : nothing;
 
     return html`
-      <div class="app-shell">
-        <div class="main-shell">
-          <header class="topbar">
-            <div class="topbar-title">
-              <span class="topbar-kicker">ESP Tree</span>
-              <span class="topbar-page">${this.pageName()}</span>
-              ${this.bridgeLabel ? html`<span class="topbar-bridge">${this.bridgeLabel}</span>` : nothing}
-            </div>
-
-            <nav class="topnav" aria-label="Primary navigation">
-              <button class="nav-item ${this.activeRoute() === 'network' ? 'active' : ''}" aria-current=${this.activeRoute() === 'network' ? 'page' : 'false'} @click=${() => this.navigate('/')}>
-                ${NAV_ICONS.network}<span>Network</span>
-              </button>
-              <button class="nav-item ${this.activeRoute() === 'queue' ? 'active' : ''}" aria-current=${this.activeRoute() === 'queue' ? 'page' : 'false'} @click=${() => this.navigate('/queue')}>
-                ${NAV_ICONS.jobs}<span>Jobs</span>${q.count > 0 ? html`<span class="nav-count ${q.active ? 'active' : ''}">${q.label}${q.paused ? html`<span class="pause-glyph"> paused</span>` : nothing}</span>` : nothing}
-              </button>
-              <button class="nav-item ${this.activeRoute() === 'activity' ? 'active' : ''}" aria-current=${this.activeRoute() === 'activity' ? 'page' : 'false'} @click=${() => this.navigate('/activity-log')}>
-                ${NAV_ICONS.activity}<span>Activity</span>
-              </button>
-              <span class="nav-divider" aria-hidden="true"></span>
-              <button class="nav-item ${this.activeRoute() === 'settings' ? 'active' : ''}" aria-current=${this.activeRoute() === 'settings' ? 'page' : 'false'} @click=${() => this.navigate('/settings')}>
-                ${NAV_ICONS.settings}<span>Settings</span>
-              </button>
-              <button class="nav-item ${this.route.name === 'secrets' ? 'active' : ''}" aria-current=${this.route.name === 'secrets' ? 'page' : 'false'} @click=${() => this.navigate('/secrets')}>
-                <span class="nav-icon text-icon" aria-hidden="true">↗</span><span>Secrets</span>
-              </button>
-            </nav>
-
-            <div class="topbar-actions">
-              <span class="connection-pill ${bridgeState === 'online' ? 'ok' : 'warn'}" role="status">
-                <span class="status-dot ${bridgeState}" aria-hidden="true"></span>${statusText}
-              </span>
-              ${q.active ? html`
-                <button class="job-pill" @click=${() => this.navigate('/queue')}>
-                  <span class="pulse-dot"></span>${q.paused ? 'Queue paused' : 'Job running'}
-                </button>
-              ` : nothing}
-              <span class="topbar-version">Add-on v${this.addonVersion || '—'}</span>
-            </div>
-          </header>
-
-          ${!this.addonConnected ? html`
-            <div class="connection-banner" role="alert">Cannot reach the add-on</div>
-          ` : nothing}
-          ${this.bridgeConnected === false ? html`
-            <div class="connection-banner subtle" role="status">Bridge unreachable</div>
-          ` : nothing}
-          <main class="content">
-            ${this.route.name === 'remote-wizard'
-              ? html`<esp-remote-wizard></esp-remote-wizard>`
-              : this.route.name === 'topology'
-              ? html`<esp-topology-map @node-selected=${(event: CustomEvent<string>) => this.navigate(`/device/${encodeURIComponent(event.detail)}`)}></esp-topology-map>`
-              : this.route.name === 'device'
-                ? html`<esp-device-detail .mac=${this.route.mac}></esp-device-detail>`
-                : this.route.name === 'device-config'
-                  ? html`<esp-config-page .mac=${this.route.mac}></esp-config-page>`
-                  : this.route.name === 'job'
-                    ? html`<esp-job-page .jobId=${this.route.jobId} .from=${this.route.from}></esp-job-page>`
-                    : this.route.name === 'queue'
-                      ? html`<esp-queue-page></esp-queue-page>`
-                      : this.route.name === 'secrets'
-                        ? html`<esp-secrets-page .from=${this.route.from}></esp-secrets-page>`
-                        : this.route.name === 'activity-log'
-                          ? html`<esp-activity-log-page></esp-activity-log-page>`
-                          : html`<esp-settings></esp-settings>`}
-          </main>
+      <header class="toolbar">
+        <div class="toolbar-inner">
+          <a class="brand" href="#/" aria-label="ESP Tree, network">
+            ${brandMark}<span>ESP Tree</span>
+          </a>
+          <nav class="tabs" aria-label="ESP Tree">
+            ${this.renderTab('network', 'Network', '/')}
+            ${this.renderTab('queue', 'Jobs', '/queue', jobsBadge)}
+            ${this.renderTab('activity', 'Activity', '/activity-log')}
+            ${this.renderTab('settings', 'Settings', '/settings')}
+          </nav>
+          <div class="toolbar-end">${this.renderStatus()}</div>
         </div>
-      </div>
+      </header>
+      ${this.renderOutage()}
+      <main class="content">
+        ${this.route.name === 'remote-wizard'
+          ? html`<esp-remote-wizard></esp-remote-wizard>`
+          : this.route.name === 'topology'
+          ? html`<esp-topology-map .addonDown=${!this.addonConnected} @node-selected=${(event: CustomEvent<string>) => this.navigate(`/device/${encodeURIComponent(event.detail)}`)}></esp-topology-map>`
+          : this.route.name === 'device'
+            ? html`<esp-device-detail .mac=${this.route.mac}></esp-device-detail>`
+            : this.route.name === 'device-config'
+              ? html`<esp-config-page .mac=${this.route.mac}></esp-config-page>`
+              : this.route.name === 'job'
+                ? html`<esp-job-page .jobId=${this.route.jobId} .from=${this.route.from}></esp-job-page>`
+                : this.route.name === 'queue'
+                  ? html`<esp-queue-page></esp-queue-page>`
+                  : this.route.name === 'secrets'
+                    ? html`<esp-secrets-page .from=${this.route.from}></esp-secrets-page>`
+                    : this.route.name === 'activity-log'
+                      ? html`<esp-activity-log-page></esp-activity-log-page>`
+                      : html`<esp-settings></esp-settings>`}
+      </main>
+      <footer class="build">ESP Tree UI · ${__GIT_HASH__}</footer>
     `;
   }
 
-  static styles = css`
+  static styles = [themeTokens, shared, css`
     :host {
-      --canvas: #f2f5f1;
-      --surface: #ffffff;
-      --surface-subtle: #f7faf6;
-      --surface-raised: #ffffff;
-      --ink: #17221f;
-      --ink-2: #34433e;
-      --muted: #5f6e68;
-      --faint: #64726c;
-      --line: #dfe6df;
-      --line-strong: #cbd5cd;
-      --primary: #1e5b4f;
-      --primary-strong: #16483f;
-      --primary-soft: #e8f1eb;
-      --accent: #c88b27;
-      --accent-soft: #fbf2df;
-      --danger: #b63c43;
-      --danger-soft: #fdf0f0;
-      --ok: #2f7b58;
-      --ok-soft: #eaf5ee;
-      --info: #356f91;
-      --info-soft: #edf4f7;
-      --shadow-sm: 0 1px 2px rgba(19, 38, 32, 0.05), 0 1px 3px rgba(19, 38, 32, 0.03);
-      --shadow-md: 0 8px 24px rgba(19, 38, 32, 0.07), 0 2px 6px rgba(19, 38, 32, 0.04);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       display: block;
       min-height: 100vh;
       background: var(--canvas);
       color: var(--ink);
       font-family: var(--font-sans);
+      font-size: var(--text-md);
       -webkit-font-smoothing: antialiased;
     }
 
-    :host, :host * { box-sizing: border-box; }
-
-    .app-shell {
-      display: block;
-      min-height: 100vh;
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--toolbar);
+      color: var(--toolbar-ink);
     }
-
-    .topnav {
+    .toolbar-inner {
       display: flex;
+      align-items: stretch;
+      gap: 8px 24px;
+      height: var(--toolbar-h);
+      max-width: calc(var(--content-max) + 2 * var(--gutter));
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+    }
+    .brand {
+      display: inline-flex;
       align-items: center;
-      gap: 2px;
+      gap: 10px;
+      color: inherit;
+      text-decoration: none;
+      font-size: var(--text-xl);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      flex: none;
+    }
+    .brand .brand-mark { width: 26px; height: 26px; color: var(--toolbar-indicator); }
+    .tabs {
+      display: flex;
+      align-items: stretch;
+      gap: 4px;
       min-width: 0;
       overflow-x: auto;
       scrollbar-width: none;
     }
-    .topnav::-webkit-scrollbar { display: none; }
-    .nav-divider { width: 1px; height: 20px; flex: 0 0 1px; margin: 0 6px; background: var(--line); }
-
-    .nav-item {
-      width: auto;
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 32px;
-      padding: 0 11px;
-      border: 0;
-      border-radius: 7px;
-      background: transparent;
-      color: var(--muted);
-      font: inherit;
-      font-size: 12.5px;
-      font-weight: 600;
-      text-align: left;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: background .15s ease, color .15s ease;
-    }
-
-    .nav-item:hover { background: var(--surface-subtle); color: var(--ink); }
-    .nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .nav-item.active {
-      background: var(--surface-subtle);
-      color: var(--ink);
-      box-shadow: inset 0 -2px 0 var(--accent);
-    }
-
-    .nav-item svg {
-      width: 15px;
-      height: 15px;
-      flex: 0 0 15px;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.55;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      opacity: .9;
-    }
-
-    .text-icon { width: 15px; flex: 0 0 15px; font-size: 15px; line-height: 1; text-align: center; color: var(--faint); }
-
-    .nav-count {
-      margin-left: 2px;
-      min-width: 18px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: var(--line);
-      color: var(--ink-2);
-      font-size: 10px;
-      font-weight: 700;
-      text-align: center;
-      line-height: 1.25;
-    }
-    .nav-count.active { background: var(--accent); color: #1c2420; }
-    .pause-glyph { font-size: 9px; font-weight: 600; opacity: .85; }
-
-    .status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--faint); margin-top: 5px; }
-    .status-dot.online { background: #66ba7e; box-shadow: 0 0 0 3px rgba(102,186,126,.13); }
-    .status-dot.bridge-offline, .status-dot.offline { background: var(--danger); }
-    .status-dot.warn { background: var(--accent); }
-
-    .connection-banner {
-      margin: 14px auto 0;
-      max-width: 1440px;
-      padding: 9px 14px;
-      border: 1px solid #eab8b8;
-      border-radius: 8px;
-      background: var(--danger-soft);
-      color: #8a2c2c;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    .connection-banner.subtle { border-color: #ead8b1; background: var(--accent-soft); color: #7c5716; }
-
-    .main-shell { min-width: 0; flex: 1; display: flex; flex-direction: column; }
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      min-height: 62px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 0 30px;
-      background: rgba(255,255,255,.92);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(8px);
-    }
-
-    .topbar-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-    .topbar-kicker { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
-    .topbar-page { color: var(--ink); font-size: 13px; font-weight: 650; white-space: nowrap; }
-    .topbar-bridge {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-      padding-left: 10px;
-      border-left: 1px solid var(--line);
-      max-width: 220px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .topbar-version { color: var(--faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: .02em; white-space: nowrap; }
-
-    .topbar-actions { display: flex; align-items: center; gap: 9px; min-width: 0; }
-    .connection-pill, .job-pill {
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      min-height: 28px;
-      padding: 0 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--surface-subtle);
-      color: var(--muted);
-      font: inherit;
-      font-size: 11px;
-      font-weight: 600;
+      gap: 8px;
+      padding: 0 14px;
+      color: var(--toolbar-muted);
+      text-decoration: none;
+      font-size: var(--text-md);
+      font-weight: 500;
       white-space: nowrap;
+      transition: color 150ms ease, background-color 150ms ease;
     }
-    .connection-pill.ok { color: var(--ok); border-color: #cfe5d5; background: var(--ok-soft); }
-    .connection-pill.warn { color: #8c6419; border-color: #ead8b1; background: var(--accent-soft); }
-    .connection-pill .status-dot { margin-top: 0; width: 6px; height: 6px; flex-basis: 6px; }
-    .job-pill { background: var(--primary); border-color: var(--primary); color: #fff; cursor: pointer; }
-    .job-pill:hover { background: var(--primary-strong); }
-    .job-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #bce7c9; box-shadow: 0 0 0 3px rgba(188,231,201,.15); }
+    .tab:hover { color: var(--toolbar-ink); background: var(--toolbar-hover); }
+    .tab.current { color: var(--toolbar-ink); }
+    .tab.current::after {
+      content: '';
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--toolbar-indicator);
+    }
+    .tab:focus-visible { outline-color: var(--toolbar-indicator); outline-offset: -4px; }
+    .tab-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--toolbar-ink);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+    .tab-count.live { background: var(--toolbar-indicator); color: #2b1a00; }
+    .tab-count svg { width: 12px; height: 12px; }
 
-    .content { width: 100%; max-width: 1440px; margin: 0 auto; padding: 30px 32px 56px; }
+    .toolbar-end {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--toolbar-muted);
+      font-size: var(--text-sm);
+    }
+    .status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sdot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: #6fd08a; box-shadow: 0 0 0 3px rgba(111, 208, 138, 0.2); }
+    .status.bad { color: var(--toolbar-ink); }
+    .status.bad .sdot { background: #ff8a80; box-shadow: 0 0 0 3px rgba(255, 138, 128, 0.25); }
+    .status.warn .sdot { background: var(--toolbar-indicator); box-shadow: none; }
 
-    @media (max-width: 980px) {
-      .content { padding: 24px 22px 48px; }
-      .topbar { padding: 0 22px; gap: 12px; }
-      .topbar-kicker { display: none; }
-      .topbar-bridge { max-width: 140px; }
-      .nav-item { padding: 0 9px; font-size: 12px; }
+    .outage {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px var(--gutter);
+      background: var(--danger-soft);
+      color: var(--ink);
+      font-size: var(--text-md);
+      border-bottom: 1px solid var(--line);
+    }
+    .outage.notice-warn { background: var(--accent-soft); }
+    .outage svg { width: 20px; height: 20px; flex: none; color: var(--danger); margin-top: 1px; }
+    .outage.notice-warn svg { color: var(--accent); }
+    .outage strong { font-weight: 500; }
+    .outage-link { margin-left: auto; white-space: nowrap; font-weight: 500; }
+
+    .content {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 20px var(--gutter) 32px;
+    }
+    .build {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 0 var(--gutter) 24px;
+      color: var(--faint);
+      font-size: var(--text-xs);
     }
 
     @media (max-width: 760px) {
-      .topbar {
-        min-height: 52px;
-        padding: 8px 14px;
-        gap: 10px;
+      .toolbar-inner {
         flex-wrap: wrap;
+        height: auto;
+        padding: 0;
+        gap: 0;
       }
-      .topbar-title { order: 1; }
-      .topbar-actions { order: 2; margin-left: auto; }
-      .topnav { order: 3; width: 100%; padding-bottom: 2px; }
-      .topbar-bridge { display: none; }
-      .topbar-page { font-size: 12px; }
-      .nav-item { min-height: 32px; padding: 0 9px; gap: 6px; font-size: 12px; }
-      .nav-item svg { width: 14px; height: 14px; flex-basis: 14px; }
-      .nav-item.active { box-shadow: inset 0 -2px 0 var(--accent); }
-      .nav-count { margin-left: 2px; }
-      .connection-pill { font-size: 10px; padding: 0 8px; }
-      .job-pill { display: none; }
-      .topbar-version { display: none; }
-      .connection-banner { margin: 10px 14px 0; }
-      .content { padding: 20px 14px 40px; }
+      .brand { height: 52px; padding: 0 var(--gutter); font-size: var(--text-lg); }
+      .toolbar-end { height: 52px; padding-right: var(--gutter); }
+      .tabs { order: 3; flex: 1 0 100%; height: 44px; padding: 0 8px; }
+      .tab { padding: 0 12px; }
+      .content { padding-top: 16px; }
+      .status-text { max-width: 40vw; }
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-    }
-  `;
+  `];
 }

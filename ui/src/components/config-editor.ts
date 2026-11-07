@@ -121,8 +121,10 @@ export class EspConfigEditor extends LitElement {
       flex-direction: column;
       flex: 1;
       min-height: 0;
+      min-width: 0;
+      max-width: 100%;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       overflow: clip;
     }
@@ -131,14 +133,16 @@ export class EspConfigEditor extends LitElement {
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-width: 0;
       background: #282c34;
     }
     .editor-container .cm-editor {
       flex: 1;
       min-height: 0;
+      max-width: 100%;
     }
     .editor-container .cm-editor .cm-scroller {
-      font-family: ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 13px;
       line-height: 1.5;
       overflow: auto;

@@ -5,6 +5,8 @@ import '../components/compile-log-viewer';
 import { hasEspTreeExternalComponents } from '../components/config-editor';
 import { api, CompileStatusResponse, DeviceConfig, normalizeMac, PreflightComparison } from '../api/client';
 import { chipFamilyFromName, openInstallDialog, usbFlashSupported } from '../lib/browser-flash';
+import { shared } from '../styles/shared';
+import { icon } from '../styles/icons';
 
 type PageState = 'loading' | 'no_config' | 'editor';
 type CompilePhase = 'idle' | 'compile_queued' | 'compiling' | 'compiled' | 'failed' | 'queued_for_flash';
@@ -317,7 +319,7 @@ export class EspConfigPage extends LitElement {
       const result = await api.saveConfig(this.mac, this.editorContent);
       this.config = result;
       this.hasUnsavedChanges = false;
-      this.saveIndicator = 'Saved ✓';
+      this.saveIndicator = 'Saved';
       setTimeout(() => { this.saveIndicator = ''; this.requestUpdate(); }, 2000);
     } catch (err) {
       this.saveIndicator = '';
@@ -555,14 +557,6 @@ export class EspConfigPage extends LitElement {
     this.stopPolling();
   }
 
-  private goBack(): void {
-    window.location.hash = `/device/${encodeURIComponent(this.mac)}`;
-  }
-
-  private goToTopology(): void {
-    window.location.hash = '/';
-  }
-
   private goToSecrets(): void {
     window.location.hash = `/secrets?from=${encodeURIComponent(window.location.hash)}`;
   }
@@ -594,12 +588,12 @@ export class EspConfigPage extends LitElement {
           ? html`
               <div class="ec-fix-backdrop" @click=${this.dismissExternalComponentsFix}>
                 <div class="ec-fix-modal" @click=${(e: Event) => e.stopPropagation()}>
-                  <h3>ESP-Tree External Components Required</h3>
-                  <p>Your configuration is missing the required <code>external_components</code> block. ESP-Tree devices need the following:</p>
+                  <h3>Add ESP Tree's external components?</h3>
+                  <p>This YAML is missing the <code>external_components</code> block that ESP Tree remotes need to compile:</p>
                   <pre class="ec-fix-snippet">${this.externalComponentsFixYaml}</pre>
-                  <p class="ec-fix-hint">This must be present for ESP-Tree components to compile correctly.</p>
+
                   <div class="ec-fix-actions">
-                    <button class="btn btn-primary" @click=${this.applyExternalComponentsFix}>Apply Fix</button>
+                    <button class="btn primary" @click=${this.applyExternalComponentsFix}>Add the block</button>
                     <button class="btn" @click=${this.dismissExternalComponentsFix}>Cancel</button>
                   </div>
                 </div>
@@ -610,56 +604,60 @@ export class EspConfigPage extends LitElement {
           ? html`
               <div class="ec-fix-backdrop" @click=${this.dismissSecretsWarning}>
                 <div class="ec-fix-modal" @click=${(e: Event) => e.stopPropagation()}>
-                  <h3>Missing Secrets Warning</h3>
-                  <p>Your configuration references secrets that are not defined in secrets.yaml:</p>
+                  <h3>Some secrets are missing</h3>
+                  <p>This YAML references secrets that aren't defined in secrets.yaml, so the build will fail:</p>
                   <ul class="missing-secrets-list">
                     ${this.missingSecrets.map((s) => html`<li><code>!secret ${s}</code></li>`)}
                   </ul>
-                  <p class="ec-fix-hint">Add these secrets to your secrets.yaml file before compiling.</p>
+
                   <div class="ec-fix-actions">
-                    <button class="btn" @click=${this.dismissSecretsWarning}>Try Anyway</button>
-                    <button class="btn btn-primary" @click=${this.goToSecretsFromWarning}>Edit Secrets</button>
+                    <button class="btn" @click=${this.dismissSecretsWarning}>Compile anyway</button>
+                    <button class="btn primary" @click=${this.goToSecretsFromWarning}>${icon('key')}Edit secrets</button>
                   </div>
                 </div>
               </div>
             `
           : nothing}
-        <header class="config-header">
-          <div class="header-info">
-            <div class="back-buttons">
-              <button class="back" @click=${this.goToTopology}>Network</button>
-              <span aria-hidden="true">/</span>
-              <button class="back" @click=${this.goBack}>Device</button>
-              <span aria-hidden="true">/</span>
-              <span class="current">Configuration</span>
+        <div>
+          <nav class="crumbs" aria-label="Breadcrumb">
+            <a href="#/">Network</a>${icon('chevronRight')}
+            <a href=${`#/device/${encodeURIComponent(this.mac)}`}>${esphomeName}</a>${icon('chevronRight')}
+            <span aria-current="page">YAML</span>
+          </nav>
+          <div class="page-head">
+            <div>
+              <h1>${esphomeName}</h1>
+              <p class="sub meta">
+                <span class="chip ${online ? 'ok' : 'danger'}"><span class="dot ${online ? 'ok' : 'danger'}"></span>${online ? 'Online' : 'Offline'}</span>
+                <span>${isRemote ? 'Remote' : isBridge ? 'Bridge' : 'Device'}</span>
+                <span class="mono">${this.mac}</span>
+                <span>${chipName}</span>
+              </p>
             </div>
-            <span class="eyebrow">Device configuration</span>
-            <h1>${esphomeName}${isRemote ? html`<span class="device-type-tag">Remote</span>` : nothing}</h1>
-            <p><span class="mono">${this.mac}</span> &middot; ${chipName} &middot; <span class=${online ? 'ok' : 'danger'}>${online ? 'Online' : 'Offline'}</span></p>
+            <div class="page-actions">
+              <button class="btn" @click=${this.goToSecrets}>${icon('key')}Secrets</button>
+            </div>
           </div>
-          <div class="header-actions">
-            <button class="btn btn-edit-config" @click=${this.goToSecrets}>Open secrets</button>
-          </div>
-        </header>
+        </div>
 
         ${this.state === 'loading'
-          ? html`<div class="card">Loading config...</div>`
+          ? html`<div class="card loading"><span class="spinner"></span>Loading configuration…</div>`
           : this.state === 'no_config'
             ? html`
-                <div class="card no-config">
+                <div class="card no-config empty">
                   ${this.chipUnknown ? html`
                     <div class="chip-error-banner">
-                      <span>&#9888; Unsupported chip type detected. Ensure correct chip type is entered in topology settings before compiling.</span>
-                      <button class="dismiss-btn" @click=${() => { this.chipUnknown = false; }}>&#10005;</button>
+                      ${icon('alert')}<span>This remote reported a chip type ESP Tree can't build for. Check the chip before compiling.</span>
+                      <button class="btn sm icon text" aria-label="Dismiss" @click=${() => { this.chipUnknown = false; }}>${icon('close')}</button>
                     </div>
                   ` : nothing}
-                  <h3>No configuration yet for this device.</h3>
+                  ${icon('code')}
+                  <strong>No YAML for this remote yet</strong>
+                  <p>Start from a scaffold filled in from what the bridge knows about this remote, or import an existing ESPHome YAML file.</p>
                   <div class="no-config-actions">
-                    <button class="btn btn-primary" @click=${this.createScaffold}>Create Config</button>
-                    <button class="btn" @click=${this.importYaml}>Import YAML</button>
+                    <button class="btn primary" @click=${this.createScaffold}>Create from scaffold</button>
+                    <button class="btn" @click=${this.importYaml}>${icon('upload')}Import YAML</button>
                   </div>
-                  <p class="hint">Create Config generates a minimal scaffold populated from this device's topology data.</p>
-                  <p class="hint">Import lets you upload an existing YAML file.</p>
                   ${this.error ? html`<p class="error">${this.error}</p>` : nothing}
                 </div>
               `
@@ -675,16 +673,16 @@ export class EspConfigPage extends LitElement {
                           ></esp-config-editor>
 
                           ${this.yamlWarnings.length > 0
-                            ? html`<div class="yaml-warnings">${this.yamlWarnings.map((w) => html`<p>&#9888; ${w}</p>`)}</div>`
+                            ? html`<div class="notice warn yaml-warnings">${icon('alert')}<div>${this.yamlWarnings.map((w) => html`<p>${w}</p>`)}</div></div>`
                             : nothing}
                         `
                       : html`
                           <div class="compile-focus-view">
                             <div class="compile-status-header">
-                              <span class="compile-spinner">&#9696;</span>
+                              <span class="spinner"></span>
                               <span>${this.compilePhase === 'compile_queued'
                                 ? `Queued at position ${this.compileQueuePosition !== null ? this.compileQueuePosition : '?'}`
-                                : 'Compiling firmware...'}</span>
+                                : 'Building firmware…'}</span>
                               <span class="compile-elapsed">${this.getElapsedTime()}</span>
                             </div>
                             <esp-compile-log-viewer
@@ -705,28 +703,35 @@ export class EspConfigPage extends LitElement {
 
                     ${this.compilePhase === 'compile_queued'
                     ? html`
-                        <div class="queue-banner">
-                          <strong>&#9203; Position ${this.compileQueuePosition !== null ? this.compileQueuePosition : '?'} in compile queue</strong>
-                          <small>Waiting for compile slot...</small>
-                          <button class="cancel-btn" @click=${this.cancelCompile}>Cancel</button>
+                        <div class="notice warn queue-banner">
+                          ${icon('clock')}<span><strong>Build queued</strong> · position ${this.compileQueuePosition !== null ? this.compileQueuePosition : '?'}. It starts when the current build finishes.</span>
+                          <span class="notice-actions"><button class="btn sm" @click=${this.cancelCompile}>Cancel build</button></span>
                         </div>
                       `
                     : nothing}
 
                   <div class="action-bar">
-                    <button class="btn btn-primary" @click=${this.saveConfig} ?disabled=${this.compilePhase === 'compiling' || this.compilePhase === 'compile_queued'}>
-                      ${this.saveIndicator || (this.hasUnsavedChanges ? 'Save' : 'Saved ✓')}
-                    </button>
-                    ${this.compilePhase === 'idle' || this.compilePhase === 'failed' || this.compilePhase === 'compiled'
-                      ? html`
-                          <button class="btn btn-success" ?disabled=${!this.config} @click=${this.triggerCompile}>Compile</button>
-                          <button class="btn btn-primary" ?disabled=${!this.config} @click=${this.triggerOtaFlash}>Compile and Flash (OTA)</button>
-                          <button class="btn" ?disabled=${!this.config} @click=${this.triggerBrowserFlashFlow}>Compile and Flash (USB via Browser)</button>
-                        `
-                      : this.compilePhase === 'compiling' || this.compilePhase === 'compile_queued'
-                        ? html`<button class="btn btn-danger" @click=${this.cancelCompile}>Cancel</button>`
-                        : nothing
-                    }
+                    <span class="save-state ${this.hasUnsavedChanges ? 'dirty' : ''}" aria-live="polite">
+                      ${this.compilePhase === 'compiling'
+                        ? html`<span class="spinner"></span>Building…`
+                        : this.compilePhase === 'compile_queued'
+                          ? html`Build queued (#${this.compileQueuePosition !== null ? this.compileQueuePosition : '?'})`
+                          : this.compilePhase === 'queued_for_flash'
+                            ? html`Upload queued or running${this.compileQueuePosition !== null ? ` (#${this.compileQueuePosition})` : ''}`
+                            : this.saveIndicator || (this.hasUnsavedChanges ? 'Unsaved changes' : html`${icon('check')}Saved`)}
+                    </span>
+                    <span class="bar-actions">
+                      <button class="btn" @click=${this.saveConfig} ?disabled=${!this.hasUnsavedChanges || this.compilePhase === 'compiling' || this.compilePhase === 'compile_queued'}>Save</button>
+                      ${this.compilePhase === 'idle' || this.compilePhase === 'failed' || this.compilePhase === 'compiled'
+                        ? html`
+                            <button class="btn" ?disabled=${!this.config} @click=${this.triggerCompile}>${icon('build')}Compile</button>
+                            <button class="btn" ?disabled=${!this.config} @click=${this.triggerBrowserFlashFlow} title="Compile, then flash a board plugged into this computer">${icon('usb')}Compile &amp; flash by USB</button>
+                            <button class="btn primary" ?disabled=${!this.config} @click=${this.triggerOtaFlash} title="Compile, then upload over the ESP-NOW mesh">${icon('upload')}Compile &amp; install</button>
+                          `
+                        : this.compilePhase === 'compiling' || this.compilePhase === 'compile_queued'
+                          ? html`<button class="btn danger" @click=${this.cancelCompile}>Cancel build</button>`
+                          : nothing}
+                    </span>
                   </div>
 
                   <div class="browser-flash-panel">
@@ -734,11 +739,11 @@ export class EspConfigPage extends LitElement {
                       ? html`
                           <div class="browser-flash-actions">
                             <button
-                              class="btn btn-primary"
+                              class="btn primary"
                               ?disabled=${this.browserFlashOpen}
                               @click=${this.openBrowserFlash}
                             >
-                              ${this.browserFlashOpen ? 'Flashing…' : 'Flash via Browser USB'}
+                              ${icon('usb')}${this.browserFlashOpen ? 'Flashing…' : 'Flash by USB now'}
                             </button>
                             <a class="btn" href=${api.downloadFactoryBinary(this.mac)} download>Download factory .bin</a>
                           </div>
@@ -747,35 +752,25 @@ export class EspConfigPage extends LitElement {
                             : nothing}
                         `
                       : html`
-                          <div class="browser-flash-hint">
+                          <div class="browser-flash-hint hint">
                             ${this.compilePhase === 'compiled' && !chipFamily
                               ? html`<p>Browser USB flash is unavailable because the chip family could not be determined for this build.</p>`
                               : !this.browserSupportsUsbFlash
                                 ? html`<p>Browser USB flash requires Chrome or Edge with Web Serial on an HTTPS page.</p>`
-                                : html`<p>Compile the device first, then flash the resulting firmware through your browser here.</p>`}
+                                : html`<p>USB flashing becomes available here after a successful build.</p>`}
                             <a class="btn" href=${api.downloadFactoryBinary(this.mac)} download ?hidden=${this.compilePhase !== 'compiled'}>Download factory .bin</a>
                           </div>
                         `}
                   </div>
 
-                  ${this.compilePhase === 'compiling'
-                    ? html`<p class="status-line">Status: compiling... <button class="cancel-link" @click=${this.cancelCompile}>Cancel</button></p>`
-                    : this.compilePhase === 'compile_queued'
-                      ? html`<p class="status-line">Status: waiting to compile (#${this.compileQueuePosition !== null ? this.compileQueuePosition : '?'})</p>`
-                      : this.compilePhase === 'queued_for_flash'
-                        ? html`<p class="status-line">Status: OTA flash queued or running${this.compileQueuePosition !== null ? ` (#${this.compileQueuePosition})` : ''}</p>`
-                      : html`<p class="status-line">Status: ${this.hasUnsavedChanges ? 'unsaved' : 'saved'}</p>`
-                  }
-
                   ${this.error && this.compilePhase !== 'compiling'
-                    ? html`<p class="error">${this.error}</p>`
+                    ? html`<div class="notice danger" role="alert">${icon('alert')}<span>${this.error}</span></div>`
                     : nothing}
 
                   ${this.compilePhase === 'compiled'
                     ? html`
                         <div class="success-section">
-                          <div class="success-banner">&#10003; Build successful</div>
-                          <p class="build-info">${esphomeName} &middot; ready for flash</p>
+                          <div class="success-banner">${icon('checkCircle')}<strong>Build succeeded</strong><span class="build-info">${esphomeName} is ready to install</span></div>
                           ${this.preflight?.has_warnings
                             ? html`
                                 <div class="warnings">
@@ -785,7 +780,7 @@ export class EspConfigPage extends LitElement {
                             : nothing}
                           ${this.flashIntent === 'browser'
                             ? html`<p class="hint">Build complete. Connect the device by USB and use the browser flash control above.</p>`
-                            : html`<p class="hint">Firmware compiled. Use OTA or browser USB flash from the action bar above.</p>`}
+                            : html`<p class="hint">Install it over the air or by USB from the buttons above, or download the binaries.</p>`}
                           <div class="download-links">
                             <a class="btn" href=${api.downloadFactoryBinary(this.mac)} download>Download .bin</a>
                             <a class="btn" href=${api.downloadCompileBinary(this.mac)} download>Download .ota.bin</a>
@@ -798,10 +793,10 @@ export class EspConfigPage extends LitElement {
                     ? html`
                         <div class="fail-section">
                           <div class="fail-banner">
-                            <span>&#10007; Build failed</span>
+                            <span class="fail-title">${icon('alert')}Build failed</span>
                             ${this.showCompileLog ? html`<button class="close-logs-link" @click=${() => { this.showCompileLog = false; }}>Hide logs</button>` : html`<button class="close-logs-link" @click=${() => { this.showCompileLog = true; }}>Show logs</button>`}
                           </div>
-                          <p class="hint">Fix the YAML above and try again. <button class="btn-link" @click=${this.cancelCompile}>Cancel</button></p>
+                          <p class="hint">Check the log for the first error, fix the YAML above, then compile again.</p>
                         </div>
                       `
                     : nothing}
@@ -811,556 +806,92 @@ export class EspConfigPage extends LitElement {
     `;
   }
 
-  static styles = css`
-    .config-page {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      color: var(--ink);
-      font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
-    }
-    .config-header {
-      display: flex;
-      align-items: end;
-      gap: 16px;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--line);
-    }
-    .back-buttons {
-      display: flex;
-      gap: 8px;
-    }
-    .back {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      min-height: 36px;
-      padding: 0 14px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.12s;
-    }
-    .back:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
-    }
-    .header-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .header-info h2 {
-      margin: 0;
-      font-size: clamp(18px, 2.5vw, 26px);
-      font-weight: 700;
-      line-height: 1.1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .header-info p {
-      margin: 4px 0 0;
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .ok { color: var(--ok); }
-    .danger { color: var(--danger); }
-    .device-type-tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #475569;
-      vertical-align: middle;
-    }
+  static styles = [shared, css`
+    :host { display: block; }
+    .config-page { display: grid; gap: 16px; }
+    .config-page > *, .main-content > * { min-width: 0; }
+    .crumbs svg { width: 14px; height: 14px; color: var(--faint); }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+    .page-actions .btn svg, .bar-actions .btn svg, .no-config .btn svg, .ec-fix-actions .btn svg, .browser-flash-actions .btn svg { width: 18px; height: 18px; }
+    .loading { display: flex; align-items: center; gap: 12px; padding: 24px 16px; color: var(--muted); }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      padding: 20px 24px;
-      margin-bottom: 16px;
+    .no-config { padding: 48px 16px; }
+    .no-config-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+    .chip-error-banner {
+      display: flex; align-items: center; gap: 10px; width: 100%; max-width: 640px;
+      padding: 10px 12px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--ink); text-align: left;
     }
-    .no-config {
-      text-align: center;
-    }
-    .no-config h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 18px;
-    }
-    .no-config-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      color: var(--ink);
-      cursor: pointer;
-      transition: all 0.12s;
-      min-height: 38px;
-    }
-    .btn:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
-    }
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-    .btn-primary:hover {
-      background: var(--primary-strong);
-    }
-    .btn-success {
-      background: var(--ok);
-      color: #fff;
-      border-color: var(--ok);
-    }
-    .btn-success:hover {
-      background: #16a34a;
-    }
-    .btn-danger {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-    .btn-danger:hover {
-      background: var(--danger);
-    }
-    .btn-edit-config {
-      border: 1px solid var(--primary);
-      background: var(--primary);
-      color: #fff;
-    }
-    .btn-edit-config:hover {
-      background: var(--primary-strong);
-      border-color: var(--primary-strong);
-    }
-    .hint {
-      font-size: 12px;
-      color: var(--muted);
-      margin: 4px 0;
-    }
+    .chip-error-banner > svg { width: 20px; height: 20px; color: var(--accent); flex: none; margin: 0; }
+    .chip-error-banner span { flex: 1; }
 
-    .yaml-warnings {
-      border: 1px solid var(--accent);
-      background: #fffbeb;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-top: 8px;
-    }
-    .yaml-warnings p {
-      font-size: 12px;
-      color: #7c3f00;
-      margin: 4px 0;
-      font-weight: 500;
-    }
-
-    .queue-banner {
-      border: 1px solid var(--accent);
-      background: #fffbeb;
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .queue-banner strong {
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .queue-banner small {
-      color: var(--muted);
-      font-size: 11px;
-    }
+    .main-content { display: grid; gap: 12px; }
+    .yaml-warnings p + p { margin-top: 4px; }
+    .compile-focus-view { display: grid; gap: 10px; }
+    .compile-status-header { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .compile-elapsed { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 400; }
+    .expanded-log { min-height: 420px; }
 
     .action-bar {
-      display: flex;
-      gap: 8px;
-      padding: 16px 0 8px;
-      border-top: 1px solid var(--line);
-      margin-top: 12px;
-    }
-
-    .cancel-link {
-      border: 1px solid var(--danger);
-      background: transparent;
-      color: var(--danger);
-      font: inherit;
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-    .cancel-link:hover {
-      background: var(--danger);
-      color: white;
-    }
-    .btn-link {
-      border: none;
-      background: transparent;
-      color: var(--primary);
-      font: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 0 4px;
-      text-decoration: underline;
-    }
-    .btn-link:hover {
-      color: var(--ink);
-    }
-    .close-logs-link {
-      margin-left: auto;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: transparent;
-      color: var(--muted);
-      font: inherit;
-      font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
-      font-size: 10px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-    .close-logs-link:hover {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-    }
-
-    .status-line {
-      font-size: 11px;
-      color: var(--muted);
-      margin: 4px 0 0;
-    }
-
-    .success-section,
-    .fail-section {
-      margin-top: 10px;
-    }
-    .download-links {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .success-banner {
-      background: #dcfce7;
-      color: var(--ok);
-      border: 1px solid var(--ok);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-weight: 600;
-      font-size: 14px;
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
       display: flex;
       align-items: center;
-      gap: 12px;
-    }
-    .fail-banner {
-      background: #fef2f2;
-      color: #991b1b;
-      border: 1px solid var(--danger);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-weight: 600;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .build-info {
-      font-size: 13px;
-      color: var(--muted);
-      margin: 6px 0;
-    }
-    .flash-actions {
-      display: flex;
-      gap: 8px;
-      margin: 10px 0;
-      flex-wrap: wrap;
-    }
-    .browser-flash-panel {
-      border: 1px solid var(--line);
-      background: #f8fafc;
-      border-radius: 8px;
-      padding: 12px;
-      display: grid;
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .browser-flash-copy strong {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-    .browser-flash-copy p {
-      margin: 0;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .browser-flash-actions,
-    .browser-flash-hint {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .browser-flash-hint p {
-      margin: 0;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .browser-flash-error {
-      margin: 6px 0 0;
-      font-size: 12px;
-      color: var(--danger, var(--danger));
-    }
-    .warnings {
-      border: 1px solid #e5d3ae;
-      background: var(--accent-soft);
-      padding: 12px 14px;
-      border-radius: 8px;
-      display: grid;
-      gap: 8px;
-      margin: 8px 0;
-    }
-    .warnings p {
-      margin: 0;
-      font-size: 12px;
-      color: #72531d;
-    }
-    .warnings label {
-      font-weight: 500;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .error {
-      color: var(--danger);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 10px 12px;
-      background: #fef2f2;
-      border: 1px solid var(--danger);
-      border-radius: 6px;
-    }
-
-    .chip-error-banner {
-      background: #fef2f2;
-      border: 2px solid var(--danger);
-      color: #991b1b;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .chip-error-banner .dismiss-btn {
-      background: transparent;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #991b1b;
-      padding: 0 4px;
-      width: auto;
-      min-height: auto;
-      border-radius: 0;
-      transform: none;
-    }
-
-    .chip-error-banner .dismiss-btn:hover {
-      color: #7f1d1d;
-      background: transparent;
-      border-color: transparent;
-      transform: none;
-    }
-
-    .compare-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 8px 0;
-      font-size: 13px;
-    }
-    .compare-table th,
-    .compare-table td {
-      border: 1px solid var(--line);
-      padding: 8px 10px;
-      text-align: left;
-    }
-    .compare-table th {
-      background: #f8fafc;
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    .tag {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      margin-left: 4px;
-    }
-    .tag.match {
-      background: #dcfce7;
-      color: var(--ok);
-    }
-    .tag.mismatch {
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .compile-focus-view {
-      display: flex;
-      flex-direction: column;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-      flex: 1;
-      min-height: 0;
-      background: #1a1b1e;
-    }
-    .compile-status-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--primary);
-      color: white;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .compile-spinner {
-      font-size: 16px;
-      animation: spin 1.5s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .compile-elapsed {
-      margin-left: auto;
-      font-family: ui-monospace, monospace;
-      font-size: 12px;
-      opacity: 0.85;
-    }
-    .expanded-log {
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
-    .expanded-log .log-body {
-      height: 100%;
-      max-height: none;
-    }
-    .main-content {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .bottom-log {
-      margin-top: 8px;
-    }
-    .ec-fix-backdrop {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .ec-fix-modal {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 560px;
-      width: 90%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
-    .ec-fix-modal h3 { margin: 0 0 12px; font-size: 16px; }
-    .ec-fix-modal p { margin: 8px 0; font-size: 13px; }
-    .ec-fix-modal code { font-family: ui-monospace, monospace; font-size: 12px; }
-    .ec-fix-snippet {
-      background: #1e1e2e;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 12px;
-      font-family: ui-monospace, monospace;
-      font-size: 12px;
-      white-space: pre-wrap;
-      color: #a8d8a8;
-      margin: 8px 0;
-    }
-    .ec-fix-hint { font-size: 12px; color: var(--muted); }
-    .ec-fix-actions {
-      display: flex;
       gap: 12px;
-      margin-top: 16px;
-      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
     }
+    .save-state { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: var(--text-sm); }
+    .save-state svg { width: 16px; height: 16px; color: var(--ok); }
+    .save-state.dirty { color: var(--accent); font-weight: 500; }
+    .save-state .spinner { width: 14px; height: 14px; }
+    .bar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-    /* ---- Configuration page header ---- */
-    :host { display: block; }
-    * { box-sizing: border-box; }
-    .config-page { gap: 14px; }
-    .config-header { display: flex !important; align-items: flex-end !important; justify-content: space-between; gap: 24px !important; padding: 0 0 15px !important; border-bottom: 1px solid var(--line); }
-    .header-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .back-buttons { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; color: var(--faint); font-size: 10px; }
-    .back-buttons .back { padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-weight: 600; cursor: pointer; }
-    .back-buttons .back:hover { text-decoration: underline; }
-    .back-buttons .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .back-buttons .current { color: var(--faint); }
-    .config-header .eyebrow { color: var(--primary); font-size: 9px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
-    .config-header h1 { margin: 0; color: var(--ink); font-size: 25px; line-height: 1.17; letter-spacing: -.032em; font-weight: 700; overflow-wrap: anywhere; }
-    .config-header p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
-    .config-header p .mono { font-family: var(--font-mono); }
-    .config-header p .ok { color: var(--ok); font-weight: 600; }
-    .config-header p .danger { color: var(--danger); font-weight: 600; }
-    .device-type-tag { display: inline-flex; align-items: center; margin-left: 7px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 8px; font-weight: 650; vertical-align: 4px; }
-    .header-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
-    .config-header .btn { min-height: 34px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
-    .config-header .btn:hover { background: var(--surface-subtle); }
-    .config-page > .card { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); }
-    @media (max-width: 760px) {
-      .config-header { align-items: flex-start !important; flex-direction: column; gap: 13px !important; }
-      .header-actions { width: 100%; }
-      .header-actions .btn { width: 100%; }
-      .config-header h1 { font-size: 21px; }
+    .browser-flash-panel:empty { display: none; }
+    .browser-flash-hint { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .browser-flash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .browser-flash-error { color: var(--danger); margin-top: 8px; }
+
+    .success-section, .fail-section { display: grid; gap: 10px; padding: 14px 16px; border-radius: var(--radius-lg); }
+    .success-section { background: var(--ok-soft); }
+    .fail-section { background: var(--danger-soft); }
+    .success-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--ok); }
+    .success-banner svg { width: 22px; height: 22px; }
+    .success-banner strong { font-weight: 500; }
+    .build-info { color: var(--ink-2); }
+    .warnings { display: grid; gap: 4px; color: var(--accent); }
+    .download-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .fail-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .fail-title { display: inline-flex; align-items: center; gap: 8px; color: var(--danger); font-weight: 500; }
+    .fail-title svg { width: 20px; height: 20px; }
+    .close-logs-link, .btn-link {
+      border: 0; background: none; padding: 0; color: var(--primary); font: inherit; font-weight: 500; cursor: pointer;
     }
-  `;
+    .close-logs-link:hover, .btn-link:hover { text-decoration: underline; }
+    .error { color: var(--danger); }
+
+    .ec-fix-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: var(--scrim); }
+    .ec-fix-modal {
+      display: grid; gap: 12px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto;
+      padding: 22px; border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-md);
+    }
+    .ec-fix-modal h3 { font-size: var(--text-xl); font-weight: 500; }
+    .ec-fix-modal p { color: var(--ink-2); }
+    .ec-fix-snippet { margin: 0; padding: 12px 14px; border-radius: var(--radius-md); background: var(--log-bg); color: var(--log-ink); font-family: var(--font-mono); font-size: var(--text-xs); overflow: auto; }
+    .missing-secrets-list { margin: 0; padding-left: 20px; }
+    .ec-fix-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
+    @media (max-width: 760px) {
+      .action-bar { position: static; }
+      .bar-actions { width: 100%; }
+      .bar-actions .btn { flex: 1 1 auto; }
+    }
+  `];
 }
 
 declare global {

@@ -1,19 +1,16 @@
 import { LitElement, css, html, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { BridgeFirmwareStatus, ConfigStatus, OtaJob, QueueResponse, TopologyNode, api, normalizeMac, streamTopology, TopologyStreamHandle, WsTopologyMessage } from '../api/client';
-import './topology-node';
-
-interface ConfirmRequest {
-  title: string;
-  message: string;
-  detail: string;
-  confirmLabel: string;
-  danger?: boolean;
-  run: () => Promise<void>;
-}
+import { renderTreeRow, treeStyles, nodeName, offlineReason, type TreeRow } from './topology-node';
+import './confirm-dialog';
+import type { ConfirmRequest } from './confirm-dialog';
+import { shared } from '../styles/shared';
+import { icon } from '../styles/icons';
 
 @customElement('esp-topology-map')
 export class EspTopologyMap extends LitElement {
+  /** Set by the shell while the add-on is unreachable; the shell already explains the outage. */
+  @property({ type: Boolean }) addonDown = false;
   @state() private topology: TopologyNode[] = [];
   @state() private currentJob: OtaJob | null = null;
   @state() private queueData: QueueResponse | null = null;
@@ -25,7 +22,6 @@ export class EspTopologyMap extends LitElement {
   @state() private query = '';
   @state() private filter: 'all' | 'online' | 'offline' = 'all';
   @state() private pendingConfirm: ConfirmRequest | null = null;
-  @state() private confirmBusy = false;
   private stream: TopologyStreamHandle | undefined;
   private firmwareTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -103,27 +99,6 @@ export class EspTopologyMap extends LitElement {
       confirmLabel: 'Update and reboot',
       run,
     };
-    requestAnimationFrame(() => (this.shadowRoot?.querySelector('.confirm-primary') as HTMLElement | null)?.focus());
-  }
-
-  private closeConfirm(): void {
-    if (this.confirmBusy) return;
-    this.pendingConfirm = null;
-  }
-
-  private async runConfirm(): Promise<void> {
-    const request = this.pendingConfirm;
-    if (!request) return;
-    this.confirmBusy = true;
-    try {
-      await request.run();
-      this.pendingConfirm = null;
-    } catch (err) {
-      this.error = err instanceof Error ? err.message : String(err);
-      this.pendingConfirm = null;
-    } finally {
-      this.confirmBusy = false;
-    }
   }
 
   private async load(showLoading = true, bypassCache = false): Promise<void> {
@@ -188,7 +163,6 @@ export class EspTopologyMap extends LitElement {
         await this.load(false, true);
       },
     };
-    requestAnimationFrame(() => (this.shadowRoot?.querySelector('.confirm-primary') as HTMLElement | null)?.focus());
   }
 
   private jobForMac(mac: string): OtaJob | null {
@@ -222,15 +196,28 @@ export class EspTopologyMap extends LitElement {
     return { root, childMap };
   }
 
+  /** Depth-first flatten so every row shares one grid and columns align. */
+  private flatten(root: TopologyNode, childMap: Map<string, TopologyNode[]>): TreeRow[] {
+    const rows: TreeRow[] = [{ node: root, depth: 0, rails: [], last: true, isRoot: true }];
+    const walk = (parent: TopologyNode, depth: number, rails: boolean[]) => {
+      const children = childMap.get(this.childKey(parent.mac)) || [];
+      children.forEach((child, i) => {
+        const last = i === children.length - 1;
+        rows.push({ node: child, depth, rails, last, isRoot: false });
+        walk(child, depth + 1, [...rails, !last]);
+      });
+    };
+    walk(root, 1, []);
+    return rows;
+  }
+
   render() {
     const { root } = this.buildChildren();
     const rootMac = this.childKey(root?.mac || '');
     // The topology list is what the bridge currently reports, plus remotes retained
-    // from earlier sessions. A retained remote has no hop count, so filtering on
-    // `hops > 0` dropped it off the page entirely - it stayed in the "known"
-    // count with no row and no way to edit or clear it. Keep any non-hidden node
-    // that is either reachable (hops > 0) or a retained remote (not the root
-    // bridge), and let it render as an offline row.
+    // from earlier sessions. A retained remote has no hop count, so keep any
+    // non-hidden node that is either reachable (hops > 0) or a retained remote
+    // (not the root bridge), and let it render as an offline row.
     const allVisibleTopology = this.topology.filter((n) => {
       if (n.hidden) return false;
       if ((n.hops ?? 0) > 0) return true;
@@ -266,393 +253,214 @@ export class EspTopologyMap extends LitElement {
       visibleChildMap.set(parent, children);
     }
     for (const children of visibleChildMap.values()) {
-      children.sort((a, b) => (a.friendly_name || a.label || a.esphome_name || a.mac).localeCompare(b.friendly_name || b.label || b.esphome_name || b.mac));
+      children.sort((a, b) => nodeName(a).localeCompare(nodeName(b)));
     }
-
-    const directChildren = visibleChildMap.get(rootMac)?.length ?? 0;
-    const maxDepth = allVisibleTopology.reduce((depth, node) => Math.max(depth, node.hops ?? 0), 0);
-    const weakLinks = remotes.filter((n) => n.online && n.rssi != null && n.rssi <= -80).length;
     const running = this.currentJob ? 1 : 0;
     const queued = (this.queueData?.queued_jobs ?? []).length;
-    const bridgeName = root ? (root.friendly_name || root.esphome_name || root.label || root.mac) : 'Bridge';
-    const healthLabel = offlineRemotes === 0
-      ? 'All remotes responding'
-      : offlineRemotes === 1
-        ? '1 remote needs attention'
-        : `${offlineRemotes} remotes need attention`;
+    const shownRemotes = visibleTopology.filter((n) => !n.is_bridge).length;
+    const filtered = this.filter !== 'all' || !!normalizedQuery;
+    const rows = root ? this.flatten(root, visibleChildMap) : [];
 
     return html`
-      <div class="overview">
+      <div class="page">
         <div class="page-head">
-          <div class="page-heading">
-            <span class="eyebrow">Live mesh</span>
-            <h1>Network overview</h1>
-            <p>See the bridge, every route, and what needs attention before you change anything.</p>
+          <div>
+            <h1>Network</h1>
+            ${root ? html`
+              <p class="summary" aria-live="polite">
+                <span><strong>${onlineRemotes.length}</strong> of ${remotes.length} remotes online</span>
+                ${offlineRemotes > 0 ? html`<button class="summary-link danger" @click=${() => { this.filter = 'offline'; }}>${offlineRemotes} offline</button>` : nothing}
+                ${running + queued > 0 ? html`<a class="summary-link" href="#/queue">${running ? '1 job running' : ''}${running && queued ? ', ' : ''}${queued ? `${queued} queued` : ''}</a>` : nothing}
+              </p>
+            ` : nothing}
           </div>
           <div class="page-actions">
-            <button class="btn" @click=${() => void this.load()} ?disabled=${this.loading}>${this.loading ? 'Refreshing…' : 'Refresh'}</button>
-            <button class="btn primary" @click=${() => { window.location.hash = '/add-remote'; }}>+ Add remote</button>
+            <button class="btn icon" aria-label="Refresh" title="Refresh" @click=${() => void this.load(true, true)} ?disabled=${this.loading}>
+              ${this.loading ? html`<span class="spinner"></span>` : icon('refresh')}
+            </button>
+            ${this.addonDown
+              ? html`<button class="btn primary" disabled title="Unavailable while the add-on is unreachable">${icon('plus')}Add remote</button>`
+              : html`<a class="btn primary" href="#/add-remote">${icon('plus')}Add remote</a>`}
           </div>
         </div>
 
-        ${this.error ? html`<div class="callout error" role="alert"><strong>Could not read the network</strong><span>${this.error}</span></div>` : nothing}
+        ${this.error && !this.addonDown ? html`<div class="notice danger" role="alert">${icon('alert')}<span><strong>Couldn't read the network.</strong> ${this.error}</span>
+          <span class="notice-actions"><button class="btn sm" @click=${() => void this.load(true, true)}>Try again</button></span></div>` : nothing}
 
         ${root ? html`
-          <section class="network-banner" aria-label="Active bridge">
-            <div class="bridge-identity">
-              <span class="bridge-glyph" aria-hidden="true">
-                <svg viewBox="0 0 32 32"><path d="M16 27V14M16 14l-6-5M16 14l6-5M10 9L7 6M22 9l3-3"/><circle cx="16" cy="6" r="2.3"/><circle cx="10" cy="9" r="2"/><circle cx="22" cy="9" r="2"/><circle cx="7" cy="6" r="1.3"/><circle cx="25" cy="6" r="1.3"/></svg>
-              </span>
-              <div class="bridge-copy">
-                <span class="overline">Active bridge</span>
-                <h2>${bridgeName}</h2>
-                <div class="bridge-meta">
-                  <span class="status ${root.online ? 'ok' : 'bad'}"><span class="dot"></span>${root.online ? 'Online' : 'Offline'}</span>
-                  ${root.network_id ? html`<span class="meta-item">${root.network_id}</span>` : nothing}
-                  ${root.chip_name ? html`<span class="meta-item">${root.chip_name}</span>` : nothing}
-                  <span class="meta-item mono">${root.mac}</span>
-                </div>
-              </div>
-            </div>
-            <div class="bridge-health" aria-label=${healthLabel}>
-              <span class="health-kicker">Mesh health</span>
-              <strong>${onlineRemotes.length}<span class="health-total">/${remotes.length || 0}</span></strong>
-              <span class="health-caption">${healthLabel}</span>
-            </div>
-          </section>
-
-          <section class="stat-grid" aria-label="Network summary">
-            <div class="stat">
-              <span class="stat-label">Remotes online</span>
-              <div class="stat-value">${onlineRemotes.length}<span>/${remotes.length}</span></div>
-              <span class="stat-note ${offlineRemotes > 0 ? 'warn' : 'ok'}">${offlineRemotes > 0 ? `${offlineRemotes} offline` : 'All reachable'}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Direct bridge links</span>
-              <div class="stat-value">${directChildren}</div>
-              <span class="stat-note">${remotes.length > directChildren ? `${remotes.length - directChildren} relayed` : 'No relayed nodes'}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Mesh depth</span>
-              <div class="stat-value">${maxDepth}<span> ${maxDepth === 1 ? 'hop' : 'hops'}</span></div>
-              <span class="stat-note">${weakLinks > 0 ? `${weakLinks} weak signal${weakLinks === 1 ? '' : 's'}` : 'No weak links'}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Work in flight</span>
-              <div class="stat-value">${running + queued}<span>${running + queued === 1 ? ' job' : ' jobs'}</span></div>
-              <span class="stat-note">${running ? '1 running' : 'Nothing running'}${queued ? ` · ${queued} queued` : ''}</span>
-            </div>
-          </section>
-
-          <section class="device-panel">
-            <div class="panel-heading">
-              <div>
-                <h2>Device tree</h2>
-                <p>Route path from ${bridgeName}. Select a device to inspect or configure it.</p>
-              </div>
-              <span class="result-count">${visibleTopology.length - 1} of ${allVisibleTopology.length - 1} shown</span>
-            </div>
-            <div class="device-toolbar">
-              <label class="search-field">
-                <span class="sr-only">Search devices</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4 4"/></svg>
-                <input type="search" placeholder="Search name, MAC, or chip" .value=${this.query}
+          <section class="card" aria-label="Device tree">
+            <div class="filters">
+              <label class="search">
+                ${icon('search')}
+                <input type="search" aria-label="Search devices" placeholder="Search by name, MAC or chip" .value=${this.query}
                   @input=${(e: Event) => { this.query = (e.target as HTMLInputElement).value; }} />
               </label>
-              <div class="segmented" role="group" aria-label="Filter devices">
+              <div class="segmented" role="group" aria-label="Show">
                 ${(['all', 'online', 'offline'] as const).map((value) => html`
-                  <button class=${this.filter === value ? 'active' : ''} aria-pressed=${this.filter === value ? 'true' : 'false'}
-                    @click=${() => { this.filter = value; }}>${value[0].toUpperCase() + value.slice(1)}</button>
+                  <button aria-pressed=${this.filter === value ? 'true' : 'false'} @click=${() => { this.filter = value; }}>
+                    ${value === 'all' ? `All ${remotes.length}` : value === 'online' ? `Online ${onlineRemotes.length}` : `Offline ${offlineRemotes}`}
+                  </button>
                 `)}
               </div>
             </div>
             ${remotes.length === 0
-              ? html`<div class="empty-state">
-                  <span class="empty-glyph" aria-hidden="true">⌁</span>
+              ? html`
+                <div class="tree" role="grid" aria-label="Devices">${rows.map((row) => this.row(row))}</div>
+                <div class="empty">
+                  ${icon('network')}
                   <strong>No remotes have joined yet</strong>
-                  <p>Flash a remote with this bridge’s network credentials. It will appear here when it joins.</p>
-                  <button class="btn primary" @click=${() => { window.location.hash = '/add-remote'; }}>+ Add remote</button>
-                </div>`
-              : visibleTopology.length <= 1
-              ? html`<div class="empty-state">
-                  <span class="empty-glyph" aria-hidden="true">⌕</span>
-                  <strong>No devices match this view</strong>
-                  <p>Try another name, or clear the status filter.</p>
-                  <button class="btn" @click=${() => { this.query = ''; this.filter = 'all'; }}>Clear filters</button>
+                  <p>Flash a remote with this bridge's network credentials. It appears here as soon as it joins.</p>
+                  <a class="btn primary" href="#/add-remote">${icon('plus')}Add remote</a>
                 </div>`
               : html`
-                  <div class="tree-wrap">
-                    <div class="tree-legend" aria-hidden="true"><span>Device</span><span>Last seen</span><span>Link</span></div>
-                    <div class="tree-root">
-                      <esp-topology-node
-                        .node=${root}
-                        .childNodesData=${visibleChildMap.get(rootMac) || []}
-                        .childMap=${visibleChildMap}
-                        .jobForMac=${(mac: string) => this.jobForMac(mac)}
-                        .configForMac=${(mac: string) => this.configForMac(mac)}
-                        .firmwareForMac=${(mac: string) => this.firmwareForMac(mac)}
-                        .onUpdateFirmware=${(mac: string) => void this.handleUpdateFirmware(mac)}
-                        .onHideDevice=${(mac: string) => this.handleHideDevice(mac)}
-                        .isRoot=${true}
-                      ></esp-topology-node>
-                    </div>
+                <div class="tree" role="grid" aria-label="Devices">
+                  <div class="tree-head" role="row">
+                    <span></span><span role="columnheader">Device</span><span role="columnheader">Signal</span><span role="columnheader">Hops</span>
+                    <span role="columnheader">Last seen</span><span role="columnheader" class="fw">Firmware</span><span role="columnheader">Status</span><span></span>
                   </div>
-                `}
-          </section>
-        ` : (!this.loading && !this.error ? html`
-          <section class="empty-page">
-            <span class="empty-glyph" aria-hidden="true">⌁</span>
-            <h2>No bridge data yet</h2>
-            <p>The add-on has no topology to show. Check that the bridge is powered and connected, then refresh.</p>
-            <button class="btn primary" @click=${() => void this.load()}>Try again</button>
-          </section>
-        ` : nothing)}
-
-        ${this.loading && !root ? html`<div class="loading-panel" aria-live="polite"><span class="spinner"></span>Reading bridge topology…</div>` : nothing}
-
-        ${hiddenDevices.length > 0 ? html`
-          <section class="device-panel hidden-section">
-            <button class="panel-heading accordion" aria-expanded=${this.hiddenExpanded ? 'true' : 'false'} @click=${() => { this.hiddenExpanded = !this.hiddenExpanded; }}>
-              <span>
-                <h2>Hidden devices <span class="count-badge">${hiddenDevices.length}</span></h2>
-                <p>Offline devices kept out of the live tree.</p>
-              </span>
-              <span class="chevron ${this.hiddenExpanded ? 'open' : ''}" aria-hidden="true">⌄</span>
-            </button>
-            ${this.hiddenExpanded ? html`
-              <div class="hidden-list">
-                ${hiddenDevices.map((node) => html`
-                  <div class="hidden-row">
-                    <span class="status-dot offline"></span>
-                    <button class="hidden-identity" @click=${() => { window.location.hash = `/device/${encodeURIComponent(node.mac)}`; }}>
-                      <strong>${node.friendly_name || node.esphome_name || node.label || node.mac}</strong>
-                      <small class="mono">${node.mac}</small>
-                    </button>
-                    <span class="hidden-reason">${node.offline_reason || 'offline'}</span>
-                    <span class="hidden-actions">
-                      <button class="btn sm" @click=${() => void this.handleUnhideDevice(node.mac)}>Restore</button>
-                      ${node.is_bridge ? nothing : html`<button class="btn sm danger" @click=${() => void this.handleRemoveDevice(node.mac)}>Delete</button>`}
-                    </span>
-                  </div>
-                `)}
+                  ${rows.map((row) => this.row(row))}
+                </div>
+                ${filtered && shownRemotes === 0 ? html`
+                  <div class="empty">
+                    ${icon('search')}
+                    <strong>No remotes match</strong>
+                    <p>Nothing matches “${this.query || this.filter}”. Clear the search or show all remotes.</p>
+                    <button class="btn" @click=${() => { this.query = ''; this.filter = 'all'; }}>Show all</button>
+                  </div>` : nothing}
+              `}
+            ${hiddenDevices.length > 0 ? html`
+              <div class="hidden-block">
+                <button class="hidden-toggle" aria-expanded=${this.hiddenExpanded ? 'true' : 'false'} @click=${() => { this.hiddenExpanded = !this.hiddenExpanded; }}>
+                  <span class="chev ${this.hiddenExpanded ? 'open' : ''}">${icon('chevronRight')}</span>
+                  Hidden devices <span class="chip">${hiddenDevices.length}</span>
+                  <span class="hint">Offline devices kept out of the tree</span>
+                </button>
+                ${this.hiddenExpanded ? html`
+                  <ul class="hidden-list">
+                    ${hiddenDevices.map((node) => html`
+                      <li>
+                        <span class="dot danger"></span>
+                        <span class="hidden-id">
+                          <a href=${`#/device/${encodeURIComponent(node.mac)}`}>${nodeName(node)}</a>
+                          <small><span class="mono">${node.mac}</span> · ${offlineReason(node)}</small>
+                        </span>
+                        <span class="hidden-actions">
+                          <button class="btn sm" @click=${() => void this.handleUnhideDevice(node.mac)}>Restore</button>
+                          ${node.is_bridge ? nothing : html`<button class="btn sm danger" @click=${() => void this.handleRemoveDevice(node.mac)}>Delete…</button>`}
+                        </span>
+                      </li>
+                    `)}
+                  </ul>
+                ` : nothing}
               </div>
             ` : nothing}
           </section>
-        ` : nothing}
-
-        ${this.pendingConfirm ? html`
-          <div class="confirm-backdrop" role="presentation" @click=${(e: Event) => { if (e.target === e.currentTarget) this.closeConfirm(); }}>
-            <section class="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-copy"
-              @keydown=${(e: KeyboardEvent) => { if (e.key === 'Escape') this.closeConfirm(); }}>
-              <span class="confirm-mark ${this.pendingConfirm.danger ? 'danger' : ''}" aria-hidden="true">${this.pendingConfirm.danger ? '!' : '↻'}</span>
-              <h2 id="confirm-title">${this.pendingConfirm.title}</h2>
-              <p id="confirm-copy">${this.pendingConfirm.message}</p>
-              <div class="confirm-detail">${this.pendingConfirm.detail}</div>
-              <div class="confirm-actions">
-                <button class="btn" @click=${() => this.closeConfirm()} ?disabled=${this.confirmBusy}>Cancel</button>
-                <button class="btn confirm-primary ${this.pendingConfirm.danger ? 'danger' : 'primary'}" @click=${() => void this.runConfirm()} ?disabled=${this.confirmBusy}>
-                  ${this.confirmBusy ? 'Working…' : this.pendingConfirm.confirmLabel}
-                </button>
+        ` : this.loading
+          ? html`<div class="card loading" aria-live="polite"><span class="spinner"></span>Reading the bridge topology…</div>`
+          : !this.error ? html`
+            <section class="card">
+              <div class="empty">
+                ${icon('bridge')}
+                <strong>No bridge data yet</strong>
+                <p>The add-on hasn't received a topology from the bridge. Check that the bridge is powered and connected, then try again.</p>
+                <button class="btn primary" @click=${() => void this.load(true, true)}>Try again</button>
               </div>
-            </section>
-          </div>
-        ` : nothing}
+            </section>` : nothing}
+
+        <esp-confirm-dialog .request=${this.pendingConfirm} @closed=${() => { this.pendingConfirm = null; }}></esp-confirm-dialog>
       </div>
     `;
   }
 
-  static styles = css`
-    :host { display: block; color: var(--ink); }
-    * { box-sizing: border-box; }
+  private row(row: TreeRow) {
+    return renderTreeRow(row, {
+      job: this.jobForMac(row.node.mac),
+      config: this.configForMac(row.node.mac),
+      firmware: row.isRoot ? this.firmwareForMac(row.node.mac) : null,
+      onUpdateFirmware: (mac) => void this.handleUpdateFirmware(mac),
+      onHide: (mac) => void this.handleHideDevice(mac),
+    });
+  }
 
-    .overview { display: flex; flex-direction: column; gap: 18px; }
-
-    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
-    .page-heading { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-    .eyebrow { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-    h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; color: var(--ink); }
-    .page-heading p { margin: 2px 0 0; max-width: 62ch; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .page-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      min-height: 36px; padding: 0 13px; border: 1px solid var(--line-strong);
-      border-radius: 7px; background: var(--surface); color: var(--ink);
-      font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
-      transition: background .15s, border-color .15s, color .15s;
-      white-space: nowrap;
-    }
-    .btn:hover { background: var(--surface-subtle); border-color: var(--faint); }
-    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .btn:disabled { opacity: .55; cursor: default; }
-    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .btn.primary:hover { background: var(--primary-strong); border-color: var(--primary-strong); }
-    .btn.sm { min-height: 30px; padding: 0 10px; font-size: 11px; }
-    .btn.danger { color: var(--danger); border-color: #e9c4c6; background: var(--danger-soft); }
-    .btn.danger:hover { background: #fbe2e3; }
-
-    .network-banner {
-      position: relative;
+  static styles = [shared, treeStyles, css`
+    :host { display: block; }
+    .summary {
       display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px 14px;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+    .summary strong { color: var(--ink); font-weight: 500; }
+    .summary-link {
+      border: 0;
+      padding: 0;
+      background: none;
+      font: inherit;
+      color: var(--primary);
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .summary-link:hover { text-decoration: underline; }
+    .summary-link.danger { color: var(--danger); }
+
+    .card { overflow: hidden; }
+    .filters {
+      display: flex;
+      gap: 12px;
       align-items: center;
       justify-content: space-between;
-      gap: 32px;
-      min-height: 146px;
-      padding: 26px 30px;
-      overflow: hidden;
-      border-radius: var(--radius-lg);
-      background: #143a33;
-      color: #edf4ef;
-      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
     }
-    .network-banner::after {
-      content: '';
-      position: absolute;
-      width: 360px; height: 360px; right: -130px; top: -185px;
-      border: 1px solid rgba(214,177,92,.13);
-      border-radius: 50%;
-      box-shadow: 0 0 0 38px rgba(214,177,92,.035), 0 0 0 76px rgba(214,177,92,.025);
-      pointer-events: none;
+    .search { position: relative; flex: 1 1 260px; max-width: 360px; }
+    .search svg { position: absolute; left: 10px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--faint); pointer-events: none; }
+    .search input { padding-left: 36px; min-height: 36px; }
+
+    .loading { display: flex; align-items: center; gap: 12px; padding: 24px 16px; color: var(--muted); }
+
+    .hidden-block { border-top: 1px solid var(--line); }
+    .hidden-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      padding: 0 16px;
+      border: 0;
+      background: none;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
     }
-    .bridge-identity { display: flex; align-items: center; gap: 18px; min-width: 0; position: relative; z-index: 1; }
-    .bridge-glyph {
-      display: grid; place-items: center; width: 54px; height: 54px; flex: 0 0 54px;
-      border-radius: 13px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+    .hidden-toggle:hover { background: var(--surface-hover); }
+    .hidden-toggle .hint { font-weight: 400; margin-left: 4px; }
+    .chev { display: inline-flex; transition: transform 150ms ease; color: var(--muted); }
+    .chev svg { width: 18px; height: 18px; }
+    .chev.open { transform: rotate(90deg); }
+    .hidden-list { list-style: none; margin: 0; padding: 0 0 8px; }
+    .hidden-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px 8px 42px;
     }
-    .bridge-glyph svg { width: 34px; height: 34px; fill: none; stroke: #d6b15c; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
-    .bridge-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .overline, .health-kicker { color: #9eb5ab; font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
-    .bridge-copy h2 { margin: 0; color: #fff; font-size: 24px; line-height: 1.2; letter-spacing: -.025em; font-weight: 650; overflow-wrap: anywhere; }
-    .bridge-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 5px; color: #abc0b7; font-size: 11px; }
-    .meta-item { display: inline-flex; align-items: center; }
-    .meta-item + .meta-item::before { content: '·'; margin-right: 10px; color: #69877b; }
-    .mono { font-family: var(--font-mono); font-size: 10px; letter-spacing: .01em; }
-    .status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
-    .status .dot { width: 6px; height: 6px; border-radius: 50%; background: #63be82; box-shadow: 0 0 0 3px rgba(99,190,130,.12); }
-    .status.bad { color: #ffc2c4; }
-    .status.bad .dot { background: #ef7c82; }
-    .status.ok { color: #bce7c9; }
-
-    .bridge-health { position: relative; z-index: 1; min-width: 150px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; }
-    .bridge-health strong { color: #fff; font-size: 37px; line-height: 1; letter-spacing: -.04em; font-weight: 650; }
-    .health-total { color: #93aea3; font-size: 21px; font-weight: 500; }
-    .health-caption { color: #a7bcb3; font-size: 11px; }
-
-    .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--line); box-shadow: var(--shadow-sm); }
-    .stat { display: flex; flex-direction: column; gap: 6px; min-height: 106px; padding: 17px 19px; background: var(--surface); }
-    .stat-label { color: var(--muted); font-size: 11px; font-weight: 600; }
-    .stat-value { color: var(--ink); font-size: 27px; line-height: 1; letter-spacing: -.035em; font-weight: 650; }
-    .stat-value span { color: var(--faint); font-size: 13px; font-weight: 500; letter-spacing: 0; }
-    .stat-note { margin-top: auto; color: var(--muted); font-size: 10px; line-height: 1.3; }
-    .stat-note.warn { color: #956917; }
-    .stat-note.ok { color: var(--ok); }
-
-    .device-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
-    .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 20px 22px 14px; }
-    .panel-heading h2 { margin: 0; color: var(--ink); font-size: 16px; letter-spacing: -.015em; font-weight: 650; }
-    .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
-    .result-count { flex-shrink: 0; margin-top: 3px; color: var(--faint); font-size: 10px; font-weight: 600; }
-
-    .device-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 22px 14px; border-bottom: 1px solid var(--line); }
-    .search-field { position: relative; display: flex; align-items: center; width: min(330px, 100%); }
-    .search-field svg { position: absolute; left: 10px; width: 15px; height: 15px; fill: none; stroke: var(--faint); stroke-width: 1.7; stroke-linecap: round; pointer-events: none; }
-    .search-field input { width: 100%; min-height: 34px; padding: 0 11px 0 31px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); color: var(--ink); font: inherit; font-size: 12px; }
-    .search-field input::placeholder { color: var(--faint); }
-    .search-field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,91,79,.10); }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-
-    .segmented { display: inline-flex; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); }
-    .segmented button { min-height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 10px; font-weight: 600; cursor: pointer; }
-    .segmented button:hover { color: var(--ink); }
-    .segmented button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(20,40,32,.10); }
-    .segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-
-    .tree-wrap { padding: 0 22px 18px; }
-    .tree-legend { display: flex; align-items: center; justify-content: flex-end; gap: 34px; padding: 9px 14px 4px; color: var(--faint); font-size: 9px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
-    .tree-legend span:first-child { margin-right: auto; margin-left: 4px; }
-    .tree-root { margin-top: 2px; }
-
-    .callout { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid #e7c2c5; border-radius: 8px; background: var(--danger-soft); color: #8c3037; font-size: 12px; line-height: 1.4; }
-    .callout strong { font-size: 12px; }
-
-    .empty-state, .empty-page, .loading-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 42px 20px; text-align: center; }
-    .empty-state strong, .empty-page h2 { margin: 0; color: var(--ink); font-size: 14px; }
-    .empty-state p, .empty-page p { margin: 0 0 8px; max-width: 46ch; color: var(--muted); font-size: 12px; line-height: 1.5; }
-    .empty-glyph { color: var(--faint); font-size: 32px; line-height: 1; font-weight: 300; }
-    .empty-page { min-height: 320px; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); background: var(--surface-subtle); }
-    .loading-panel { flex-direction: row; color: var(--muted); font-size: 12px; }
-    .spinner { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .hidden-section { margin-top: 0; }
-    .accordion { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; align-items: center; }
-    .accordion:hover { background: var(--surface-subtle); }
-    .accordion:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-    .count-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 4px; padding: 0 5px; border-radius: 999px; background: var(--surface-subtle); color: var(--muted); font-size: 10px; vertical-align: 2px; }
-    .chevron { color: var(--faint); font-size: 18px; line-height: 1; transition: transform .15s; }
-    .chevron.open { transform: rotate(180deg); }
-    .hidden-list { border-top: 1px solid var(--line); }
-    .hidden-row { display: flex; align-items: center; gap: 11px; min-height: 54px; padding: 8px 22px; border-bottom: 1px solid var(--line); }
-    .hidden-row:last-child { border-bottom: 0; }
-    .status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--faint); }
-    .status-dot.offline { background: var(--danger); }
-    .hidden-identity { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
-    .hidden-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
-    .hidden-identity small { color: var(--muted); }
-    .hidden-identity:hover strong { text-decoration: underline; }
-    .hidden-reason { max-width: 200px; color: var(--danger); font-size: 10px; }
-    .hidden-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
-    @media (max-width: 1000px) {
-      .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
+    .hidden-id { display: grid; min-width: 0; flex: 1; }
+    .hidden-id a { color: var(--ink); font-weight: 500; text-decoration: none; }
+    .hidden-id a:hover { color: var(--primary); text-decoration: underline; }
+    .hidden-id small { color: var(--muted); font-size: var(--text-xs); }
+    .hidden-actions { display: flex; gap: 8px; }
 
     @media (max-width: 760px) {
-      .overview { gap: 14px; }
-      .page-head { align-items: flex-start; flex-direction: column; gap: 14px; }
-      h1 { font-size: 24px; }
-      .page-actions { width: 100%; }
-      .page-actions .btn { flex: 1; }
-      .network-banner { min-height: 0; padding: 20px 18px; gap: 18px; align-items: flex-start; flex-direction: column; }
-      .bridge-glyph { width: 44px; height: 44px; flex-basis: 44px; border-radius: 10px; }
-      .bridge-glyph svg { width: 28px; height: 28px; }
-      .bridge-copy h2 { font-size: 21px; }
-      .bridge-health { min-width: 0; align-items: flex-start; text-align: left; flex-direction: row; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-      .bridge-health strong { font-size: 26px; }
-      .health-kicker { width: 100%; }
-      .health-caption { font-size: 10px; }
-      .stat { min-height: 94px; padding: 14px 15px; }
-      .stat-value { font-size: 23px; }
-      .device-toolbar { align-items: stretch; flex-direction: column; padding: 0 15px 12px; }
-      .search-field { width: 100%; }
-      .segmented { align-self: flex-start; }
-      .panel-heading { padding: 17px 15px 12px; }
-      .result-count { display: none; }
-      .tree-wrap { padding: 0 12px 14px; }
-      .tree-legend { display: none; }
-      .hidden-row { align-items: flex-start; flex-wrap: wrap; padding: 12px 15px; }
-      .hidden-identity { flex-basis: calc(100% - 20px); }
-      .hidden-reason { order: 3; flex: 1; max-width: none; padding-left: 18px; }
-      .hidden-actions { order: 4; }
+      .page-head { flex-wrap: nowrap; align-items: flex-start; }
+      .search { max-width: none; }
+      .hidden-toggle .hint { display: none; }
+      .hidden-list li { flex-wrap: wrap; padding-left: 16px; }
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-    }
-
-    .confirm-backdrop { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(12,28,24,.60); backdrop-filter: blur(2px); }
-    .confirm-modal { width: min(450px, 100%); padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: 0 24px 70px rgba(9,24,19,.28); }
-    .confirm-mark { display: grid; place-items: center; width: 30px; height: 30px; margin-bottom: 10px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); font-size: 14px; font-weight: 750; }
-    .confirm-mark.danger { background: var(--danger-soft); color: var(--danger); }
-    .confirm-modal h2 { margin: 0; color: var(--ink); font-size: 17px; line-height: 1.3; letter-spacing: -.02em; font-weight: 700; }
-    .confirm-modal p { margin: 7px 0 0; color: var(--ink-2); font-size: 12px; line-height: 1.55; }
-    .confirm-detail { margin-top: 10px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); color: var(--muted); font-size: 10px; line-height: 1.5; }
-    .confirm-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 18px; }
-    .confirm-actions .btn { min-height: 35px; padding: 0 12px; }
-    .confirm-actions .btn.primary { border-color: var(--primary); background: var(--primary); color: #fff; }
-    .confirm-actions .btn.primary:hover { background: var(--primary-strong); }
-    .confirm-actions .btn.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
-    .confirm-actions .btn.danger:hover { background: #9f3037; }
-    @media (max-width: 520px) { .confirm-actions { flex-direction: column-reverse; } .confirm-actions .btn { width: 100%; } }
-  `;
+  `];
 }
