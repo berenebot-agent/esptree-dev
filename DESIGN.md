@@ -452,6 +452,7 @@ Components use the shared vocabulary in `ui/src/styles/shared.ts` and the job vo
 - **Data tables:** column heads are 12px medium `muted` with 10px 16px padding and a 1px `line` bottom divider. Cells are 14px with 12px 16px padding. Rows divide with `line`; the last row has none. Numeric cells are tabular.
 - **Route tree:** a single card. The head is `surface-subtle` with 12px `muted` column labels. Each row is at least 56px, divided by `line`, hovering to `surface-hover`. The bridge root row sits on `surface-subtle`.
 - **Row content:** a 32px node disc (bridge on `primary-soft`, offline on `danger-soft`, others on `surface-subtle`), then the name as a link with a 12px meta line of role, MAC (mono), and chip type. Signal, hops, last seen, firmware, and status follow in aligned columns. The primary row action is a text button outside the link.
+- **The whole row opens the device:** the name link's hit area is stretched over the row (`position: relative` row, `.title::after { inset: 0 }`), so a click on any cell — signal, hops, last seen, firmware, status — goes to that device. Row actions sit above the overlay (`z-index: 1`) and keep their own behaviour. The row shows `cursor: pointer`, and keyboard focus on the link rings the row.
 
 ### Route tree signature
 - **Connectors:** each ancestor level draws a 2px `line-strong` rail through the rows below it. Each node's elbow comes off its parent's rail with its own colour and weight:

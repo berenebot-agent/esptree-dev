@@ -196,9 +196,11 @@ export const treeStyles = css`
   }
   .tree-head .num { text-align: left; }
   .row {
+    position: relative; /* containing block for the row-wide hit target below */
     min-height: 56px;
     border-bottom: 1px solid var(--line);
     transition: background-color 120ms ease;
+    cursor: pointer;
   }
   .row:last-child { border-bottom: 0; }
   .row:hover { background: var(--surface-hover); }
@@ -217,6 +219,12 @@ export const treeStyles = css`
     white-space: nowrap;
   }
   .title:hover { color: var(--primary); text-decoration: underline; }
+  /* The name link's hit area is the whole row, so a click anywhere on a device opens that
+     device. Its containing block is .row (now positioned), which is how it escapes
+     .title's overflow:hidden — that clip is what truncates a long name with an ellipsis,
+     so do not "fix" it by making .title overflow visible. */
+  .title::after { content: ''; position: absolute; inset: 0; }
+  .row:has(.title:focus-visible) { outline: 2px solid var(--primary); outline-offset: -2px; }
   .is-root .title { font-size: var(--text-lg); }
   .meta {
     display: flex;
@@ -247,7 +255,8 @@ export const treeStyles = css`
   .m-label { display: none; }
   .num, .seen, .fw { font-variant-numeric: tabular-nums; color: var(--ink-2); }
   .fw .ver { font-size: var(--text-sm); }
-  .actions { display: flex; justify-content: flex-end; }
+  /* Above the stretched name link, or the overlay would swallow the row actions. */
+  .actions { display: flex; justify-content: flex-end; position: relative; z-index: 1; }
   .actions .btn svg { width: 16px; height: 16px; }
   .chip .spinner.sm { width: 10px; height: 10px; border-width: 1.5px; border-color: currentColor; border-top-color: transparent; }
   .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
