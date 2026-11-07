@@ -403,7 +403,7 @@ def create_app() -> FastAPI:
         bridge_manager=bridge_manager,
     )
 
-    app = FastAPI(title="ESP Tree Add-on", version="0.1.341")
+    app = FastAPI(title="ESP Tree Add-on", version="0.1.342")
     # HA ingress authenticates the user, but host networking otherwise exposes
     # this unauthenticated API on the LAN. Restrict the actual socket peer.
     app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
@@ -3901,7 +3901,10 @@ def _mount_static(app: FastAPI, static_dir: Path) -> None:
                 '<meta name="x-ingress-path" content="" />',
                 f'<meta name="x-ingress-path" content="{ingress_path}" />',
             )
-        return HTMLResponse(content)
+        # The shell names hashed bundles, so it must never outlive the build it came
+        # from: a cached index.html makes a freshly installed add-on keep rendering
+        # the previous UI in an open panel.
+        return HTMLResponse(content, headers={"Cache-Control": "no-store, must-revalidate"})
 
     @app.get("/", response_class=HTMLResponse)
     async def index(request: Request):
