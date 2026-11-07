@@ -250,62 +250,33 @@ export class EspnowApp extends LitElement {
 
     return html`
       <div class="app-shell">
-        <aside class="sidebar" aria-label="Primary navigation">
-          <a class="brand" href="#/" aria-label="ESP Tree network overview">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32"><path d="M16 27V15M16 15l-6-5M16 15l6-5M10 10l-3-3M22 10l3-3" /><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="10" r="2"/><circle cx="22" cy="10" r="2"/><circle cx="7" cy="7" r="1.4"/><circle cx="25" cy="7" r="1.4"/></svg>
-            </span>
-            <span class="brand-copy"><strong>ESP Tree</strong><small>Field network console</small></span>
-          </a>
-
-          ${!this.addonConnected ? html`
-            <div class="connection-banner" role="alert">Cannot reach the add-on</div>
-          ` : nothing}
-          ${this.bridgeConnected === false ? html`
-            <div class="connection-banner subtle" role="status">Bridge unreachable</div>
-          ` : nothing}
-
-          <div class="nav-group">
-            <span class="nav-label">Workspace</span>
-            <button class="nav-item ${this.activeRoute() === 'network' ? 'active' : ''}" aria-current=${this.activeRoute() === 'network' ? 'page' : 'false'} @click=${() => this.navigate('/')}>
-              ${NAV_ICONS.network}<span>Network</span>
-            </button>
-            <button class="nav-item ${this.activeRoute() === 'queue' ? 'active' : ''}" aria-current=${this.activeRoute() === 'queue' ? 'page' : 'false'} @click=${() => this.navigate('/queue')}>
-              ${NAV_ICONS.jobs}<span>Jobs</span>${q.count > 0 ? html`<span class="nav-count ${q.active ? 'active' : ''}">${q.label}${q.paused ? html`<span class="pause-glyph"> paused</span>` : nothing}</span>` : nothing}
-            </button>
-            <button class="nav-item ${this.activeRoute() === 'activity' ? 'active' : ''}" aria-current=${this.activeRoute() === 'activity' ? 'page' : 'false'} @click=${() => this.navigate('/activity-log')}>
-              ${NAV_ICONS.activity}<span>Activity</span>
-            </button>
-          </div>
-
-          <div class="nav-group nav-secondary">
-            <span class="nav-label">Configure</span>
-            <button class="nav-item ${this.activeRoute() === 'settings' ? 'active' : ''}" aria-current=${this.activeRoute() === 'settings' ? 'page' : 'false'} @click=${() => this.navigate('/settings')}>
-              ${NAV_ICONS.settings}<span>Settings</span>
-            </button>
-            <button class="nav-item ${this.route.name === 'secrets' ? 'active' : ''}" aria-current=${this.route.name === 'secrets' ? 'page' : 'false'} @click=${() => this.navigate('/secrets')}>
-              <span class="nav-icon text-icon" aria-hidden="true">↗</span><span>Secrets</span>
-            </button>
-          </div>
-
-          <div class="sidebar-footer">
-            <div class="bridge-summary">
-              <span class="status-dot ${bridgeState}" aria-hidden="true"></span>
-              <span class="bridge-summary-copy">
-                <strong>${this.bridgeLabel || 'No bridge'}</strong>
-                <small>${statusText}</small>
-              </span>
-            </div>
-            <div class="sidebar-version">Add-on v${this.addonVersion || '—'}</div>
-          </div>
-        </aside>
-
         <div class="main-shell">
           <header class="topbar">
             <div class="topbar-title">
               <span class="topbar-kicker">ESP Tree</span>
               <span class="topbar-page">${this.pageName()}</span>
+              ${this.bridgeLabel ? html`<span class="topbar-bridge">${this.bridgeLabel}</span>` : nothing}
             </div>
+
+            <nav class="topnav" aria-label="Primary navigation">
+              <button class="nav-item ${this.activeRoute() === 'network' ? 'active' : ''}" aria-current=${this.activeRoute() === 'network' ? 'page' : 'false'} @click=${() => this.navigate('/')}>
+                ${NAV_ICONS.network}<span>Network</span>
+              </button>
+              <button class="nav-item ${this.activeRoute() === 'queue' ? 'active' : ''}" aria-current=${this.activeRoute() === 'queue' ? 'page' : 'false'} @click=${() => this.navigate('/queue')}>
+                ${NAV_ICONS.jobs}<span>Jobs</span>${q.count > 0 ? html`<span class="nav-count ${q.active ? 'active' : ''}">${q.label}${q.paused ? html`<span class="pause-glyph"> paused</span>` : nothing}</span>` : nothing}
+              </button>
+              <button class="nav-item ${this.activeRoute() === 'activity' ? 'active' : ''}" aria-current=${this.activeRoute() === 'activity' ? 'page' : 'false'} @click=${() => this.navigate('/activity-log')}>
+                ${NAV_ICONS.activity}<span>Activity</span>
+              </button>
+              <span class="nav-divider" aria-hidden="true"></span>
+              <button class="nav-item ${this.activeRoute() === 'settings' ? 'active' : ''}" aria-current=${this.activeRoute() === 'settings' ? 'page' : 'false'} @click=${() => this.navigate('/settings')}>
+                ${NAV_ICONS.settings}<span>Settings</span>
+              </button>
+              <button class="nav-item ${this.route.name === 'secrets' ? 'active' : ''}" aria-current=${this.route.name === 'secrets' ? 'page' : 'false'} @click=${() => this.navigate('/secrets')}>
+                <span class="nav-icon text-icon" aria-hidden="true">↗</span><span>Secrets</span>
+              </button>
+            </nav>
+
             <div class="topbar-actions">
               <span class="connection-pill ${bridgeState === 'online' ? 'ok' : 'warn'}" role="status">
                 <span class="status-dot ${bridgeState}" aria-hidden="true"></span>${statusText}
@@ -315,8 +286,16 @@ export class EspnowApp extends LitElement {
                   <span class="pulse-dot"></span>${q.paused ? 'Queue paused' : 'Job running'}
                 </button>
               ` : nothing}
+              <span class="topbar-version">Add-on v${this.addonVersion || '—'}</span>
             </div>
           </header>
+
+          ${!this.addonConnected ? html`
+            <div class="connection-banner" role="alert">Cannot reach the add-on</div>
+          ` : nothing}
+          ${this.bridgeConnected === false ? html`
+            <div class="connection-banner subtle" role="status">Bridge unreachable</div>
+          ` : nothing}
           <main class="content">
             ${this.route.name === 'remote-wizard'
               ? html`<esp-remote-wizard></esp-remote-wizard>`
@@ -382,106 +361,54 @@ export class EspnowApp extends LitElement {
     :host, :host * { box-sizing: border-box; }
 
     .app-shell {
-      display: flex;
+      display: block;
       min-height: 100vh;
     }
 
-    .sidebar {
-      width: 232px;
-      min-height: 100vh;
-      flex: 0 0 232px;
-      display: flex;
-      flex-direction: column;
-      gap: 26px;
-      padding: 24px 14px 16px;
-      background: #102a26;
-      color: #e4ede7;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
-
-    .brand {
+    .topnav {
       display: flex;
       align-items: center;
-      gap: 11px;
-      min-height: 42px;
-      padding: 0 8px;
-      color: inherit;
-      text-decoration: none;
-      border-radius: var(--radius-md);
+      gap: 2px;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
-
-    .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-    .brand-mark {
-      display: grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      flex: 0 0 36px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.09);
-      border: 1px solid rgba(255,255,255,.12);
-    }
-
-    .brand-mark svg {
-      width: 24px;
-      height: 24px;
-      fill: none;
-      stroke: #d6b15c;
-      stroke-width: 1.55;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .brand-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .brand-copy strong { color: #fff; font-size: 16px; letter-spacing: -.02em; font-weight: 650; }
-    .brand-copy small { color: #91a69e; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-
-    .nav-group { display: flex; flex-direction: column; gap: 3px; }
-    .nav-secondary { margin-top: 2px; }
-    .nav-label {
-      padding: 0 11px 7px;
-      color: #7c9289;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
+    .topnav::-webkit-scrollbar { display: none; }
+    .nav-divider { width: 1px; height: 20px; flex: 0 0 1px; margin: 0 6px; background: var(--line); }
 
     .nav-item {
-      width: 100%;
+      width: auto;
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-height: 38px;
+      gap: 7px;
+      min-height: 32px;
       padding: 0 11px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 7px;
       background: transparent;
-      color: #b9c9c2;
+      color: var(--muted);
       font: inherit;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 12.5px;
+      font-weight: 600;
       text-align: left;
+      white-space: nowrap;
       cursor: pointer;
       transition: background .15s ease, color .15s ease;
     }
 
-    .nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+    .nav-item:hover { background: var(--surface-subtle); color: var(--ink); }
     .nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .nav-item.active {
-      background: rgba(255,255,255,.11);
-      color: #fff;
-      box-shadow: inset 2px 0 0 #d6b15c;
+      background: var(--surface-subtle);
+      color: var(--ink);
+      box-shadow: inset 0 -2px 0 var(--accent);
     }
 
     .nav-item svg {
-      width: 17px;
-      height: 17px;
-      flex: 0 0 17px;
+      width: 15px;
+      height: 15px;
+      flex: 0 0 15px;
       fill: none;
       stroke: currentColor;
       stroke-width: 1.55;
@@ -490,15 +417,15 @@ export class EspnowApp extends LitElement {
       opacity: .9;
     }
 
-    .text-icon { width: 17px; flex: 0 0 17px; font-size: 17px; line-height: 1; text-align: center; color: #91a69e; }
+    .text-icon { width: 15px; flex: 0 0 15px; font-size: 15px; line-height: 1; text-align: center; color: var(--faint); }
 
     .nav-count {
-      margin-left: auto;
-      min-width: 20px;
+      margin-left: 2px;
+      min-width: 18px;
       padding: 2px 6px;
       border-radius: 999px;
-      background: rgba(255,255,255,.13);
-      color: #f1f5f2;
+      background: var(--line);
+      color: var(--ink-2);
       font-size: 10px;
       font-weight: 700;
       text-align: center;
@@ -507,29 +434,23 @@ export class EspnowApp extends LitElement {
     .nav-count.active { background: var(--accent); color: #1c2420; }
     .pause-glyph { font-size: 9px; font-weight: 600; opacity: .85; }
 
-    .sidebar-footer { margin-top: auto; border-top: 1px solid rgba(255,255,255,.10); padding: 16px 8px 0; }
-    .bridge-summary { display: flex; align-items: flex-start; gap: 9px; }
-    .bridge-summary-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .bridge-summary-copy strong { color: #e8efeb; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bridge-summary-copy small { color: #8fa49b; font-size: 10px; line-height: 1.35; }
-    .sidebar-version { margin-top: 13px; color: #7e9288; font-family: var(--font-mono); font-size: 9px; letter-spacing: .02em; }
-
     .status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--faint); margin-top: 5px; }
     .status-dot.online { background: #66ba7e; box-shadow: 0 0 0 3px rgba(102,186,126,.13); }
     .status-dot.bridge-offline, .status-dot.offline { background: var(--danger); }
     .status-dot.warn { background: var(--accent); }
 
     .connection-banner {
-      margin: -8px 2px 0;
-      padding: 8px 10px;
-      border: 1px solid rgba(255,120,120,.35);
-      border-radius: 7px;
-      background: rgba(150,45,50,.23);
-      color: #ffdada;
-      font-size: 11px;
-      line-height: 1.35;
+      margin: 14px auto 0;
+      max-width: 1440px;
+      padding: 9px 14px;
+      border: 1px solid #eab8b8;
+      border-radius: 8px;
+      background: var(--danger-soft);
+      color: #8a2c2c;
+      font-size: 12px;
+      line-height: 1.4;
     }
-    .connection-banner.subtle { border-color: rgba(214,177,92,.35); background: rgba(150,110,30,.18); color: #f4dfae; }
+    .connection-banner.subtle { border-color: #ead8b1; background: var(--accent-soft); color: #7c5716; }
 
     .main-shell { min-width: 0; flex: 1; display: flex; flex-direction: column; }
     .topbar {
@@ -548,8 +469,20 @@ export class EspnowApp extends LitElement {
     }
 
     .topbar-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-    .topbar-kicker { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-    .topbar-page { color: var(--ink); font-size: 13px; font-weight: 650; }
+    .topbar-kicker { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+    .topbar-page { color: var(--ink); font-size: 13px; font-weight: 650; white-space: nowrap; }
+    .topbar-bridge {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .topbar-version { color: var(--faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: .02em; white-space: nowrap; }
 
     .topbar-actions { display: flex; align-items: center; gap: 9px; min-width: 0; }
     .connection-pill, .job-pill {
@@ -578,42 +511,33 @@ export class EspnowApp extends LitElement {
     .content { width: 100%; max-width: 1440px; margin: 0 auto; padding: 30px 32px 56px; }
 
     @media (max-width: 980px) {
-      .sidebar { width: 206px; flex-basis: 206px; padding-left: 10px; padding-right: 10px; }
       .content { padding: 24px 22px 48px; }
-      .topbar { padding: 0 22px; }
-      .brand-copy small { display: none; }
+      .topbar { padding: 0 22px; gap: 12px; }
+      .topbar-kicker { display: none; }
+      .topbar-bridge { max-width: 140px; }
+      .nav-item { padding: 0 9px; font-size: 12px; }
     }
 
     @media (max-width: 760px) {
-      .app-shell { display: block; }
-      .sidebar {
-        position: static;
-        width: 100%;
-        height: auto;
-        min-height: 0;
-        flex: initial;
-        padding: 13px 14px 10px;
-        gap: 13px;
-        overflow: visible;
+      .topbar {
+        min-height: 52px;
+        padding: 8px 14px;
+        gap: 10px;
+        flex-wrap: wrap;
       }
-      .brand { min-height: 36px; padding: 0 3px; gap: 9px; }
-      .brand-mark { width: 30px; height: 30px; flex-basis: 30px; border-radius: 8px; }
-      .brand-mark svg { width: 20px; height: 20px; }
-      .brand-copy strong { font-size: 15px; }
-      .brand-copy small { display: block; font-size: 9px; }
-      .nav-group { flex-direction: row; gap: 4px; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; }
-      .nav-group::-webkit-scrollbar { display: none; }
-      .nav-label, .sidebar-footer { display: none; }
-      .nav-secondary { margin-top: 0; }
-      .nav-item { width: auto; flex: 0 0 auto; min-height: 36px; padding: 0 10px; gap: 7px; white-space: nowrap; }
-      .nav-item svg { width: 15px; height: 15px; flex-basis: 15px; }
-      .nav-item.active { box-shadow: inset 0 -2px 0 #d6b15c; border-radius: 6px; }
-      .nav-count { margin-left: 2px; }
-      .topbar { min-height: 48px; padding: 0 16px; }
-      .topbar-kicker { display: none; }
+      .topbar-title { order: 1; }
+      .topbar-actions { order: 2; margin-left: auto; }
+      .topnav { order: 3; width: 100%; padding-bottom: 2px; }
+      .topbar-bridge { display: none; }
       .topbar-page { font-size: 12px; }
+      .nav-item { min-height: 32px; padding: 0 9px; gap: 6px; font-size: 12px; }
+      .nav-item svg { width: 14px; height: 14px; flex-basis: 14px; }
+      .nav-item.active { box-shadow: inset 0 -2px 0 var(--accent); }
+      .nav-count { margin-left: 2px; }
       .connection-pill { font-size: 10px; padding: 0 8px; }
       .job-pill { display: none; }
+      .topbar-version { display: none; }
+      .connection-banner { margin: 10px 14px 0; }
       .content { padding: 20px 14px 40px; }
     }
 

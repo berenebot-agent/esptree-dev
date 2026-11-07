@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-BiEuzucL.js","./index-CSdYqW8G.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-m_3nlYHM.js","./index-CxNzwwYK.js"])))=>i.map(i=>d[i]);
 (function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))s(r);new MutationObserver(r=>{for(const n of r)if(n.type==="childList")for(const o of n.addedNodes)o.tagName==="LINK"&&o.rel==="modulepreload"&&s(o)}).observe(document,{childList:!0,subtree:!0});function i(r){const n={};return r.integrity&&(n.integrity=r.integrity),r.referrerPolicy&&(n.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?n.credentials="include":r.crossOrigin==="anonymous"?n.credentials="omit":n.credentials="same-origin",n}function s(r){if(r.ep)return;r.ep=!0;const n=i(r);fetch(r.href,n)}})();/**
  * @license
  * Copyright 2019 Google LLC
@@ -3908,7 +3908,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-BiEuz
       line-height: 1.5;
       overflow: auto;
     }
-  `;tc([V({type:String})],yr.prototype,"value",2);tc([V({type:Boolean})],yr.prototype,"readonly",2);yr=tc([ke("esp-config-editor")],yr);const ck="modulepreload",hk=function(t,e){return new URL(t,e).href},yd={},zu=function(e,i,s){let r=Promise.resolve();if(i&&i.length>0){let o=function(h){return Promise.all(h.map(d=>Promise.resolve(d).then(p=>({status:"fulfilled",value:p}),p=>({status:"rejected",reason:p}))))};const a=document.getElementsByTagName("link"),l=document.querySelector("meta[property=csp-nonce]"),c=(l==null?void 0:l.nonce)||(l==null?void 0:l.getAttribute("nonce"));r=o(i.map(h=>{if(h=hk(h,s),h in yd)return;yd[h]=!0;const d=h.endsWith(".css"),p=d?'[rel="stylesheet"]':"";if(!!s)for(let m=a.length-1;m>=0;m--){const b=a[m];if(b.href===h&&(!d||b.rel==="stylesheet"))return}else if(document.querySelector(`link[href="${h}"]${p}`))return;const u=document.createElement("link");if(u.rel=d?"stylesheet":ck,d||(u.as="script"),u.crossOrigin="",u.href=h,c&&u.setAttribute("nonce",c),document.head.appendChild(u),d)return new Promise((m,b)=>{u.addEventListener("load",m),u.addEventListener("error",()=>b(new Error(`Unable to preload CSS for ${h}`)))})}))}function n(o){const a=new Event("vite:preloadError",{cancelable:!0});if(a.payload=o,window.dispatchEvent(a),!a.defaultPrevented)throw o}return r.then(o=>{for(const a of o||[])a.status==="rejected"&&n(a.reason);return e().catch(n)})},dk=["ESP32-C61","ESP32-C6","ESP32-C5","ESP32-C3","ESP32-C2","ESP32-H2","ESP32-P4","ESP32-S3","ESP32-S2","ESP8266","ESP32"],pk={baudRate:115200,bufferSize:8192};function Ms(){return typeof window<"u"&&window.isSecureContext&&"serial"in navigator}function ic(t){if(!t)return null;const e=t.trim().toUpperCase().replace(/\s+/g,"");for(const i of dk)if(e.includes(i)||e.includes(i.replace(/-/g,"")))return i;return null}async function fk(){if(!Ms()||!navigator.serial)return[];try{return await navigator.serial.getPorts()}catch{return[]}}async function uk(){return(await fk()).filter(e=>{try{return!!e.getInfo().usbVendorId}catch{return!1}})}async function gk(){if(!navigator.serial)throw new Error("Web Serial is not available in this browser.");try{return await navigator.serial.requestPort()}catch(t){if(t instanceof DOMException&&t.name==="NotFoundError")return"cancelled";throw t}}async function Xn(t={}){if(!Ms()||!navigator.serial)throw new Error("Web Serial is not available in this browser.");if(!t.forcePicker){const e=await uk();if(e.length===1)return e[0]}return gk()}async function ol(t){const{Transport:e,ESPLoader:i}=await zu(async()=>{const{Transport:r,ESPLoader:n}=await import("./index-CSdYqW8G.js");return{Transport:r,ESPLoader:n}},[],import.meta.url),s=new e(t,!0);try{const r=new i({transport:s,baudrate:115200,terminal:{clean:()=>{},writeLine:()=>{},write:()=>{}},debugLogging:!1}),n=String(await r.main());return{detected:n,family:ic(n)}}finally{try{await s.disconnect()}catch{}}}async function sc(t){if(!Ms())throw new Error("Browser USB flashing needs Chrome or Edge on a secure HTTPS page.");let e=t.port??null;if(!e){const l=await Xn();if(l==="cancelled")return"cancelled";e=l}await zu(()=>import("./install-dialog-BiEuzucL.js"),__vite__mapDeps([0,1]),import.meta.url),e.readable===null&&await e.open(pk);const i=document.createElement("ewt-install-dialog");i.port=e,i.manifestPath=t.manifestUrl;let s=!1,r=!1,n=null;const o=()=>{n==null||n.disconnect(),n=null};return(()=>{t.onFinished&&(n=new MutationObserver(()=>{var c;const l=i.getAttribute("state");if(l==="INSTALL"){s=!0;return}s&&!r&&(l==="DASHBOARD"||l==="PROVISION")&&(r=!0,(c=t.onFinished)==null||c.call(t))}),n.observe(i,{attributes:!0,attributeFilter:["state"]}))})(),i.addEventListener("closed",()=>{var l;o(),e.close().catch(()=>{}),(l=t.onClosed)==null||l.call(t)},{once:!0}),document.body.appendChild(i),"opened"}var mk=Object.defineProperty,bk=Object.getOwnPropertyDescriptor,ce=(t,e,i,s)=>{for(var r=s>1?void 0:s?bk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&mk(e,i,r),r};const xk=new Set(["queued","starting","announcing","transferring","verifying","transfer_success_waiting_rejoin"]),vk=new Set(["success","failed","aborted","rejoin_timeout","version_mismatch"]);function yk(t){const e=t||"";if(/^\s*esp8266\s*:/m.test(e))return"ESP8266";if(!/^\s*esp32\s*:/m.test(e))return null;const i=e.match(/^\s*variant\s*:\s*["']?([A-Za-z0-9_-]+)["']?\s*$/m),s=((i==null?void 0:i[1])||"").toUpperCase().replace(/_/g,"-");return s?s.includes("ESP32-C61")?"ESP32-C61":s.includes("ESP32-C6")?"ESP32-C6":s.includes("ESP32-C5")?"ESP32-C5":s.includes("ESP32-C3")?"ESP32-C3":s.includes("ESP32-C2")?"ESP32-C2":s.includes("ESP32-H2")?"ESP32-H2":s.includes("ESP32-P4")?"ESP32-P4":s.includes("ESP32-S3")?"ESP32-S3":s.includes("ESP32-S2")?"ESP32-S2":"ESP32":"ESP32"}let ie=class extends de{constructor(){super(...arguments),this.mac="",this.state="loading",this.device=null,this.config=null,this.editorContent="",this.saveIndicator="",this.hasUnsavedChanges=!1,this.error="",this.compilePhase="idle",this.topology=[],this.compileJobId=null,this.compileQueuePosition=null,this.preflight=null,this.chipUnknown=!1,this.yamlWarnings=[],this.showExternalComponentsFix=!1,this.showSecretsWarning=!1,this.missingSecrets=[],this.pendingAction=null,this.pendingAutoFlash=!1,this.showCompileLog=!0,this.compileStartedAt=null,this.flashIntent="none",this.browserFlashManifestUrl="",this.browserFlashError="",this.browserFlashOpen=!1,this.browserFlashFirmwareBlobUrl="",this.elapsedTimer=null,this.pollTimer=null,this.devicePollTimer=null}connectedCallback(){super.connectedCallback(),this.load()}disconnectedCallback(){this.stopPolling(),this.stopDevicePolling(),super.disconnectedCallback()}startPolling(){this.pollTimer||(this.pollTimer=setInterval(()=>this.pollCompileStatus(),2e3))}stopPolling(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}stopCompileLogViewer(){this.compileLogViewer&&(this.compileLogViewer.stopped=!0)}startDevicePolling(){this.devicePollTimer||(this.devicePollTimer=setInterval(()=>void this.pollDevice(),3e4))}stopDevicePolling(){this.devicePollTimer&&(clearInterval(this.devicePollTimer),this.devicePollTimer=null)}async pollDevice(){try{const t=await C.device(this.mac);this.device=t||{}}catch{}}get isCompilingActive(){return this.compilePhase==="compiling"||this.compilePhase==="compile_queued"}get browserSupportsUsbFlash(){return Ms()}get browserFlashChipFamily(){var e,i;const t=String(((e=this.preflight)==null?void 0:e.chip.new)||((i=this.device)==null?void 0:i.chip_name)||"");return yk(this.editorContent)||ic(t)}getElapsedTime(){if(!this.compileStartedAt)return"00:00";const t=Math.floor((Date.now()-this.compileStartedAt)/1e3),e=Math.floor(t/60).toString().padStart(2,"0"),i=(t%60).toString().padStart(2,"0");return`${e}:${i}`}startElapsedTimer(){this.stopElapsedTimer(),this.elapsedTimer=setInterval(()=>this.requestUpdate(),1e3)}stopElapsedTimer(){this.elapsedTimer&&(clearInterval(this.elapsedTimer),this.elapsedTimer=null)}async load(){this.state="loading";try{const[t,e,i]=await Promise.all([C.device(this.mac).catch(()=>null),C.getConfig(this.mac).catch(()=>null),C.topology().catch(()=>[])]);this.device=t||{},this.topology=i,this.startDevicePolling(),e&&e.has_config?(this.config=e,this.editorContent=this.config.content,this.hasUnsavedChanges=!1,this.state="editor"):this.state="no_config",await this.pollCompileStatus()}catch{this.state="no_config"}}clearBrowserFlashManifestUrl(){this.browserFlashManifestUrl&&(URL.revokeObjectURL(this.browserFlashManifestUrl),this.browserFlashManifestUrl=""),this.browserFlashFirmwareBlobUrl&&(URL.revokeObjectURL(this.browserFlashFirmwareBlobUrl),this.browserFlashFirmwareBlobUrl="")}async updateBrowserFlashManifestUrl(){var e,i,s,r;if(this.compilePhase!=="compiled")return;const t=this.browserFlashChipFamily;if(!t){this.clearBrowserFlashManifestUrl();return}try{const n=C.downloadFactoryBinary(this.mac),o=await fetch(n);if(!o.ok){this.clearBrowserFlashManifestUrl();return}const a=await o.blob(),l=URL.createObjectURL(a),c={name:String(((e=this.device)==null?void 0:e.esphome_name)||((i=this.device)==null?void 0:i.label)||this.mac),version:String(((s=this.device)==null?void 0:s.project_version)||((r=this.device)==null?void 0:r.firmware_version)||"compiled"),new_install_prompt_erase:!1,new_install_improv_wait_time:0,builds:[{chipFamily:t,parts:[{path:l,offset:0}]}]},h=new Blob([JSON.stringify(c)],{type:"application/json"}),d=URL.createObjectURL(h);this.clearBrowserFlashManifestUrl(),this.browserFlashManifestUrl=d,this.browserFlashFirmwareBlobUrl=l}catch{this.clearBrowserFlashManifestUrl()}}async pollCompileStatus(){try{const t=await C.getCompileStatus(this.mac);t.status==="compile_queued"?(this.compilePhase="compile_queued",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.startPolling()):t.status==="compiling"?(this.compilePhase="compiling",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.startPolling()):xk.has(t.status)?(this.compilePhase="queued_for_flash",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.flashIntent="ota",this.startPolling(),window.location.hash=`/device/${encodeURIComponent(this.mac)}`):t.status==="compiled"?(this.compilePhase="compiled",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.stopElapsedTimer(),this.updateBrowserFlashManifestUrl(),this.stopPolling(),this.flashIntent==="ota"&&(window.location.hash=`/device/${encodeURIComponent(this.mac)}`)):vk.has(t.status)&&(this.compilePhase="idle",this.compileJobId=null,this.compileQueuePosition=null,this.compileStartedAt=null,this.flashIntent="none",this.clearBrowserFlashManifestUrl(),this.stopElapsedTimer(),this.stopPolling(),this.stopCompileLogViewer())}catch{}}async createScaffold(){try{const t=await C.saveConfig(this.mac,"",!0);this.config=t,this.editorContent=t.content,this.chipUnknown=t.chip_unknown??!1,this.state="editor"}catch(t){this.error=t instanceof Error?t.message:String(t)}}async importYaml(){const t=document.createElement("input");t.type="file",t.accept=".yaml,.yml",t.onchange=async()=>{var i;const e=(i=t.files)==null?void 0:i[0];if(e)try{const s=await C.importConfig(this.mac,e);this.config=s,this.editorContent=s.content,this.state="editor"}catch(s){this.error=s instanceof Error?s.message:String(s)}},t.click()}async saveConfig(t=!1){if(!t&&!nl(this.editorContent)){this.pendingAction="save",this.showExternalComponentsFix=!0;return}this.saveIndicator="Saving...";try{const e=await C.saveConfig(this.mac,this.editorContent);this.config=e,this.hasUnsavedChanges=!1,this.saveIndicator="Saved ✓",setTimeout(()=>{this.saveIndicator="",this.requestUpdate()},2e3)}catch(e){this.saveIndicator="",this.error=e instanceof Error?e.message:String(e)}}onEditorChange(t){const e=t.detail;this.editorContent=e.content,this.yamlWarnings=e.warnings??[],this.hasUnsavedChanges=this.config?this.editorContent!==this.config.content:!0}get isBridgeDevice(){var t;return!!((t=this.device)!=null&&t.is_bridge)}get isEsp8266Device(){var e;const t=String(((e=this.device)==null?void 0:e.chip_name)??"");return t==="ESP8266"||t==="ESP-01"||t==="ESP-12E"}get remoteComponentName(){return this.isBridgeDevice?"esp_tree_bridge":this.isEsp8266Device?"espnow_82xx_remote":"esp_tree_remote"}get externalComponentsFixYaml(){return`external_components:
+  `;tc([V({type:String})],yr.prototype,"value",2);tc([V({type:Boolean})],yr.prototype,"readonly",2);yr=tc([ke("esp-config-editor")],yr);const ck="modulepreload",hk=function(t,e){return new URL(t,e).href},yd={},zu=function(e,i,s){let r=Promise.resolve();if(i&&i.length>0){let o=function(h){return Promise.all(h.map(d=>Promise.resolve(d).then(p=>({status:"fulfilled",value:p}),p=>({status:"rejected",reason:p}))))};const a=document.getElementsByTagName("link"),l=document.querySelector("meta[property=csp-nonce]"),c=(l==null?void 0:l.nonce)||(l==null?void 0:l.getAttribute("nonce"));r=o(i.map(h=>{if(h=hk(h,s),h in yd)return;yd[h]=!0;const d=h.endsWith(".css"),p=d?'[rel="stylesheet"]':"";if(!!s)for(let m=a.length-1;m>=0;m--){const b=a[m];if(b.href===h&&(!d||b.rel==="stylesheet"))return}else if(document.querySelector(`link[href="${h}"]${p}`))return;const u=document.createElement("link");if(u.rel=d?"stylesheet":ck,d||(u.as="script"),u.crossOrigin="",u.href=h,c&&u.setAttribute("nonce",c),document.head.appendChild(u),d)return new Promise((m,b)=>{u.addEventListener("load",m),u.addEventListener("error",()=>b(new Error(`Unable to preload CSS for ${h}`)))})}))}function n(o){const a=new Event("vite:preloadError",{cancelable:!0});if(a.payload=o,window.dispatchEvent(a),!a.defaultPrevented)throw o}return r.then(o=>{for(const a of o||[])a.status==="rejected"&&n(a.reason);return e().catch(n)})},dk=["ESP32-C61","ESP32-C6","ESP32-C5","ESP32-C3","ESP32-C2","ESP32-H2","ESP32-P4","ESP32-S3","ESP32-S2","ESP8266","ESP32"],pk={baudRate:115200,bufferSize:8192};function Ms(){return typeof window<"u"&&window.isSecureContext&&"serial"in navigator}function ic(t){if(!t)return null;const e=t.trim().toUpperCase().replace(/\s+/g,"");for(const i of dk)if(e.includes(i)||e.includes(i.replace(/-/g,"")))return i;return null}async function fk(){if(!Ms()||!navigator.serial)return[];try{return await navigator.serial.getPorts()}catch{return[]}}async function uk(){return(await fk()).filter(e=>{try{return!!e.getInfo().usbVendorId}catch{return!1}})}async function gk(){if(!navigator.serial)throw new Error("Web Serial is not available in this browser.");try{return await navigator.serial.requestPort()}catch(t){if(t instanceof DOMException&&t.name==="NotFoundError")return"cancelled";throw t}}async function Xn(t={}){if(!Ms()||!navigator.serial)throw new Error("Web Serial is not available in this browser.");if(!t.forcePicker){const e=await uk();if(e.length===1)return e[0]}return gk()}async function ol(t){const{Transport:e,ESPLoader:i}=await zu(async()=>{const{Transport:r,ESPLoader:n}=await import("./index-CxNzwwYK.js");return{Transport:r,ESPLoader:n}},[],import.meta.url),s=new e(t,!0);try{const r=new i({transport:s,baudrate:115200,terminal:{clean:()=>{},writeLine:()=>{},write:()=>{}},debugLogging:!1}),n=String(await r.main());return{detected:n,family:ic(n)}}finally{try{await s.disconnect()}catch{}}}async function sc(t){if(!Ms())throw new Error("Browser USB flashing needs Chrome or Edge on a secure HTTPS page.");let e=t.port??null;if(!e){const l=await Xn();if(l==="cancelled")return"cancelled";e=l}await zu(()=>import("./install-dialog-m_3nlYHM.js"),__vite__mapDeps([0,1]),import.meta.url),e.readable===null&&await e.open(pk);const i=document.createElement("ewt-install-dialog");i.port=e,i.manifestPath=t.manifestUrl;let s=!1,r=!1,n=null;const o=()=>{n==null||n.disconnect(),n=null};return(()=>{t.onFinished&&(n=new MutationObserver(()=>{var c;const l=i.getAttribute("state");if(l==="INSTALL"){s=!0;return}s&&!r&&(l==="DASHBOARD"||l==="PROVISION")&&(r=!0,(c=t.onFinished)==null||c.call(t))}),n.observe(i,{attributes:!0,attributeFilter:["state"]}))})(),i.addEventListener("closed",()=>{var l;o(),e.close().catch(()=>{}),(l=t.onClosed)==null||l.call(t)},{once:!0}),document.body.appendChild(i),"opened"}var mk=Object.defineProperty,bk=Object.getOwnPropertyDescriptor,ce=(t,e,i,s)=>{for(var r=s>1?void 0:s?bk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&mk(e,i,r),r};const xk=new Set(["queued","starting","announcing","transferring","verifying","transfer_success_waiting_rejoin"]),vk=new Set(["success","failed","aborted","rejoin_timeout","version_mismatch"]);function yk(t){const e=t||"";if(/^\s*esp8266\s*:/m.test(e))return"ESP8266";if(!/^\s*esp32\s*:/m.test(e))return null;const i=e.match(/^\s*variant\s*:\s*["']?([A-Za-z0-9_-]+)["']?\s*$/m),s=((i==null?void 0:i[1])||"").toUpperCase().replace(/_/g,"-");return s?s.includes("ESP32-C61")?"ESP32-C61":s.includes("ESP32-C6")?"ESP32-C6":s.includes("ESP32-C5")?"ESP32-C5":s.includes("ESP32-C3")?"ESP32-C3":s.includes("ESP32-C2")?"ESP32-C2":s.includes("ESP32-H2")?"ESP32-H2":s.includes("ESP32-P4")?"ESP32-P4":s.includes("ESP32-S3")?"ESP32-S3":s.includes("ESP32-S2")?"ESP32-S2":"ESP32":"ESP32"}let ie=class extends de{constructor(){super(...arguments),this.mac="",this.state="loading",this.device=null,this.config=null,this.editorContent="",this.saveIndicator="",this.hasUnsavedChanges=!1,this.error="",this.compilePhase="idle",this.topology=[],this.compileJobId=null,this.compileQueuePosition=null,this.preflight=null,this.chipUnknown=!1,this.yamlWarnings=[],this.showExternalComponentsFix=!1,this.showSecretsWarning=!1,this.missingSecrets=[],this.pendingAction=null,this.pendingAutoFlash=!1,this.showCompileLog=!0,this.compileStartedAt=null,this.flashIntent="none",this.browserFlashManifestUrl="",this.browserFlashError="",this.browserFlashOpen=!1,this.browserFlashFirmwareBlobUrl="",this.elapsedTimer=null,this.pollTimer=null,this.devicePollTimer=null}connectedCallback(){super.connectedCallback(),this.load()}disconnectedCallback(){this.stopPolling(),this.stopDevicePolling(),super.disconnectedCallback()}startPolling(){this.pollTimer||(this.pollTimer=setInterval(()=>this.pollCompileStatus(),2e3))}stopPolling(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}stopCompileLogViewer(){this.compileLogViewer&&(this.compileLogViewer.stopped=!0)}startDevicePolling(){this.devicePollTimer||(this.devicePollTimer=setInterval(()=>void this.pollDevice(),3e4))}stopDevicePolling(){this.devicePollTimer&&(clearInterval(this.devicePollTimer),this.devicePollTimer=null)}async pollDevice(){try{const t=await C.device(this.mac);this.device=t||{}}catch{}}get isCompilingActive(){return this.compilePhase==="compiling"||this.compilePhase==="compile_queued"}get browserSupportsUsbFlash(){return Ms()}get browserFlashChipFamily(){var e,i;const t=String(((e=this.preflight)==null?void 0:e.chip.new)||((i=this.device)==null?void 0:i.chip_name)||"");return yk(this.editorContent)||ic(t)}getElapsedTime(){if(!this.compileStartedAt)return"00:00";const t=Math.floor((Date.now()-this.compileStartedAt)/1e3),e=Math.floor(t/60).toString().padStart(2,"0"),i=(t%60).toString().padStart(2,"0");return`${e}:${i}`}startElapsedTimer(){this.stopElapsedTimer(),this.elapsedTimer=setInterval(()=>this.requestUpdate(),1e3)}stopElapsedTimer(){this.elapsedTimer&&(clearInterval(this.elapsedTimer),this.elapsedTimer=null)}async load(){this.state="loading";try{const[t,e,i]=await Promise.all([C.device(this.mac).catch(()=>null),C.getConfig(this.mac).catch(()=>null),C.topology().catch(()=>[])]);this.device=t||{},this.topology=i,this.startDevicePolling(),e&&e.has_config?(this.config=e,this.editorContent=this.config.content,this.hasUnsavedChanges=!1,this.state="editor"):this.state="no_config",await this.pollCompileStatus()}catch{this.state="no_config"}}clearBrowserFlashManifestUrl(){this.browserFlashManifestUrl&&(URL.revokeObjectURL(this.browserFlashManifestUrl),this.browserFlashManifestUrl=""),this.browserFlashFirmwareBlobUrl&&(URL.revokeObjectURL(this.browserFlashFirmwareBlobUrl),this.browserFlashFirmwareBlobUrl="")}async updateBrowserFlashManifestUrl(){var e,i,s,r;if(this.compilePhase!=="compiled")return;const t=this.browserFlashChipFamily;if(!t){this.clearBrowserFlashManifestUrl();return}try{const n=C.downloadFactoryBinary(this.mac),o=await fetch(n);if(!o.ok){this.clearBrowserFlashManifestUrl();return}const a=await o.blob(),l=URL.createObjectURL(a),c={name:String(((e=this.device)==null?void 0:e.esphome_name)||((i=this.device)==null?void 0:i.label)||this.mac),version:String(((s=this.device)==null?void 0:s.project_version)||((r=this.device)==null?void 0:r.firmware_version)||"compiled"),new_install_prompt_erase:!1,new_install_improv_wait_time:0,builds:[{chipFamily:t,parts:[{path:l,offset:0}]}]},h=new Blob([JSON.stringify(c)],{type:"application/json"}),d=URL.createObjectURL(h);this.clearBrowserFlashManifestUrl(),this.browserFlashManifestUrl=d,this.browserFlashFirmwareBlobUrl=l}catch{this.clearBrowserFlashManifestUrl()}}async pollCompileStatus(){try{const t=await C.getCompileStatus(this.mac);t.status==="compile_queued"?(this.compilePhase="compile_queued",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.startPolling()):t.status==="compiling"?(this.compilePhase="compiling",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.startPolling()):xk.has(t.status)?(this.compilePhase="queued_for_flash",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.flashIntent="ota",this.startPolling(),window.location.hash=`/device/${encodeURIComponent(this.mac)}`):t.status==="compiled"?(this.compilePhase="compiled",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.stopElapsedTimer(),this.updateBrowserFlashManifestUrl(),this.stopPolling(),this.flashIntent==="ota"&&(window.location.hash=`/device/${encodeURIComponent(this.mac)}`)):vk.has(t.status)&&(this.compilePhase="idle",this.compileJobId=null,this.compileQueuePosition=null,this.compileStartedAt=null,this.flashIntent="none",this.clearBrowserFlashManifestUrl(),this.stopElapsedTimer(),this.stopPolling(),this.stopCompileLogViewer())}catch{}}async createScaffold(){try{const t=await C.saveConfig(this.mac,"",!0);this.config=t,this.editorContent=t.content,this.chipUnknown=t.chip_unknown??!1,this.state="editor"}catch(t){this.error=t instanceof Error?t.message:String(t)}}async importYaml(){const t=document.createElement("input");t.type="file",t.accept=".yaml,.yml",t.onchange=async()=>{var i;const e=(i=t.files)==null?void 0:i[0];if(e)try{const s=await C.importConfig(this.mac,e);this.config=s,this.editorContent=s.content,this.state="editor"}catch(s){this.error=s instanceof Error?s.message:String(s)}},t.click()}async saveConfig(t=!1){if(!t&&!nl(this.editorContent)){this.pendingAction="save",this.showExternalComponentsFix=!0;return}this.saveIndicator="Saving...";try{const e=await C.saveConfig(this.mac,this.editorContent);this.config=e,this.hasUnsavedChanges=!1,this.saveIndicator="Saved ✓",setTimeout(()=>{this.saveIndicator="",this.requestUpdate()},2e3)}catch(e){this.saveIndicator="",this.error=e instanceof Error?e.message:String(e)}}onEditorChange(t){const e=t.detail;this.editorContent=e.content,this.yamlWarnings=e.warnings??[],this.hasUnsavedChanges=this.config?this.editorContent!==this.config.content:!0}get isBridgeDevice(){var t;return!!((t=this.device)!=null&&t.is_bridge)}get isEsp8266Device(){var e;const t=String(((e=this.device)==null?void 0:e.chip_name)??"");return t==="ESP8266"||t==="ESP-01"||t==="ESP-12E"}get remoteComponentName(){return this.isBridgeDevice?"esp_tree_bridge":this.isEsp8266Device?"espnow_82xx_remote":"esp_tree_remote"}get externalComponentsFixYaml(){return`external_components:
   - source:
       type: local
       path: /opt/esp-tree/components
@@ -7261,62 +7261,33 @@ external_components:
     }
   `;K([x()],U.prototype,"name",2);K([x()],U.prototype,"chips",2);K([x()],U.prototype,"chipName",2);K([x()],U.prototype,"loadingChips",2);K([x()],U.prototype,"detectingChip",2);K([x()],U.prototype,"chipDetectionError",2);K([x()],U.prototype,"detectedChipName",2);K([x()],U.prototype,"networkId",2);K([x()],U.prototype,"psk",2);K([x()],U.prototype,"bridgeName",2);K([x()],U.prototype,"credentialsComplete",2);K([x()],U.prototype,"networkIdSource",2);K([x()],U.prototype,"pskSource",2);K([x()],U.prototype,"credentialsMismatch",2);K([x()],U.prototype,"bridgeNetworkId",2);K([x()],U.prototype,"loadingCredentials",2);K([x()],U.prototype,"stage",2);K([x()],U.prototype,"error",2);K([x()],U.prototype,"mac",2);K([x()],U.prototype,"esphomeName",2);K([x()],U.prototype,"compilePercent",2);K([x()],U.prototype,"compileStatus",2);K([x()],U.prototype,"manifestUrl",2);K([x()],U.prototype,"firmwareBlobUrl",2);K([x()],U.prototype,"preparingManifest",2);K([x()],U.prototype,"usbSupported",2);K([x()],U.prototype,"flashError",2);K([x()],U.prototype,"flashing",2);K([x()],U.prototype,"flashNeedsConfirm",2);K([x()],U.prototype,"autoInstall",2);K([x()],U.prototype,"haStatus",2);K([x()],U.prototype,"haDeviceId",2);K([x()],U.prototype,"haBusy",2);K([x()],U.prototype,"haNotice",2);U=K([ke("esp-remote-wizard")],U);var k2=Object.defineProperty,S2=Object.getOwnPropertyDescriptor,ut=(t,e,i,s)=>{for(var r=s>1?void 0:s?S2(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&k2(e,i,r),r};const rn={network:g`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.3"/><circle cx="5" cy="18" r="2.3"/><circle cx="19" cy="18" r="2.3"/><path d="M12 7.3v3.4M6.4 16.6l4.3-4.3M17.6 16.6l-4.3-4.3"/></svg>`,jobs:g`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"/><circle cx="3" cy="6.5" r=".9"/><circle cx="3" cy="12" r=".9"/><circle cx="3" cy="17.5" r=".9"/></svg>`,activity:g`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.2-6 3.6 12 2.1-6H21"/></svg>`,settings:g`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .35 1.87l.06.06-1.9 1.9-.06-.06a1.7 1.7 0 0 0-1.87-.35 1.7 1.7 0 0 0-1 1.55v.09h-2.7v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.35l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 0 0 7.4 15a1.7 1.7 0 0 0-1.55-1H5.76v-2.7h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.35-1.87l-.06-.06 1.9-1.9.06.06a1.7 1.7 0 0 0 1.87.35 1.7 1.7 0 0 0 1-1.55v-.09h2.7v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.35l.06-.06 1.9 1.9-.06.06a1.7 1.7 0 0 0-.35 1.87 1.7 1.7 0 0 0 1.55 1h.09v2.7h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>`,plus:g`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`};let Je=class extends de{constructor(){super(...arguments),this.route=this.readRoute(),this.queueData=null,this.compileData=null,this.addonConnected=!0,this.bridgeConnected=null,this.bridgeConfigured=null,this.integrationLoaded=null,this.integrationConfigured=!1,this.restartRequired=!1,this.bridgeLabel="",this.addonVersion="",this.pollTimer=null,this.bridgeStreamHandle=null,this.setupDismissed=!1,this.onHashChange=()=>{this.route=this.readRoute()},this.onSetupDismissed=()=>{this.setupDismissed=!0}}connectedCallback(){super.connectedCallback(),window.addEventListener("hashchange",this.onHashChange),this.addEventListener("setup-dismissed",this.onSetupDismissed),this.bridgeStreamHandle=Sg(t=>{this.bridgeConnected=t,this.fetchConfig()}),this.fetchQueue(),this.pollTimer=setInterval(()=>{this.fetchQueue(),this.fetchConfig(),this.checkRestartRequired()},3e3),this.fetchConfig(),this.checkRestartRequired(),this.fetchVersion(),this.maybeRedirectToSetup()}async fetchVersion(){try{const t=await C.health();t.version&&(this.addonVersion=t.version)}catch{}}async checkRestartRequired(){var t,e;try{const i=await C.restartRequired();this.restartRequired=i.restart_required,this.integrationLoaded=((t=i.integration)==null?void 0:t.loaded)??this.integrationLoaded,this.integrationConfigured=((e=i.integration)==null?void 0:e.configured)??this.integrationConfigured}catch{this.restartRequired=!1}this.maybeRedirectToSetup()}async fetchConfig(){var t,e,i;try{const s=await C.config(),r=s.active_bridge;this.integrationLoaded=((t=s.integration)==null?void 0:t.loaded)??null,this.integrationConfigured=((e=s.integration)==null?void 0:e.configured)??!1,this.bridgeLabel=(r==null?void 0:r.name)||(r==null?void 0:r.hostname)||(r==null?void 0:r.host)||"",this.bridgeConfigured=!!(r&&!r.error||(((i=s.bridges)==null?void 0:i.length)??0)>0),this.addonConnected=!0}catch{this.addonConnected=!1,this.bridgeConfigured=!1}this.maybeRedirectToSetup()}needsSetup(){return this.bridgeConfigured===!1||this.restartRequired||!this.integrationConfigured&&this.integrationLoaded===!1}maybeRedirectToSetup(){this.needsSetup()&&this.route.name==="topology"&&!this.setupDismissed&&this.navigate("/setup")}disconnectedCallback(){var t;window.removeEventListener("hashchange",this.onHashChange),this.removeEventListener("setup-dismissed",this.onSetupDismissed),this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null),(t=this.bridgeStreamHandle)==null||t.close(),this.bridgeStreamHandle=null,super.disconnectedCallback()}async fetchQueue(){try{const[t,e]=await Promise.all([C.getQueue(),C.getCompileQueue()]);this.queueData=t,this.compileData=e,this.addonConnected=!0}catch{this.addonConnected=!1}}readRoute(){const t=window.location.hash.replace(/^#\/?/,"").replace(/\/+$/,"");if(t.startsWith("device/")){const e=t.slice(7);return e.endsWith("/config")?{name:"device-config",mac:decodeURIComponent(e.replace(/\/config$/,""))}:{name:"device",mac:decodeURIComponent(e)}}if(t.startsWith("job/")){const e=t.slice(4),[i,s]=e.split("?"),r=parseInt(i,10);let n="/queue";return s&&(n=new URLSearchParams(s).get("from")||"/queue"),{name:"job",jobId:r,from:n}}return t==="settings"?{name:"settings"}:t==="queue"?{name:"queue"}:t==="secrets"?{name:"secrets",from:"/"}:t.startsWith("secrets?")?{name:"secrets",from:new URLSearchParams(t.slice(7)).get("from")||"/"}:t==="activity-log"?{name:"activity-log"}:t==="setup"?{name:"setup"}:t==="add-remote"?{name:"remote-wizard"}:{name:"topology"}}navigate(t){window.location.hash=t}activeRoute(){return this.route.name==="topology"||this.route.name==="device"||this.route.name==="device-config"||this.route.name==="remote-wizard"?"network":this.route.name==="queue"||this.route.name==="job"?"queue":this.route.name==="activity-log"?"activity":"settings"}queueSummary(){const t=this.queueData,e=this.compileData,i=(t==null?void 0:t.count)??0,s=(e==null?void 0:e.count)??0,r=!!(t!=null&&t.active_job)||!!(e!=null&&e.active_job);return{label:`${i+s}`,count:i+s,active:r,paused:!!(t!=null&&t.paused)}}pageName(){switch(this.route.name){case"queue":return"Jobs";case"job":return"Job detail";case"settings":return"Settings";case"activity-log":return"Activity";case"secrets":return"Secrets";case"device":return"Device";case"device-config":return"Configuration";case"remote-wizard":return"Add remote";default:return"Network overview"}}render(){if(this.route.name==="setup")return g`<esp-setup-wizard></esp-setup-wizard>`;const t=this.queueSummary(),e=this.addonConnected?this.bridgeConnected===!1?"bridge-offline":"online":"offline",i=this.addonConnected?e==="bridge-offline"?"Bridge unreachable":this.restartRequired?"Restart required":this.bridgeConfigured===!1?"No bridge configured":"Network connected":"Add-on unreachable";return g`
       <div class="app-shell">
-        <aside class="sidebar" aria-label="Primary navigation">
-          <a class="brand" href="#/" aria-label="ESP Tree network overview">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32"><path d="M16 27V15M16 15l-6-5M16 15l6-5M10 10l-3-3M22 10l3-3" /><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="10" r="2"/><circle cx="22" cy="10" r="2"/><circle cx="7" cy="7" r="1.4"/><circle cx="25" cy="7" r="1.4"/></svg>
-            </span>
-            <span class="brand-copy"><strong>ESP Tree</strong><small>Field network console</small></span>
-          </a>
-
-          ${this.addonConnected?v:g`
-            <div class="connection-banner" role="alert">Cannot reach the add-on</div>
-          `}
-          ${this.bridgeConnected===!1?g`
-            <div class="connection-banner subtle" role="status">Bridge unreachable</div>
-          `:v}
-
-          <div class="nav-group">
-            <span class="nav-label">Workspace</span>
-            <button class="nav-item ${this.activeRoute()==="network"?"active":""}" aria-current=${this.activeRoute()==="network"?"page":"false"} @click=${()=>this.navigate("/")}>
-              ${rn.network}<span>Network</span>
-            </button>
-            <button class="nav-item ${this.activeRoute()==="queue"?"active":""}" aria-current=${this.activeRoute()==="queue"?"page":"false"} @click=${()=>this.navigate("/queue")}>
-              ${rn.jobs}<span>Jobs</span>${t.count>0?g`<span class="nav-count ${t.active?"active":""}">${t.label}${t.paused?g`<span class="pause-glyph"> paused</span>`:v}</span>`:v}
-            </button>
-            <button class="nav-item ${this.activeRoute()==="activity"?"active":""}" aria-current=${this.activeRoute()==="activity"?"page":"false"} @click=${()=>this.navigate("/activity-log")}>
-              ${rn.activity}<span>Activity</span>
-            </button>
-          </div>
-
-          <div class="nav-group nav-secondary">
-            <span class="nav-label">Configure</span>
-            <button class="nav-item ${this.activeRoute()==="settings"?"active":""}" aria-current=${this.activeRoute()==="settings"?"page":"false"} @click=${()=>this.navigate("/settings")}>
-              ${rn.settings}<span>Settings</span>
-            </button>
-            <button class="nav-item ${this.route.name==="secrets"?"active":""}" aria-current=${this.route.name==="secrets"?"page":"false"} @click=${()=>this.navigate("/secrets")}>
-              <span class="nav-icon text-icon" aria-hidden="true">↗</span><span>Secrets</span>
-            </button>
-          </div>
-
-          <div class="sidebar-footer">
-            <div class="bridge-summary">
-              <span class="status-dot ${e}" aria-hidden="true"></span>
-              <span class="bridge-summary-copy">
-                <strong>${this.bridgeLabel||"No bridge"}</strong>
-                <small>${i}</small>
-              </span>
-            </div>
-            <div class="sidebar-version">Add-on v${this.addonVersion||"—"}</div>
-          </div>
-        </aside>
-
         <div class="main-shell">
           <header class="topbar">
             <div class="topbar-title">
               <span class="topbar-kicker">ESP Tree</span>
               <span class="topbar-page">${this.pageName()}</span>
+              ${this.bridgeLabel?g`<span class="topbar-bridge">${this.bridgeLabel}</span>`:v}
             </div>
+
+            <nav class="topnav" aria-label="Primary navigation">
+              <button class="nav-item ${this.activeRoute()==="network"?"active":""}" aria-current=${this.activeRoute()==="network"?"page":"false"} @click=${()=>this.navigate("/")}>
+                ${rn.network}<span>Network</span>
+              </button>
+              <button class="nav-item ${this.activeRoute()==="queue"?"active":""}" aria-current=${this.activeRoute()==="queue"?"page":"false"} @click=${()=>this.navigate("/queue")}>
+                ${rn.jobs}<span>Jobs</span>${t.count>0?g`<span class="nav-count ${t.active?"active":""}">${t.label}${t.paused?g`<span class="pause-glyph"> paused</span>`:v}</span>`:v}
+              </button>
+              <button class="nav-item ${this.activeRoute()==="activity"?"active":""}" aria-current=${this.activeRoute()==="activity"?"page":"false"} @click=${()=>this.navigate("/activity-log")}>
+                ${rn.activity}<span>Activity</span>
+              </button>
+              <span class="nav-divider" aria-hidden="true"></span>
+              <button class="nav-item ${this.activeRoute()==="settings"?"active":""}" aria-current=${this.activeRoute()==="settings"?"page":"false"} @click=${()=>this.navigate("/settings")}>
+                ${rn.settings}<span>Settings</span>
+              </button>
+              <button class="nav-item ${this.route.name==="secrets"?"active":""}" aria-current=${this.route.name==="secrets"?"page":"false"} @click=${()=>this.navigate("/secrets")}>
+                <span class="nav-icon text-icon" aria-hidden="true">↗</span><span>Secrets</span>
+              </button>
+            </nav>
+
             <div class="topbar-actions">
               <span class="connection-pill ${e==="online"?"ok":"warn"}" role="status">
                 <span class="status-dot ${e}" aria-hidden="true"></span>${i}
@@ -7326,8 +7297,16 @@ external_components:
                   <span class="pulse-dot"></span>${t.paused?"Queue paused":"Job running"}
                 </button>
               `:v}
+              <span class="topbar-version">Add-on v${this.addonVersion||"—"}</span>
             </div>
           </header>
+
+          ${this.addonConnected?v:g`
+            <div class="connection-banner" role="alert">Cannot reach the add-on</div>
+          `}
+          ${this.bridgeConnected===!1?g`
+            <div class="connection-banner subtle" role="status">Bridge unreachable</div>
+          `:v}
           <main class="content">
             ${this.route.name==="remote-wizard"?g`<esp-remote-wizard></esp-remote-wizard>`:this.route.name==="topology"?g`<esp-topology-map @node-selected=${s=>this.navigate(`/device/${encodeURIComponent(s.detail)}`)}></esp-topology-map>`:this.route.name==="device"?g`<esp-device-detail .mac=${this.route.mac}></esp-device-detail>`:this.route.name==="device-config"?g`<esp-config-page .mac=${this.route.mac}></esp-config-page>`:this.route.name==="job"?g`<esp-job-page .jobId=${this.route.jobId} .from=${this.route.from}></esp-job-page>`:this.route.name==="queue"?g`<esp-queue-page></esp-queue-page>`:this.route.name==="secrets"?g`<esp-secrets-page .from=${this.route.from}></esp-secrets-page>`:this.route.name==="activity-log"?g`<esp-activity-log-page></esp-activity-log-page>`:g`<esp-settings></esp-settings>`}
           </main>
@@ -7374,106 +7353,54 @@ external_components:
     :host, :host * { box-sizing: border-box; }
 
     .app-shell {
-      display: flex;
+      display: block;
       min-height: 100vh;
     }
 
-    .sidebar {
-      width: 232px;
-      min-height: 100vh;
-      flex: 0 0 232px;
-      display: flex;
-      flex-direction: column;
-      gap: 26px;
-      padding: 24px 14px 16px;
-      background: #102a26;
-      color: #e4ede7;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
-
-    .brand {
+    .topnav {
       display: flex;
       align-items: center;
-      gap: 11px;
-      min-height: 42px;
-      padding: 0 8px;
-      color: inherit;
-      text-decoration: none;
-      border-radius: var(--radius-md);
+      gap: 2px;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
-
-    .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-    .brand-mark {
-      display: grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      flex: 0 0 36px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.09);
-      border: 1px solid rgba(255,255,255,.12);
-    }
-
-    .brand-mark svg {
-      width: 24px;
-      height: 24px;
-      fill: none;
-      stroke: #d6b15c;
-      stroke-width: 1.55;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .brand-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .brand-copy strong { color: #fff; font-size: 16px; letter-spacing: -.02em; font-weight: 650; }
-    .brand-copy small { color: #91a69e; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-
-    .nav-group { display: flex; flex-direction: column; gap: 3px; }
-    .nav-secondary { margin-top: 2px; }
-    .nav-label {
-      padding: 0 11px 7px;
-      color: #7c9289;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
+    .topnav::-webkit-scrollbar { display: none; }
+    .nav-divider { width: 1px; height: 20px; flex: 0 0 1px; margin: 0 6px; background: var(--line); }
 
     .nav-item {
-      width: 100%;
+      width: auto;
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-height: 38px;
+      gap: 7px;
+      min-height: 32px;
       padding: 0 11px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 7px;
       background: transparent;
-      color: #b9c9c2;
+      color: var(--muted);
       font: inherit;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 12.5px;
+      font-weight: 600;
       text-align: left;
+      white-space: nowrap;
       cursor: pointer;
       transition: background .15s ease, color .15s ease;
     }
 
-    .nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+    .nav-item:hover { background: var(--surface-subtle); color: var(--ink); }
     .nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .nav-item.active {
-      background: rgba(255,255,255,.11);
-      color: #fff;
-      box-shadow: inset 2px 0 0 #d6b15c;
+      background: var(--surface-subtle);
+      color: var(--ink);
+      box-shadow: inset 0 -2px 0 var(--accent);
     }
 
     .nav-item svg {
-      width: 17px;
-      height: 17px;
-      flex: 0 0 17px;
+      width: 15px;
+      height: 15px;
+      flex: 0 0 15px;
       fill: none;
       stroke: currentColor;
       stroke-width: 1.55;
@@ -7482,15 +7409,15 @@ external_components:
       opacity: .9;
     }
 
-    .text-icon { width: 17px; flex: 0 0 17px; font-size: 17px; line-height: 1; text-align: center; color: #91a69e; }
+    .text-icon { width: 15px; flex: 0 0 15px; font-size: 15px; line-height: 1; text-align: center; color: var(--faint); }
 
     .nav-count {
-      margin-left: auto;
-      min-width: 20px;
+      margin-left: 2px;
+      min-width: 18px;
       padding: 2px 6px;
       border-radius: 999px;
-      background: rgba(255,255,255,.13);
-      color: #f1f5f2;
+      background: var(--line);
+      color: var(--ink-2);
       font-size: 10px;
       font-weight: 700;
       text-align: center;
@@ -7499,29 +7426,23 @@ external_components:
     .nav-count.active { background: var(--accent); color: #1c2420; }
     .pause-glyph { font-size: 9px; font-weight: 600; opacity: .85; }
 
-    .sidebar-footer { margin-top: auto; border-top: 1px solid rgba(255,255,255,.10); padding: 16px 8px 0; }
-    .bridge-summary { display: flex; align-items: flex-start; gap: 9px; }
-    .bridge-summary-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .bridge-summary-copy strong { color: #e8efeb; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bridge-summary-copy small { color: #8fa49b; font-size: 10px; line-height: 1.35; }
-    .sidebar-version { margin-top: 13px; color: #7e9288; font-family: var(--font-mono); font-size: 9px; letter-spacing: .02em; }
-
     .status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--faint); margin-top: 5px; }
     .status-dot.online { background: #66ba7e; box-shadow: 0 0 0 3px rgba(102,186,126,.13); }
     .status-dot.bridge-offline, .status-dot.offline { background: var(--danger); }
     .status-dot.warn { background: var(--accent); }
 
     .connection-banner {
-      margin: -8px 2px 0;
-      padding: 8px 10px;
-      border: 1px solid rgba(255,120,120,.35);
-      border-radius: 7px;
-      background: rgba(150,45,50,.23);
-      color: #ffdada;
-      font-size: 11px;
-      line-height: 1.35;
+      margin: 14px auto 0;
+      max-width: 1440px;
+      padding: 9px 14px;
+      border: 1px solid #eab8b8;
+      border-radius: 8px;
+      background: var(--danger-soft);
+      color: #8a2c2c;
+      font-size: 12px;
+      line-height: 1.4;
     }
-    .connection-banner.subtle { border-color: rgba(214,177,92,.35); background: rgba(150,110,30,.18); color: #f4dfae; }
+    .connection-banner.subtle { border-color: #ead8b1; background: var(--accent-soft); color: #7c5716; }
 
     .main-shell { min-width: 0; flex: 1; display: flex; flex-direction: column; }
     .topbar {
@@ -7540,8 +7461,20 @@ external_components:
     }
 
     .topbar-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-    .topbar-kicker { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-    .topbar-page { color: var(--ink); font-size: 13px; font-weight: 650; }
+    .topbar-kicker { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+    .topbar-page { color: var(--ink); font-size: 13px; font-weight: 650; white-space: nowrap; }
+    .topbar-bridge {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .topbar-version { color: var(--faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: .02em; white-space: nowrap; }
 
     .topbar-actions { display: flex; align-items: center; gap: 9px; min-width: 0; }
     .connection-pill, .job-pill {
@@ -7570,42 +7503,33 @@ external_components:
     .content { width: 100%; max-width: 1440px; margin: 0 auto; padding: 30px 32px 56px; }
 
     @media (max-width: 980px) {
-      .sidebar { width: 206px; flex-basis: 206px; padding-left: 10px; padding-right: 10px; }
       .content { padding: 24px 22px 48px; }
-      .topbar { padding: 0 22px; }
-      .brand-copy small { display: none; }
+      .topbar { padding: 0 22px; gap: 12px; }
+      .topbar-kicker { display: none; }
+      .topbar-bridge { max-width: 140px; }
+      .nav-item { padding: 0 9px; font-size: 12px; }
     }
 
     @media (max-width: 760px) {
-      .app-shell { display: block; }
-      .sidebar {
-        position: static;
-        width: 100%;
-        height: auto;
-        min-height: 0;
-        flex: initial;
-        padding: 13px 14px 10px;
-        gap: 13px;
-        overflow: visible;
+      .topbar {
+        min-height: 52px;
+        padding: 8px 14px;
+        gap: 10px;
+        flex-wrap: wrap;
       }
-      .brand { min-height: 36px; padding: 0 3px; gap: 9px; }
-      .brand-mark { width: 30px; height: 30px; flex-basis: 30px; border-radius: 8px; }
-      .brand-mark svg { width: 20px; height: 20px; }
-      .brand-copy strong { font-size: 15px; }
-      .brand-copy small { display: block; font-size: 9px; }
-      .nav-group { flex-direction: row; gap: 4px; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; }
-      .nav-group::-webkit-scrollbar { display: none; }
-      .nav-label, .sidebar-footer { display: none; }
-      .nav-secondary { margin-top: 0; }
-      .nav-item { width: auto; flex: 0 0 auto; min-height: 36px; padding: 0 10px; gap: 7px; white-space: nowrap; }
-      .nav-item svg { width: 15px; height: 15px; flex-basis: 15px; }
-      .nav-item.active { box-shadow: inset 0 -2px 0 #d6b15c; border-radius: 6px; }
-      .nav-count { margin-left: 2px; }
-      .topbar { min-height: 48px; padding: 0 16px; }
-      .topbar-kicker { display: none; }
+      .topbar-title { order: 1; }
+      .topbar-actions { order: 2; margin-left: auto; }
+      .topnav { order: 3; width: 100%; padding-bottom: 2px; }
+      .topbar-bridge { display: none; }
       .topbar-page { font-size: 12px; }
+      .nav-item { min-height: 32px; padding: 0 9px; gap: 6px; font-size: 12px; }
+      .nav-item svg { width: 14px; height: 14px; flex-basis: 14px; }
+      .nav-item.active { box-shadow: inset 0 -2px 0 var(--accent); }
+      .nav-count { margin-left: 2px; }
       .connection-pill { font-size: 10px; padding: 0 8px; }
       .job-pill { display: none; }
+      .topbar-version { display: none; }
+      .connection-banner { margin: 10px 14px 0; }
       .content { padding: 20px 14px 40px; }
     }
 
@@ -7613,4 +7537,4 @@ external_components:
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
   `;ut([x()],Je.prototype,"route",2);ut([x()],Je.prototype,"queueData",2);ut([x()],Je.prototype,"compileData",2);ut([x()],Je.prototype,"addonConnected",2);ut([x()],Je.prototype,"bridgeConnected",2);ut([x()],Je.prototype,"bridgeConfigured",2);ut([x()],Je.prototype,"integrationLoaded",2);ut([x()],Je.prototype,"integrationConfigured",2);ut([x()],Je.prototype,"restartRequired",2);ut([x()],Je.prototype,"bridgeLabel",2);ut([x()],Je.prototype,"addonVersion",2);Je=ut([ke("espnow-app")],Je);export{v as A,gg as D,us as E,zu as _,de as a,Ug as b,Wg as c,Hg as d,xg as e,Rd as f,g,zg as h,we as i,V as n,P2 as p,x as r,ke as t,O2 as w};
-//# sourceMappingURL=index-CGvdEQ2m.js.map
+//# sourceMappingURL=index-CylJ6tx8.js.map
