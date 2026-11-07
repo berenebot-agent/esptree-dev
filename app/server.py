@@ -46,6 +46,7 @@ from .models import (
     PENDING_CONFIRM,
     QUEUED,
     REJOIN_TIMEOUT,
+    REJOINED_UNVERIFIED,
     SUCCESS,
     STARTING,
     TRANSFERRING,
@@ -1949,7 +1950,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail="config not found after save")
 
         active = db.active_job_for_device(nm)
-        if active and active["status"] not in (COMPILE_SUCCESS, FAILED, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH):
+        if active and active["status"] not in (COMPILE_SUCCESS, FAILED, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH, REJOINED_UNVERIFIED):
             try:
                 db.mark_terminal(int(active["id"]), ABORTED, error_msg="superseded by flash wizard re-submit")
             except Exception:
@@ -3310,7 +3311,7 @@ def create_app() -> FastAPI:
                 "error": latest_compile.get("error_msg"),
                 "flash_job": None,
             }
-        if flash_job and flash_job["status"] in (SUCCESS, FAILED, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH):
+        if flash_job and flash_job["status"] in (SUCCESS, FAILED, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH, REJOINED_UNVERIFIED):
             return {
                 "mac": nm,
                 "esphome_name": esphome_name,

@@ -24,6 +24,7 @@ from .models import (
     ABORTED,
     REJOIN_TIMEOUT,
     VERSION_MISMATCH,
+    REJOINED_UNVERIFIED,
     TERMINAL_STATUSES,
     node_key_from_topology,
     normalize_mac,
@@ -767,7 +768,7 @@ class Database:
             )
 
     def get_latest_flash_job_for_device(self, mac: str) -> dict[str, Any] | None:
-        flash_statuses = (QUEUED, STARTING, ANNOUNCING, TRANSFERRING, VERIFYING, WAITING_REJOIN, SUCCESS, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH)
+        flash_statuses = (QUEUED, STARTING, ANNOUNCING, TRANSFERRING, VERIFYING, WAITING_REJOIN, SUCCESS, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH, REJOINED_UNVERIFIED)
         placeholders = ",".join("?" for _ in flash_statuses)
         with self.connect() as conn:
             return self.row(

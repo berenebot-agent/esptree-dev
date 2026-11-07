@@ -20,9 +20,10 @@ const STATUS_LABELS: Record<string, string> = {
   aborted: 'Aborted',
   rejoin_timeout: 'Rejoin timeout',
   version_mismatch: 'Version mismatch',
+  rejoined_unverified: 'Rejoined — build unconfirmed',
 };
 
-const TERMINAL_STATUSES = ['compile_success', 'success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch'];
+const TERMINAL_STATUSES = ['compile_success', 'success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch', 'rejoined_unverified'];
 
 @customElement('esp-job-page')
 export class EspJobPage extends LitElement {
@@ -125,6 +126,7 @@ export class EspJobPage extends LitElement {
       flash_failed: 'danger',
       flash_aborted: 'danger',
       flash_version_mismatch: 'warn',
+      flash_identity_unverified: 'warn',
       flash_rejoin_timeout: 'warn',
     };
     const colorClass = statusColors[ev.type] || '';
@@ -141,6 +143,8 @@ export class EspJobPage extends LitElement {
           ${ev.esphome_name ? html`<span class="event-detail">${ev.esphome_name}</span>` : nothing}
           ${ev.host ? html`<span class="event-detail">at ${ev.host}</span>` : nothing}
           ${ev.current_build_date ? html`<span class="event-detail">running build: ${ev.current_build_date}</span>` : nothing}
+          ${ev.expected_build_date ? html`<span class="event-detail">expected build: ${ev.expected_build_date}</span>` : nothing}
+          ${ev.actual_build_date ? html`<span class="event-detail">reported build: ${ev.actual_build_date}</span>` : nothing}
           ${ev.firmware_name ? html`<span class="event-detail">${ev.firmware_name}</span>` : nothing}
           ${ev.duration_s != null ? html`<span class="event-detail">took ${fmtDuration(ev.duration_s as number)}</span>` : nothing}
           ${ev.current_md5 ? html`<span class="event-detail">current running firmware MD5: ${ev.current_md5}</span>` : nothing}
@@ -188,7 +192,7 @@ export class EspJobPage extends LitElement {
         </div>
 
         ${this.error ? html`<div class="notice danger" role="alert">${icon('alert')}<span>${this.error}</span></div>` : nothing}
-        ${job?.error_msg ? html`<div class="notice danger" role="status">${icon('alert')}<span>${job.error_msg}</span><span class="notice-actions"><a class="btn sm" href=${`#/device/${encodeURIComponent(job.mac)}`}>Open device</a></span></div>` : nothing}
+        ${job?.error_msg ? html`<div class="notice ${st.tone === 'warn' ? 'warn' : 'danger'}" role="status">${icon('alert')}<span>${job.error_msg}</span><span class="notice-actions"><a class="btn sm" href=${`#/device/${encodeURIComponent(job.mac)}`}>Open device</a></span></div>` : nothing}
 
         ${job ? html`
           <section class="card">
@@ -199,6 +203,7 @@ export class EspJobPage extends LitElement {
               <div><dt>Finished</dt><dd>${job.completed_at ? fmtTime(job.completed_at) : '—'}</dd></div>
               <div><dt>Duration</dt><dd>${job.started_at && job.completed_at ? fmtDuration(job.completed_at - job.started_at) : '—'}</dd></div>
               ${job.parsed_version ? html`<div><dt>Version</dt><dd>${job.old_firmware_version ? `${job.old_firmware_version} → ` : ''}${job.parsed_version}</dd></div>` : nothing}
+              ${job.parsed_build_date ? html`<div><dt>Image build</dt><dd>${job.parsed_build_date}</dd></div>` : nothing}
             </dl>
           </section>
         ` : nothing}

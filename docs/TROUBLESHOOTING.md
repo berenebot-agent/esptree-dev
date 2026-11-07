@@ -627,17 +627,41 @@ by `ota_transfer_timeout_s`, **1800 seconds** (`app/config.py:22`). Both are
 
 ### `version_mismatch` — the device rejoined but reports the old version
 
+Applies to **remotes**, which report a project version and a firmware MD5.
+
 **Cause.** The node rejoined (detected by an uptime reset) but its reported
 `firmware_version` does not match the expected `parsed_version`. The job is closed as
 `VERSION_MISMATCH` with
 `"firmware version mismatch after rejoin — device may not have updated"`
-(`app/ota_worker.py:495-512`). If either version string is empty, the check is
-skipped and the job is marked successful
-(`app/ota_worker.py:504-513`).
+(`OTAWorker._wait_for_rejoin`). If either version string is empty, the check is
+skipped and the job is marked successful.
 
 **Fix.** Reflash. Retention makes reflash-as-rollback the recovery path — any
 retained binary can be reflashed from the job history
 (`README.md:186-190`; `app/server.py:2716`).
+
+### `rejoined_unverified` — the device came back, but not provably on the new image
+
+A **bridge** flash ends here instead of claiming a verdict it cannot support.
+
+**Cause.** A bridge reports no project version and no firmware MD5, so the only
+post-reboot evidence is the build date it reports (`OTAWorker._wait_for_rejoin` with
+`verify_bridge_identity=True`). That date is `__DATE__`/`__TIME__` expanded in the
+bridge's own `setup()` (`device_code/components/esp_tree_bridge/esp_tree_bridge.cpp`,
+the `set_bridge_identity(...)` call) — the compile time of **one translation unit** —
+and the add-on compiles into a persistent build tree (`Compiler._artifact_dir` under
+`devices/<name>/.esphome/build/`, plus a persistent `PLATFORMIO_CORE_DIR`). An image
+rebuilt from unchanged component sources therefore boots carrying the *same* string,
+so an unchanged date cannot distinguish "the push never landed" from "the push landed
+and recompiled nothing". The job closes amber, with `"... so the image it booted could
+not be confirmed"`, and a `flash_identity_unverified` event records the build date
+either side of the upload and why it settled nothing (`build date unchanged`, `no
+baseline build date`, `no build date reported`).
+
+**Fix.** Treat it as "go and look", not "the update failed". Compare the running build
+date on the device page with the job's **Image build** fact (the new artifact's own app
+descriptor date). A changed build date is proof the new image booted; an unchanged one
+stays ambiguous until the bridge reports an image identity of its own.
 
 ### The upload is rejected: `firmware file must be an OTA image (.ota.bin)`
 

@@ -27,7 +27,7 @@ export interface RowContext {
   onHide: (mac: string) => void;
 }
 
-const TERMINAL = ['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout'];
+const TERMINAL = ['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout', 'rejoined_unverified'];
 
 export function nodeName(node: TopologyNode): string {
   return node.friendly_name || node.esphome_name || node.label || node.mac;

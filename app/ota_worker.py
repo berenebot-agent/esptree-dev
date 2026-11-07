@@ -12,6 +12,7 @@ from .models import (
     FAILED,
     QUEUED,
     REJOIN_TIMEOUT,
+    REJOINED_UNVERIFIED,
     STARTING,
     SUCCESS,
     TRANSFERRING,
@@ -345,6 +346,7 @@ class OTAWorker:
             latest,
             initial_uptime_s=initial_uptime_s,
             expect_changed_build_date=initial_build_date or None,
+            verify_bridge_identity=True,
         )
 
     async def _ota_upload_with_timeout(
@@ -611,6 +613,7 @@ class OTAWorker:
         *,
         initial_uptime_s: float | None = None,
         expect_changed_build_date: str | None = None,
+        verify_bridge_identity: bool = False,
     ) -> None:
         target_mac = normalize_mac(str(job["mac"]))
         deadline = now_ts() + self.rejoin_timeout_s
@@ -641,27 +644,32 @@ class OTAWorker:
 
                 if initial_uptime_s is None or current_uptime < initial_uptime_s:
                     self.db.append_job_event(job_id, "flash_rejoined")
-                    if expect_changed_build_date:
-                        # A bridge has no firmware MD5 in its identity and no project
-                        # version (no scaffold emits `esphome: project:`), so the build
-                        # date is the only evidence that the image it booted is the one
-                        # just uploaded. Same value as before the upload means the push
-                        # landed on a device that did not switch partitions.
+                    if verify_bridge_identity:
+                        # A bridge reports no project version and no firmware MD5, so a
+                        # *changed* build date is the only evidence available that it
+                        # booted the image just sent. But that date is
+                        # `__DATE__`/`__TIME__` expanded in the bridge's own setup(),
+                        # i.e. the compile time of ONE translation unit - and the add-on
+                        # compiles into a persistent build tree, so an image rebuilt
+                        # from unchanged component sources boots with the same string.
+                        # An unchanged date therefore cannot mean "the upload did not
+                        # take effect": it means the device's identity cannot settle the
+                        # question, which is not the same verdict as a failure.
                         actual_build_date = str(node.get("firmware_build_date") or "").strip()
-                        if actual_build_date and actual_build_date == expect_changed_build_date:
-                            self.db.append_job_event(
-                                job_id,
-                                "flash_version_mismatch",
-                                expected_build_date=expect_changed_build_date,
-                                actual_build_date=actual_build_date,
-                            )
-                            self._finish(
-                                job_id,
-                                VERSION_MISMATCH,
-                                "bridge rejoined but still reports its previous firmware "
-                                "build date — the upload did not take effect",
-                            )
+                        expected = (expect_changed_build_date or "").strip()
+                        if expected and actual_build_date and actual_build_date != expected:
+                            self._finish(job_id, SUCCESS)
                             return
+                        reason, message = _bridge_identity_unverified(expected, actual_build_date)
+                        self.db.append_job_event(
+                            job_id,
+                            "flash_identity_unverified",
+                            expected_build_date=expected,
+                            actual_build_date=actual_build_date,
+                            reason=reason,
+                        )
+                        self._finish(job_id, REJOINED_UNVERIFIED, message)
+                        return
                     latest_job = self.db.get_job(job_id) or job
                     expected_version = (latest_job.get("parsed_version") or "").strip()
                     actual_version = (node.get("firmware_version") or "").strip()
@@ -700,7 +708,9 @@ class OTAWorker:
             if job.get("started_at"):
                 elapsed = now_ts() - int(job["started_at"])
             self.db.append_job_event(job_id, "flash_success", duration_s=elapsed)
-        else:
+        elif status != REJOINED_UNVERIFIED:
+            # An unverified rejoin already logged `flash_identity_unverified` with the
+            # dates either side of the upload; "Flash failed" here would contradict it.
             self.db.append_job_event(job_id, "flash_failed", error=error_msg or status)
         self.db.mark_terminal(job_id, status, error_msg=error_msg, percent=100 if status == SUCCESS else job.get("percent"))
 
@@ -711,6 +721,33 @@ class OTAWorker:
         for job in self.db.expired_retained():
             self.firmware_store.delete_file(job.get("firmware_path"))
             self.db.clear_job_firmware(int(job["id"]))
+
+
+def _bridge_identity_unverified(expected: str, actual: str) -> tuple[str, str]:
+    """Why a bridge's post-reboot identity could not settle what it booted.
+
+    Returns (short reason for the event log, sentence for the job's message). Each
+    case is a different missing fact, so each gets its own wording rather than one
+    blanket "mismatch": an absent baseline and an absent report are not evidence of
+    a failed upload either.
+    """
+    if not expected:
+        return (
+            "no baseline build date",
+            "bridge rejoined but no build date was recorded before the upload, so the "
+            "image it booted could not be confirmed",
+        )
+    if not actual:
+        return (
+            "no build date reported",
+            "bridge rejoined without reporting a build date, so the image it booted "
+            "could not be confirmed",
+        )
+    return (
+        "build date unchanged",
+        "bridge rejoined but its build date is unchanged, so the image it booted "
+        "could not be confirmed",
+    )
 
 
 def _bounded_percent(value: Any) -> int:

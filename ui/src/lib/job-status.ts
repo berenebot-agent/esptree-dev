@@ -9,6 +9,7 @@ const LABELS: Record<string, [string, Tone]> = {
   aborted: ['Aborted', 'warn'],
   rejoin_timeout: ['Rejoin timeout', 'danger'],
   version_mismatch: ['Version mismatch', 'warn'],
+  rejoined_unverified: ['Build unconfirmed', 'warn'],
   queued: ['Queued', 'warn'],
   compile_queued: ['Build queued', 'warn'],
   compiling: ['Building', 'info'],
@@ -20,7 +21,7 @@ const LABELS: Record<string, [string, Tone]> = {
   transfer_success_waiting_rejoin: ['Waiting for rejoin', 'info'],
 };
 
-export const TERMINAL_JOB_STATUSES = ['success', 'compile_success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch'];
+export const TERMINAL_JOB_STATUSES = ['success', 'compile_success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch', 'rejoined_unverified'];
 
 export function jobStatus(status: string): { label: string; tone: Tone } {
   const hit = LABELS[status];

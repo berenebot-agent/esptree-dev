@@ -69,7 +69,7 @@ export class EspTopologyMap extends LitElement {
       this.firmwareStatus = null;
     }
     const status = this.firmwareStatus?.job?.status ?? '';
-    const running = !!status && !['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout'].includes(status);
+    const running = !!status && !['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout', 'rejoined_unverified'].includes(status);
     if (running && !this.firmwareTimer) {
       this.firmwareTimer = setInterval(() => void this.load(false, true), 3000);
     } else if (!running) {

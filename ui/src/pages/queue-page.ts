@@ -17,7 +17,7 @@ interface HistoryDisplayEntry {
 }
 
 const COMBINE_WINDOW_S = 300;
-const FLASH_RESULT_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch']);
+const FLASH_RESULT_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch', 'rejoined_unverified']);
 
 @customElement('esp-queue-page')
 export class EspQueuePage extends LitElement {

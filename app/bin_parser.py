@@ -104,7 +104,12 @@ def parse_firmware(path: Path) -> FirmwareInfo:
     build_time = _read_c_string(data, desc_offset + 80, 16)
     build_date = _read_c_string(data, desc_offset + 96, 16)
     idf_version = _read_c_string(data, desc_offset + 112, 32)
-    parsed_version = app_version or idf_version
+    # Only a project build carries a version of its own. A project-less ESPHome image
+    # leaves `PROJECT_VER` at the *toolchain* version (esphome 2026.6.5), and no
+    # scaffold here emits `esphome: project:` - so reporting that as the firmware
+    # version puts the build tool's version on the device's job card. Keep the raw
+    # field in `app_version` and claim no version when there is no project.
+    parsed_version = app_version if project_name else ""
 
     return FirmwareInfo(
         valid=True,

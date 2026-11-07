@@ -12,7 +12,7 @@ type PageState = 'loading' | 'no_config' | 'editor';
 type CompilePhase = 'idle' | 'compile_queued' | 'compiling' | 'compiled' | 'failed' | 'queued_for_flash';
 type FlashIntent = 'none' | 'ota' | 'browser';
 const FLASH_STATUSES = new Set(['queued', 'starting', 'announcing', 'transferring', 'verifying', 'transfer_success_waiting_rejoin']);
-const FLASH_TERMINAL_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch']);
+const FLASH_TERMINAL_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch', 'rejoined_unverified']);
 
 function chipFamilyFromYaml(yaml: string): string | null {
   const text = yaml || '';

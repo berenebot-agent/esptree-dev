@@ -5,7 +5,7 @@ import './ota-progress';
 import { shared } from '../styles/shared';
 import { icon } from '../styles/icons';
 
-const TERMINAL_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch']);
+const TERMINAL_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch', 'rejoined_unverified']);
 
 @customElement('esp-ota-box')
 export class EspOtaBox extends LitElement {

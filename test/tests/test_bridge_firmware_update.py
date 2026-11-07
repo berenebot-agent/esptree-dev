@@ -72,6 +72,13 @@ def _flash_job(db, tmp_path: Path, *, mac="11:22:33:44:55:66", esphome_name="esp
     return job, firmware
 
 
+def _events(job: dict[str, Any]) -> list[dict[str, Any]]:
+    import json
+
+    raw = job.get("log_events") or []
+    return json.loads(raw) if isinstance(raw, str) else list(raw)
+
+
 # ── routing ────────────────────────────────────────────────────────────────
 
 
@@ -221,11 +228,17 @@ async def test_bridge_update_uses_stored_password_and_verifies_the_new_build(tmp
 
 
 @pytest.mark.asyncio
-async def test_bridge_update_reports_mismatch_when_build_date_did_not_change(tmp_path: Path) -> None:
+async def test_bridge_update_with_an_unchanged_build_date_is_unverified_not_failed(tmp_path: Path) -> None:
+    """An unchanged build date is "cannot tell", not "the upload did not take effect".
+
+    The date a bridge reports is `__DATE__`/`__TIME__` expanded in its own setup(),
+    i.e. the compile time of one translation unit. The add-on compiles into a
+    persistent build tree, so an image rebuilt from unchanged component sources
+    boots carrying the same string — and a real reflash of unchanged code therefore
+    looked identical to a push that never landed. This call is the post-reboot read,
+    so the manager starts on its rebooted values.
+    """
     compiler = FakeCompiler()
-    # Same build date before and after: the image landed but the device did not switch
-    # partitions, so "success" would be a lie. This call is the post-reboot read, so the
-    # manager starts on its rebooted values.
     manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", uptimes=(5,))
     worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
     _bridge_row(db)
@@ -235,12 +248,55 @@ async def test_bridge_update_reports_mismatch_when_build_date_did_not_change(tmp
         db.get_job(job["id"]) or job,
         initial_uptime_s=100,
         expect_changed_build_date="Nov 6 2026 13:00:00",
+        verify_bridge_identity=True,
     )
 
     completed = db.get_job(job["id"])
     assert completed is not None
-    assert completed["status"] == models.VERSION_MISMATCH
-    assert "build date" in (completed["error_msg"] or "")
+    assert completed["status"] == models.REJOINED_UNVERIFIED
+    assert models.is_terminal(completed["status"])
+    assert "could not be confirmed" in (completed["error_msg"] or "")
+    assert "did not take effect" not in (completed["error_msg"] or "")
+
+    events = _events(completed)
+    types = [event.get("type") for event in events]
+    # The dates either side of the upload are the whole evidence, so they must survive.
+    unverified = next(event for event in events if event.get("type") == "flash_identity_unverified")
+    assert unverified["expected_build_date"] == "Nov 6 2026 13:00:00"
+    assert unverified["actual_build_date"] == "Nov 6 2026 13:00:00"
+    assert unverified["reason"] == "build date unchanged"
+    # An amber outcome must not also log a red "flash failed" line.
+    assert "flash_failed" not in types
+    assert "flash_version_mismatch" not in types
+
+
+@pytest.mark.asyncio
+async def test_bridge_update_without_a_baseline_build_date_is_unverified(tmp_path: Path) -> None:
+    """No pre-upload reading is no evidence either — it used to fall through to success.
+
+    The old gate only fired when a baseline existed, so a flash whose pre-flight
+    topology read failed reported SUCCESS without anything having been verified.
+    """
+    compiler = FakeCompiler()
+    manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", uptimes=(5,))
+    worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
+    _bridge_row(db)
+    job, _firmware = _flash_job(db, tmp_path)
+
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=100,
+        expect_changed_build_date=None,
+        verify_bridge_identity=True,
+    )
+
+    completed = db.get_job(job["id"])
+    assert completed is not None
+    assert completed["status"] == models.REJOINED_UNVERIFIED
+    unverified = next(event for event in _events(completed) if event.get("type") == "flash_identity_unverified")
+    assert unverified["expected_build_date"] == ""
+    assert unverified["actual_build_date"] == "Nov 6 2026 13:00:00"
+    assert unverified["reason"] == "no baseline build date"
 
 
 @pytest.mark.asyncio
