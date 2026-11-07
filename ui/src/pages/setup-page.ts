@@ -2,6 +2,7 @@ import { LitElement, PropertyValues, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { load as loadYaml } from 'js-yaml';
 import { DiscoveredBridge, SerialPortInfo, api } from '../api/client';
+import { icon, brandMark } from '../styles/icons';
 import {
   acquirePort,
   chipFamilyFromName,
@@ -1041,15 +1042,15 @@ export class EspSetupWizard extends LitElement {
 
   private get flashBackLabel(): string {
     if (this.flashStage === 'detecting' || (this.flashStage === 'error' && this.flashDetectError)) {
-      return '← Back to Flash';
+      return 'Back to flashing';
     }
     if (this.flashStage === 'flashing' || this.flashStage === 'compiling' || this.flashStage === 'error') {
-      return '← Back to Configure';
+      return 'Back to configuration';
     }
     if (this.flashStage === 'config' && this.flashTransportChosen) {
-      return '← Back to bridge type';
+      return 'Back to bridge type';
     }
-    return '← Back';
+    return 'Back';
   }
 
   private async handleFlashBack(): Promise<void> {
@@ -1117,19 +1118,14 @@ export class EspSetupWizard extends LitElement {
 
   render() {
     return html`
+      <div class="setup-bar"><div class="setup-bar-inner">
+        <span class="setup-brand">${brandMark}ESP Tree</span>
+        <button class="dismiss-btn" @click=${this.dismiss}>Skip for now</button>
+      </div></div>
       <div class="wizard-page">
         <header class="wizard-header">
-          <div class="setup-brand">
-            <span class="setup-mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32"><path d="M16 27V14M16 14l-6-5M16 14l6-5M10 9L7 6M22 9l3-3"/><circle cx="16" cy="6" r="2.3"/><circle cx="10" cy="9" r="2"/><circle cx="22" cy="9" r="2"/></svg>
-            </span>
-            <div>
-              <span class="setup-eyebrow">First-run setup</span>
-              <h1>Connect your network</h1>
-              <p class="tagline">Add an ESP-NOW bridge, then hand the network to Home Assistant.</p>
-            </div>
-          </div>
-          <button class="dismiss-btn" @click=${this.dismiss}>Skip for now</button>
+          <h1>Connect your network</h1>
+          <p class="tagline">Connect an ESP-NOW bridge, then hand the network to Home Assistant. Three steps, a few minutes.</p>
         </header>
 
         <div class="stepper">
@@ -1152,22 +1148,22 @@ export class EspSetupWizard extends LitElement {
               this.step1 === 'scanning' ? html`<span class="spinner"></span>` :
               this.step1 === 'connecting' ? html`<span class="spinner"></span>` :
               this.step1 === 'pending' ? html`<span class="spinner"></span>` :
-              this.step1 === 'complete' ? '\u2705' :
-              this.step1 === 'error' ? '\u274C' : '1'}
+              this.step1 === 'complete' ? icon('check') :
+              this.step1 === 'error' ? icon('close') : '1'}
           </span>
           <div class="step-title-area">
-            <h2>Connect Your ESP32 Bridge</h2>
+            <h2>Connect your bridge</h2>
             <p class="step-summary">
               ${this.step1 === 'choose' ? 'Choose how to set up your bridge' :
-                this.step1 === 'scanning' ? 'Scanning for bridges on your network...' :
+                this.step1 === 'scanning' ? 'Searching your network for bridges…' :
                 this.step1 === 'found' ? `${this.discoveredBridges.length} bridge(s) found` :
-                this.step1 === 'connecting' ? 'Connecting to bridge...' :
-                this.step1 === 'pending' ? 'Validating bridge connection...' :
+                this.step1 === 'connecting' ? 'Connecting to the bridge…' :
+                this.step1 === 'pending' ? 'Checking the bridge connection…' :
                 this.step1 === 'complete' ? 'Bridge connected' :
                 this.step1 === 'error' ? (this.activeBridgeUuid ? 'Bridge offline' : 'No bridges found') : ''}
             </p>
           </div>
-          ${collapsed ? html`<span class="collapse-icon">\u25B6</span>` : nothing}
+          ${collapsed ? html`<span class="collapse-icon">${icon('chevronRight')}</span>` : nothing}
         </div>
 
         ${!collapsed ? html`
@@ -1175,13 +1171,13 @@ export class EspSetupWizard extends LitElement {
             ${this.step1 === 'choose' && this.step1Choice === 'choose' ? html`
               <div class="choice-cards">
                 <button class="choice-card" @click=${this.onChooseExistingBridge}>
-                  <span class="choice-icon">\u{1F50C}</span>
-                  <h3>I Already Have a Bridge</h3>
+                  <span class="choice-icon">${icon('search')}</span>
+                  <h3>I already have a bridge</h3>
                   <p>Scan your network for an existing ESP-NOW bridge or enter its address manually.</p>
                 </button>
                 <button class="choice-card" @click=${this.onChooseNewBridge}>
-                  <span class="choice-icon">\u{1F4E1}</span>
-                  <h3>Set Up a New Bridge</h3>
+                  <span class="choice-icon">${icon('usb')}</span>
+                  <h3>Set up a new bridge</h3>
                   <p>Flash ESP-NOW firmware onto a new ESP32 device and configure it.</p>
                 </button>
               </div>
@@ -1189,7 +1185,7 @@ export class EspSetupWizard extends LitElement {
 
             ${this.step1Choice === 'existing' && this.step1 !== 'complete' ? html`
               <div class="choice-back">
-                <button class="btn btn-outline btn-sm" @click=${this.onBackToChoose}>\u2190 Back</button>
+                <button class="btn btn-outline btn-sm" @click=${this.onBackToChoose}>${icon('chevronLeft')}Back</button>
               </div>
               <div class="step-tabs">
                 <button class="tab ${this.flashTab === 'discover' ? 'active' : ''}" @click=${() => this.flashTab = 'discover'}>Discover</button>
@@ -1203,14 +1199,14 @@ export class EspSetupWizard extends LitElement {
 
             ${this.step1Choice === 'new' && this.step1 !== 'complete' ? html`
               <div class="choice-back">
-                <button class="btn btn-outline btn-sm" @click=${() => void this.handleFlashBack()}>${this.flashBackLabel}</button>
+                <button class="btn btn-outline btn-sm" @click=${() => void this.handleFlashBack()}>${icon('chevronLeft')}${this.flashBackLabel}</button>
               </div>
               ${this.renderFlashTab()}
             ` : nothing}
 
             ${this.step1 === 'complete' && this.step2 === 'disabled' ? html`
               <div class="complete-state">
-                <span class="check">\u2705</span>
+                <span class="check">${icon('checkCircle')}</span>
                 <span>${this.bridgeApiStatus || 'Bridge connected successfully'}</span>
               </div>
             ` : nothing}
@@ -1225,9 +1221,9 @@ export class EspSetupWizard extends LitElement {
       ${this.step1 === 'scanning' || this.step1 === 'connecting' || this.step1 === 'pending' ? html`
         <div class="scanning-state">
           <span class="spinner large"></span>
-          <p>${this.step1 === 'scanning' ? 'Scanning for bridges on your network...' :
-            this.step1 === 'connecting' ? 'Connecting to bridge...' :
-            'Validating bridge connection...'}</p>
+          <p>${this.step1 === 'scanning' ? 'Searching your network for bridges…' :
+            this.step1 === 'connecting' ? 'Connecting to the bridge…' :
+            'Checking the bridge connection…'}</p>
         </div>
       ` : nothing}
 
@@ -1573,12 +1569,12 @@ export class EspSetupWizard extends LitElement {
 
       <div class="choice-cards">
         <button class="choice-card" @click=${() => this.onChooseTransport('wifi')}>
-          <span class="choice-icon">\u{1F4F6}</span>
+          <span class="choice-icon">${icon('wifi')}</span>
           <h3>Wi-Fi Bridge</h3>
           <p>Connects to the add-on over your Wi-Fi network. You'll need the network name and password.</p>
         </button>
         <button class="choice-card" @click=${() => this.onChooseTransport('serial')}>
-          <span class="choice-icon">\u{1F50C}</span>
+          <span class="choice-icon">${icon('usb')}</span>
           <h3>Serial Bridge</h3>
           <p>Connects over a USB-UART link to the add-on. No Wi-Fi credentials needed.</p>
         </button>
@@ -1635,7 +1631,7 @@ export class EspSetupWizard extends LitElement {
               <p class="muted">Flashing ${this.flashName}...</p>
             ` : nothing}
             ${this.flashSerialFlashStatus === 'success' ? html`
-              <div class="complete-state"><span class="check">\u2705</span><span>Flashed over serial.</span></div>
+              <div class="complete-state"><span class="check">${icon('checkCircle')}</span><span>Flashed over serial.</span></div>
             ` : nothing}
             ${this.flashSerialFlashStatus === 'failed' ? html`
               <div class="flash-warning">Serial flash failed: ${this.flashSerialFlashError || 'see log'}</div>
@@ -1709,7 +1705,7 @@ export class EspSetupWizard extends LitElement {
       ${this.flashStage === 'complete' ? html`
         <div class="flash-progress-area">
           <div class="complete-state">
-            <span class="check">\u2705</span>
+            <span class="check">${icon('checkCircle')}</span>
             <span>Bridge detected and connected!</span>
           </div>
         </div>
@@ -1745,11 +1741,11 @@ export class EspSetupWizard extends LitElement {
       <div class="step ${this.step2 === 'disabled' ? 'locked' : ''} ${collapsed ? 'collapsed' : ''} ${this.step2 === 'complete' ? 'done' : ''} ${this.step2 === 'error' ? 'has-error' : ''}">
         <div class="step-header">
           <span class="step-icon">
-            ${this.step2 === 'disabled' ? '\u{1F512}' :
+            ${this.step2 === 'disabled' ? icon('lock') :
               this.step2 === 'restarting' ? html`<span class="spinner"></span>` :
               this.step2 === 'polling' ? html`<span class="spinner"></span>` :
-              this.step2 === 'complete' ? '\u2705' :
-              this.step2 === 'error' ? '\u274C' : '2'}
+              this.step2 === 'complete' ? icon('check') :
+              this.step2 === 'error' ? icon('close') : '2'}
           </span>
           <div class="step-title-area">
             <h2>Restart Home Assistant</h2>
@@ -1762,7 +1758,7 @@ export class EspSetupWizard extends LitElement {
                 this.step2 === 'error' ? 'Restart failed' : ''}
             </p>
           </div>
-          ${collapsed ? html`<span class="collapse-icon">\u25B6</span>` : nothing}
+          ${collapsed ? html`<span class="collapse-icon">${icon('chevronRight')}</span>` : nothing}
         </div>
 
         ${!collapsed ? html`
@@ -1804,7 +1800,7 @@ export class EspSetupWizard extends LitElement {
 
             ${this.step2 === 'complete' ? html`
               <div class="complete-state">
-                <span class="check">\u2705</span>
+                <span class="check">${icon('checkCircle')}</span>
                 <span>
                   Home Assistant is running the ESP Tree integration
                   ${this.runningIntegrationVersion ? ` ${this.runningIntegrationVersion}` : ''}
@@ -1829,15 +1825,15 @@ export class EspSetupWizard extends LitElement {
       <div class="step ${this.step3 === 'disabled' ? 'locked' : ''} ${this.step3 === 'complete' ? 'done' : ''}">
         <div class="step-header">
           <span class="step-icon">
-            ${this.step3 === 'disabled' ? '\u{1F512}' :
+            ${this.step3 === 'disabled' ? icon('lock') :
               this.step3 === 'triggering' ? html`<span class="spinner"></span>` :
               this.step3 === 'polling' ? html`<span class="spinner"></span>` :
-              this.step3 === 'complete' ? '\u2705' :
-              this.step3 === 'fallback' ? '\u26A0\uFE0F' :
-              this.step3 === 'error' ? '\u274C' : '3'}
+              this.step3 === 'complete' ? icon('check') :
+              this.step3 === 'fallback' ? icon('alert') :
+              this.step3 === 'error' ? icon('close') : '3'}
           </span>
           <div class="step-title-area">
-            <h2>Add ESP Tree Integration</h2>
+            <h2>Add the ESP Tree integration</h2>
             <p class="step-summary">
               ${this.step3 === 'disabled' ? 'Complete step 2 first' :
                 this.step3 === 'triggering' ? 'Setting up the ESP Tree integration...' :
@@ -1870,7 +1866,7 @@ export class EspSetupWizard extends LitElement {
 
           ${this.step3 === 'complete' ? html`
             <div class="complete-state">
-              <span class="check">\u2705</span>
+              <span class="check">${icon('checkCircle')}</span>
               <span>
                 ESP Tree integration is active
                 ${this.runningIntegrationVersion ? ` (${this.runningIntegrationVersion})` : ''}
@@ -1921,7 +1917,7 @@ export class EspSetupWizard extends LitElement {
     return html`
       <div class="step done expanded">
         <div class="step-header">
-          <span class="step-icon">\u2728</span>
+          <span class="step-icon">${icon('checkCircle')}</span>
           <div class="step-title-area">
             <h2>Setup Complete!</h2>
             <p class="step-summary">Redirecting to topology map...</p>
@@ -1936,32 +1932,9 @@ export class EspSetupWizard extends LitElement {
 
   static styles = css`
     :host {
-      --bg: #f2f5f1;
-      --canvas: #f2f5f1;
-      --surface-subtle: #f7faf6;
-      --line-strong: #cbd5cd;
-      --ink: #17221f;
-      --ink-2: #34433e;
-      --muted: #5f6e68;
-      --faint: #64726c;
-      --line: #dfe6df;
-      --primary: #1e5b4f;
-      --primary-strong: #16483f;
-      --primary-soft: #e8f1eb;
-      --accent: #c88b27;
-      --accent-soft: #fbf2df;
-      --danger: #b63c43;
-      --danger-soft: #fdf0f0;
-      --ok: #2f7b58;
-      --ok-soft: #eaf5ee;
-      --shadow-sm: 0 1px 2px rgba(19, 38, 32, 0.05), 0 1px 3px rgba(19, 38, 32, 0.03);
-      --shadow: var(--shadow-sm);
-      --radius-lg: 14px;
-      --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       display: block;
       min-height: 100vh;
-      background: var(--bg);
+      background: var(--canvas);
       color: var(--ink);
       font-family: var(--font-sans);
       -webkit-font-smoothing: antialiased;
@@ -2061,14 +2034,14 @@ export class EspSetupWizard extends LitElement {
       align-items: center;
       justify-content: center;
       font-size: 20px;
-      background: #f1f5f9;
+      background: var(--surface-subtle);
       border-radius: 50%;
       margin-top: 2px;
     }
 
     .step.complete .step-icon,
     .step.done .step-icon {
-      background: #dcfce7;
+      background: var(--ok-soft);
     }
 
     .step-title-area {
@@ -2151,8 +2124,8 @@ export class EspSetupWizard extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: 14px 16px;
-      background: #f8fafc;
-      border: 1px solid #f1f5f9;
+      background: var(--surface-subtle);
+      border: 1px solid var(--surface-subtle);
       border-radius: 10px;
       gap: 12px;
       flex-wrap: wrap;
@@ -2170,7 +2143,7 @@ export class EspSetupWizard extends LitElement {
     }
 
     .net-id {
-      font-size: 11px;
+      font-size: var(--text-xs);
       color: var(--muted);
       font-family: monospace;
     }
@@ -2198,8 +2171,8 @@ export class EspSetupWizard extends LitElement {
       flex-direction: column;
       gap: 12px;
       padding: 16px;
-      background: #f8fafc;
-      border: 1px solid #f1f5f9;
+      background: var(--surface-subtle);
+      border: 1px solid var(--surface-subtle);
       border-radius: 10px;
       margin-bottom: 12px;
     }
@@ -2225,8 +2198,8 @@ export class EspSetupWizard extends LitElement {
     .error-block {
       margin-top: 12px;
       padding: 12px 16px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: var(--danger-soft);
+      border: 1px solid var(--line);
       border-radius: 8px;
     }
 
@@ -2240,13 +2213,13 @@ export class EspSetupWizard extends LitElement {
       display: block;
       margin-top: 4px;
       font-size: 12px;
-      color: #6b7280;
+      color: var(--muted);
     }
 
     .fallback-state {
       padding: 16px;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
+      background: var(--accent-soft);
+      border: 1px solid var(--line);
       border-radius: 8px;
       margin-top: 8px;
     }
@@ -2277,7 +2250,7 @@ export class EspSetupWizard extends LitElement {
     }
 
     .btn:hover {
-      background: #f1f5f9;
+      background: var(--surface-subtle);
     }
 
     .btn:disabled {
@@ -2287,12 +2260,12 @@ export class EspSetupWizard extends LitElement {
 
     .btn-primary {
       background: var(--primary);
-      color: #fff;
+      color: var(--on-primary);
       border-color: var(--primary);
     }
 
     .btn-primary:hover {
-      background: #0e4a5e;
+      background: var(--primary);
     }
 
     .btn-outline {
@@ -2350,7 +2323,7 @@ export class EspSetupWizard extends LitElement {
       }
 
       .flash-form label {
-        font-size: 11px;
+        font-size: var(--text-xs);
       }
 
       .flash-key-row {
@@ -2447,8 +2420,8 @@ export class EspSetupWizard extends LitElement {
       flex-direction: column;
       gap: 14px;
       padding: 16px;
-      background: #f8fafc;
-      border: 1px solid #f1f5f9;
+      background: var(--surface-subtle);
+      border: 1px solid var(--surface-subtle);
       border-radius: 10px;
     }
 
@@ -2478,11 +2451,11 @@ export class EspSetupWizard extends LitElement {
 
     .flash-warning {
       padding: 10px 14px;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
+      background: var(--accent-soft);
+      border: 1px solid var(--line);
       border-radius: 8px;
       font-size: 13px;
-      color: #92400e;
+      color: var(--accent);
     }
 
     .transport-badge {
@@ -2490,8 +2463,8 @@ export class EspSetupWizard extends LitElement {
       align-self: flex-start;
       padding: 4px 10px;
       border-radius: 999px;
-      background: #e0f2fe;
-      border: 1px solid #bae6fd;
+      background: var(--info-soft);
+      border: 1px solid var(--line);
       color: var(--primary);
       font-size: 12px;
       font-weight: 600;
@@ -2502,10 +2475,10 @@ export class EspSetupWizard extends LitElement {
       margin-left: 6px;
       padding: 1px 7px;
       border-radius: 999px;
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      color: #166534;
-      font-size: 10px;
+      background: var(--ok-soft);
+      border: 1px solid var(--line);
+      color: var(--ok);
+      font-size: var(--text-xs);
       font-weight: 600;
       text-transform: none;
       letter-spacing: 0.02em;
@@ -2587,26 +2560,26 @@ export class EspSetupWizard extends LitElement {
     }
 
     .chip-badge.detected {
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #bbf7d0;
+      background: var(--ok-soft);
+      color: var(--ok);
+      border: 1px solid var(--line);
     }
 
     .chip-badge.detecting {
-      background: #f0f9ff;
+      background: var(--info-soft);
       color: var(--primary);
-      border: 1px solid #bae6fd;
+      border: 1px solid var(--line);
     }
 
     .chip-badge.error {
-      background: #fef2f2;
+      background: var(--danger-soft);
       color: var(--danger);
-      border: 1px solid #fecaca;
+      border: 1px solid var(--line);
       flex-wrap: wrap;
     }
 
     .chip-board-info {
-      font-size: 11px;
+      font-size: var(--text-xs);
       color: var(--muted);
       font-weight: 400;
     }
@@ -2630,13 +2603,13 @@ export class EspSetupWizard extends LitElement {
 
     .stage-dot.active {
       color: var(--primary);
-      background: #e0f2fe;
+      background: var(--info-soft);
       font-weight: 600;
     }
 
     .stage-dot.done {
       color: var(--ok);
-      background: #dcfce7;
+      background: var(--ok-soft);
     }
 
     .stage-line {
@@ -2663,9 +2636,9 @@ export class EspSetupWizard extends LitElement {
       max-height: 200px;
       overflow-y: auto;
       font-family: monospace;
-      font-size: 11px;
-      background: #1e293b;
-      color: #e2e8f0;
+      font-size: var(--text-xs);
+      background: var(--log-bg);
+      color: var(--log-ink);
       padding: 12px;
       border-radius: 8px;
       white-space: pre-wrap;
@@ -2698,7 +2671,7 @@ export class EspSetupWizard extends LitElement {
     .progress-bar-container {
       width: 100%;
       height: 8px;
-      background: #e2e8f0;
+      background: var(--line);
       border-radius: 4px;
       overflow: hidden;
       margin: 8px 0;
@@ -2711,77 +2684,79 @@ export class EspSetupWizard extends LitElement {
       transition: width 0.3s;
     }
 
-    /* ---- Setup shell aligned with the redesigned console ---- */
-    .wizard-page { max-width: 760px; padding: 34px 24px 56px; }
-    .wizard-header { align-items: center; gap: 20px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-    .setup-brand { display: flex; align-items: flex-start; gap: 13px; min-width: 0; }
-    .setup-mark { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 10px; background: #143a33; }
-    .setup-mark svg { width: 27px; height: 27px; fill: none; stroke: #d6b15c; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .setup-eyebrow { display: block; margin-bottom: 2px; color: var(--primary); font-size: 9px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
-    .wizard-header h1 { margin: 0; color: var(--ink); font-size: 26px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; }
-    .tagline { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-    .dismiss-btn { min-height: 34px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--muted); font: inherit; font-size: 10px; font-weight: 600; cursor: pointer; }
-    .dismiss-btn:hover { border-color: var(--faint); background: var(--surface-subtle); color: var(--ink); }
+    /* ---- Setup shell: HA-native, shared tokens ---- */
+    .setup-bar { background: var(--toolbar); color: var(--toolbar-ink); }
+    .setup-bar-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 760px; height: var(--toolbar-h); margin: 0 auto; padding: 0 24px; }
+    .setup-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--text-xl); font-weight: 500; }
+    .setup-brand .brand-mark { width: 26px; height: 26px; color: var(--toolbar-indicator); }
+    .dismiss-btn { min-height: 36px; padding: 0 14px; border: 1px solid rgba(255,255,255,.3); border-radius: var(--radius-md); background: transparent; color: var(--toolbar-ink); font: inherit; font-size: var(--text-md); font-weight: 500; cursor: pointer; }
+    .dismiss-btn:hover { background: var(--toolbar-hover); }
+    .wizard-page { max-width: 760px; padding: 24px 24px 56px; }
+    .wizard-header { display: block; margin-bottom: 20px; padding-bottom: 0; border-bottom: 0; }
+    .wizard-header h1 { margin: 0; color: var(--ink); font-size: var(--text-2xl); line-height: 1.2; font-weight: 500; }
+    .tagline { margin: 4px 0 0; color: var(--muted); font-size: var(--text-md); line-height: 1.45; }
     .stepper { gap: 12px; }
-    .step { border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
-    .step.done { border-color: #cfe5d5; }
-    .step.has-error { border-color: #e7c2c5; }
-    .step-header { padding: 16px 18px; gap: 12px; }
-    .step-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-subtle); color: var(--muted); font-size: 12px; font-weight: 700; margin-top: 0; }
+    .step { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: none; }
+    .step.disabled, .step.locked { opacity: 0.7; }
+    .step-header { padding: 16px; gap: 14px; }
+    .step-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--surface-subtle); color: var(--muted); font-size: var(--text-md); font-weight: 500; margin-top: 0; }
+    .step-icon svg { width: 18px; height: 18px; }
     .step.done .step-icon, .step.complete .step-icon { background: var(--ok-soft); color: var(--ok); }
-    .step.has-error .step-icon { background: var(--danger-soft); }
-    .step-title-area h2 { color: var(--ink); font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
-    .step-summary { margin-top: 2px; color: var(--muted); font-size: 11px; }
-    .step-body { padding: 0 18px 18px 60px; }
-    .step-body.done-body { padding: 0 18px 18px 60px; }
-    .choice-cards { gap: 10px; margin-bottom: 14px; }
-    .choice-card { align-items: flex-start; min-height: 122px; padding: 16px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-subtle); color: var(--ink); text-align: left; }
-    .choice-card:hover { border-color: #aebfb5; background: var(--surface); transform: none; box-shadow: var(--shadow-sm); }
-    .choice-icon { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font-size: 15px; }
-    .choice-card h3 { margin: 0 0 4px !important; font-size: 13px !important; font-weight: 650 !important; }
-    .choice-card p { color: var(--muted); font-size: 10px !important; line-height: 1.5 !important; }
-    .tab { padding: 8px 12px; font-size: 11px; }
+    .step.has-error .step-icon { background: var(--danger-soft); color: var(--danger); }
+    .step-title-area h2 { color: var(--ink); font-size: var(--text-lg); font-weight: 500; letter-spacing: 0; }
+    .step-summary { margin-top: 2px; color: var(--muted); font-size: var(--text-sm); }
+    .collapse-icon svg { width: 18px; height: 18px; color: var(--muted); }
+    .step-body, .step-body.done-body { padding: 0 16px 18px 62px; }
+    .choice-cards { display: grid !important; grid-template-columns: 1fr; gap: 0; margin-bottom: 14px; border-top: 1px solid var(--line); }
+    .choice-card { display: grid !important; grid-template-columns: 36px 1fr; column-gap: 14px; align-items: center; min-height: 0; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); text-align: left; transition: background-color 150ms ease; }
+    .choice-card:hover { background: var(--surface-hover); transform: none; box-shadow: none; }
+    .choice-card .choice-icon { grid-row: 1 / 3; }
+    .choice-icon { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 0; border: 0; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
+    .choice-icon svg { width: 20px; height: 20px; }
+    .choice-card h3 { margin: 0 0 4px !important; font-size: var(--text-md) !important; font-weight: 500 !important; }
+    .choice-card p { color: var(--muted); font-size: var(--text-sm) !important; line-height: 1.5 !important; }
+    .tab { padding: 10px 14px; font-size: var(--text-md); font-weight: 500; color: var(--muted); }
     .tab.active { border-bottom-color: var(--primary); color: var(--primary); }
-    .step-tabs { margin-bottom: 13px; border-bottom: 1px solid var(--line); }
-    .flash-form, .manual-form { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
-    .flash-form label, .manual-form label { color: var(--muted); font-size: 10px; letter-spacing: .05em; }
-    .flash-form input, .flash-form select, .manual-form input, .api-key-row input { min-height: 34px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
-    .flash-form input:focus, .flash-form select:focus, .manual-form input:focus, .api-key-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
-    .bridge-card { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
-    .bridge-info { font-size: 11px; }
-    .bridge-info strong { font-size: 12px; }
-    .btn { min-height: 34px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
-    .btn:hover { background: var(--surface-subtle); }
-    .btn-primary { border-color: var(--primary); background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-strong); border-color: var(--primary-strong); }
-    .btn-outline { border-color: var(--line-strong); color: var(--ink-2); background: transparent; }
-    .btn-outline:hover { background: var(--surface-subtle); }
-    .btn-sm { min-height: 28px; padding: 0 9px; font-size: 10px; }
-    .transport-badge { padding: 3px 7px; border: 1px solid var(--line); background: var(--surface-subtle); color: var(--muted); font-size: 9px; }
-    .prefill-tag { background: var(--primary-soft); border-color: #d5e4da; color: var(--primary); font-size: 8px; }
+    .step-tabs { margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .flash-form, .manual-form { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-subtle); }
+    .flash-form label, .manual-form label { color: var(--ink-2); font-size: var(--text-sm); font-weight: 500; letter-spacing: 0; text-transform: none; }
+    .flash-form input, .flash-form select, .manual-form input, .api-key-row input { min-height: 40px; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--text-md); }
+    .flash-form input:focus, .flash-form select:focus, .manual-form input:focus, .api-key-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+    .bridge-card { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+    .bridge-info { font-size: var(--text-sm); color: var(--muted); }
+    .bridge-info strong { font-size: var(--text-md); font-weight: 500; color: var(--ink); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--text-md); font-weight: 500; cursor: pointer; }
+    .btn:hover:not(:disabled) { background: var(--surface-hover); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-strong); border-color: var(--primary-strong); }
+    .btn-outline { border-color: var(--line-strong); color: var(--ink); background: transparent; }
+    .btn-outline:hover:not(:disabled) { background: var(--surface-hover); }
+    .btn-sm { min-height: 30px; padding: 0 10px; font-size: var(--text-sm); }
+    .btn-sm svg { width: 16px; height: 16px; }
+    .transport-badge { padding: 2px 8px; border: 0; border-radius: 999px; background: var(--surface-subtle); color: var(--ink-2); font-size: var(--text-xs); }
+    .prefill-tag { background: var(--primary-soft); border-color: transparent; color: var(--primary); font-size: var(--text-xs); }
     .advanced-section { border-color: var(--line); background: var(--surface-subtle); }
-    .advanced-section summary { color: var(--muted); font-size: 10px; }
-    .flash-warning, .fallback-state { border: 1px solid #e5d3ae; background: var(--accent-soft); color: #72531d; font-size: 11px; }
-    .error-block { border: 1px solid #e7c2c5; background: var(--danger-soft); }
-    .error-block p { color: #8c3037; font-size: 11px; }
-    .chip-badge { font-size: 11px; }
-    .chip-badge.detected { border-color: #cfe5d5; background: var(--ok-soft); color: var(--ok); }
-    .chip-badge.detecting { border-color: #d7e2e7; background: var(--info-soft); color: var(--info); }
-    .chip-badge.error { border-color: #e7c2c5; background: var(--danger-soft); color: var(--danger); }
+    .advanced-section summary { color: var(--ink-2); font-size: var(--text-sm); font-weight: 500; }
+    .flash-warning, .fallback-state { border: 0; background: var(--accent-soft); color: var(--ink); font-size: var(--text-md); }
+    .error-block { border: 0; background: var(--danger-soft); }
+    .error-block p { color: var(--danger); font-size: var(--text-md); }
+    .chip-badge { font-size: var(--text-xs); }
+    .chip-badge.detected { border-color: transparent; background: var(--ok-soft); color: var(--ok); }
+    .chip-badge.detecting { border-color: transparent; background: var(--info-soft); color: var(--info); }
+    .chip-badge.error { border-color: transparent; background: var(--danger-soft); color: var(--danger); }
     .stage-dot.active { background: var(--primary-soft); color: var(--primary); }
     .stage-dot.done { background: var(--ok-soft); color: var(--ok); }
-    .flash-log-viewer { background: #101f1c; color: #b9cdc4; font-family: var(--font-mono); font-size: 10px; border-radius: 7px; }
-    .progress-bar-container { background: var(--line); }
+    .flash-log-viewer { background: var(--log-bg); color: var(--log-ink); font-family: var(--font-mono); font-size: var(--text-xs); border-radius: var(--radius-md); }
+    .progress-bar-container { background: var(--surface-subtle); }
+    .check svg { width: 20px; height: 20px; color: var(--ok); }
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     @media (max-width: 620px) {
-      .wizard-page { padding: 20px 14px 40px; }
-      .wizard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
-      .setup-mark { width: 36px; height: 36px; flex-basis: 36px; border-radius: 9px; }
-      .setup-mark svg { width: 23px; height: 23px; }
-      .wizard-header h1 { font-size: 23px; }
-      .dismiss-btn { width: 100%; min-height: 38px; }
-      .step-body, .step-body.done-body { padding: 0 14px 15px; }
+      .setup-bar-inner { padding: 0 16px; }
+      .wizard-page { padding: 18px 16px 40px; }
+      .step-body, .step-body.done-body { padding: 0 16px 16px; }
       .choice-cards { flex-direction: column; }
-      .choice-card { min-height: 0; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   `;

@@ -1,6 +1,10 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { AppConfig, ConfiguredBridge, ContainerStatusInfo, DiscoveredBridge, api } from '../api/client';
+import { shared } from '../styles/shared';
+import { icon } from '../styles/icons';
+import './confirm-dialog';
+import type { ConfirmRequest } from './confirm-dialog';
 
 @customElement('esp-settings')
 export class EspSettings extends LitElement {
@@ -32,6 +36,7 @@ export class EspSettings extends LitElement {
   @state() private scanLogLoading = false;
   @state() private restarting = false;
   @state() private restartFeedback = '';
+  @state() private confirm: ConfirmRequest | null = null;
   private integrationPollTimer: ReturnType<typeof setInterval> | null = null;
 
   connectedCallback(): void {
@@ -75,84 +80,6 @@ export class EspSettings extends LitElement {
       this.restarting = false;
       setTimeout(() => { this.restartFeedback = ''; }, 4000);
     }
-  }
-
-  private renderIntegrationStatus() {
-    const int = this.config?.integration;
-    if (!int) {
-      return html`<p class="int-status-note muted">Loading integration status...</p>`;
-    }
-
-    const { installed, loaded, configured, connected, bridge_count, remote_count } = int;
-    // remote_count includes offline remotes kept from earlier sessions, so show the
-    // online split when the integration reports it. Older integrations don't send it:
-    // fall back to a neutral count rather than claiming the total is online.
-    const hasOnline = typeof int.remotes_online === 'number';
-    const online = hasOnline ? int.remotes_online! : 0;
-    const offline = hasOnline ? remote_count - online : 0;
-
-    if (!installed) {
-      return html`
-        <div class="int-status-row">
-          <span class="status-dot red"></span>
-          <span>Integration files not found — Restart Home Assistant to complete installation</span>
-        </div>
-      `;
-    }
-
-    if (!loaded) {
-      return html`
-        <div class="int-status-row">
-          <span class="status-dot yellow"></span>
-          <span>Integration installed but not yet loaded — Restart Home Assistant</span>
-        </div>
-        <button class="btn btn-primary" ?disabled=${this.restarting} @click=${this.restartHa}>
-          ${this.restarting ? 'Restarting...' : 'Restart Home Assistant'}
-        </button>
-        ${this.restartFeedback ? html`<p class="saved">${this.restartFeedback}</p>` : nothing}
-      `;
-    }
-
-    if (!configured && !loaded) {
-      return html`
-        <div class="int-status-row">
-          <span class="status-dot yellow"></span>
-          <span>Integration not yet configured</span>
-        </div>
-        <div class="int-configure-hint">
-          <strong>Add ESP-Tree integration</strong>
-          <p>Go to <strong>Settings → Devices &amp; Services → Add Integration</strong> → search for <em>ESP-Tree</em></p>
-        </div>
-      `;
-    }
-
-    if (!connected) {
-      return html`
-        <div class="int-status-row">
-          <span class="status-dot gray"></span>
-          <span>Bridge connection lost</span>
-        </div>
-      `;
-    }
-
-    return html`
-      <div class="int-connected-box">
-        <div class="int-connected-header">
-          <span class="status-dot green pulse"></span>
-          <span class="int-connected-label">Connected v${int.version || '?'}</span>
-        </div>
-        <div class="int-connected-counts">
-          ${bridge_count > 0 ? html`<span>${bridge_count} ${bridge_count === 1 ? 'bridge' : 'bridges'}</span>` : nothing}
-          ${hasOnline
-            ? html`
-                ${online > 0 ? html`<span>${online} ${online === 1 ? 'remote' : 'remotes'} online</span>` : nothing}
-                ${offline > 0 ? html`<span class="muted">${offline} offline</span>` : nothing}
-                ${online === 0 && offline === 0 ? html`<span>no remotes</span>` : nothing}
-              `
-            : html`<span>${remote_count} ${remote_count === 1 ? 'remote' : 'remotes'} known</span>`}
-        </div>
-      </div>
-    `;
   }
 
   private async load(): Promise<void> {
@@ -423,913 +350,306 @@ export class EspSettings extends LitElement {
     }
   }
 
-  private scrollToSection(id: string): void {
-    this.shadowRoot?.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
 
-  render() {
-    if (this.loading) return html`<section class="card loading-card">Loading settings…</section>`;
+  private renderIntegrationStatus() {
+    const int = this.config?.integration;
+    if (!int) {
+      return html`<div class="setting"><span class="what"><span class="spinner"></span></span></div>`;
+    }
+    const { installed, loaded, configured, connected, bridge_count, remote_count } = int;
+    // remote_count includes offline remotes kept from earlier sessions, so show the
+    // online split when the integration reports it. Older integrations don't send it.
+    const hasOnline = typeof int.remotes_online === 'number';
+    const online = hasOnline ? int.remotes_online! : 0;
+    const offline = hasOnline ? remote_count - online : 0;
 
+    if (!installed) {
+      return html`<div class="notice danger">${icon('alert')}<span><strong>Integration files not found.</strong> Restart Home Assistant to finish installing ESP Tree.</span></div>`;
+    }
+    if (!loaded) {
+      return html`
+        <div class="notice warn">${icon('info')}<span><strong>Installed but not loaded yet.</strong> Home Assistant loads the integration on its next restart.</span>
+          <span class="notice-actions"><button class="btn sm primary" ?disabled=${this.restarting} @click=${this.restartHa}>${this.restarting ? 'Restarting…' : 'Restart Home Assistant'}</button></span>
+        </div>
+        ${this.restartFeedback ? html`<p class="hint">${this.restartFeedback}</p>` : nothing}
+      `;
+    }
+    if (!configured) {
+      return html`<div class="notice warn">${icon('info')}<span><strong>Not set up yet.</strong> In Home Assistant, go to Settings → Devices &amp; services → Add integration, and search for ESP Tree.</span></div>`;
+    }
+    if (!connected) {
+      return html`<div class="notice danger">${icon('alert')}<span><strong>The integration lost its connection to the add-on.</strong> It reconnects automatically; if it doesn't, reload the integration in Home Assistant.</span></div>`;
+    }
     return html`
-      <div class="settings-page">
-        <div class="page-head">
-          <div class="page-heading">
-            <span class="eyebrow">Configuration</span>
-            <h1>Settings</h1>
-            <p>Manage the bridge connection, Home Assistant integration, and the local build environment.</p>
-          </div>
-          <div class="page-actions">
-            <button class="btn" @click=${() => { window.location.hash = '/secrets'; }}>Open secrets</button>
-          </div>
-        </div>
-
-        <nav class="settings-nav" aria-label="Settings sections">
-          <button @click=${() => this.scrollToSection('settings-connection')}>Bridge connection</button>
-          <button @click=${() => this.scrollToSection('settings-integration')}>Integration</button>
-          <button @click=${() => this.scrollToSection('settings-build')}>Build environment</button>
-        </nav>
-
-        <div class="settings-stack">
-          <section class="card settings-card" id="settings-connection">
-            <div class="title">
-              <span class="section-mark">01</span>
-              <span class="section-copy"><h2>Bridge connection</h2><p>Discover, activate, or update the bridge that carries this network.</p></span>
-            </div>
-
-        <div class="actions">
-          <button class="btn btn-primary" ?disabled=${this.discovering} @click=${this.triggerScan}>
-            ${this.discovering ? html`<span class="spinner"></span> Scanning...` : 'Scan Network'}
-          </button>
-          <button class="btn" ?disabled=${this.saving} @click=${() => this.showManualEntry = !this.showManualEntry}>
-            ${this.showManualEntry ? 'Cancel' : 'Manual IP'}
-          </button>
-          <button class="btn" @click=${this.viewScanLog}>
-            ${this.showScanLog ? 'Hide Scan Log' : 'View Scan Log'}
-          </button>
-        </div>
-
-        ${this.showScanLog ? html`
-          <div class="scan-log">
-            <h3>Scan Log</h3>
-            ${this.scanLogLoading ? html`<p class="info">Loading...</p>` : html`
-              <pre class="scan-log-content">${this.scanLogContent}</pre>
-            `}
-          </div>
-        ` : nothing}
-
-        ${this.showManualEntry ? html`
-          <div class="manual-entry">
-            <div class="manual-form">
-              <label>
-                Host / IP
-                <input type="text" placeholder="192.168.1.50 or hostname.local" .value=${this.manualHost} @input=${(e: Event) => this.manualHost = (e.target as HTMLInputElement).value} />
-              </label>
-              <label>
-                Port
-                <input type="number" min="1" max="65535" .value=${String(this.manualPort)} @input=${(e: Event) => this.manualPort = Number((e.target as HTMLInputElement).value || 80)} />
-              </label>
-              <label>
-                API Key
-                <input type="password" placeholder="API Key" .value=${this.manualApiKey} @input=${(e: Event) => this.manualApiKey = (e.target as HTMLInputElement).value} />
-              </label>
-            </div>
-            <button class="btn btn-primary" ?disabled=${this.saving} @click=${this.addManualBridge}>Connect</button>
-          </div>
-        ` : nothing}
-
-        ${this.discovering ? html`<p class="info">Scanning your network for bridges (8s)...</p>` : nothing}
-
-        ${this.discoveredBridges.length > 0 ? html`
-          <div class="bridge-list">
-            <h3>Discovered Bridges</h3>
-            <table class="bridge-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Hostname</th>
-                  <th>IP</th>
-                  <th>Port</th>
-                  <th>Network ID</th>
-                  <th>API Key</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                ${this.discoveredBridges.map(bridge => html`
-                  <tr>
-                    <td><strong>${bridge.name || bridge.host}</strong></td>
-                    <td>${bridge.hostname || '-'}</td>
-                    <td>${bridge.host}</td>
-                    <td>${bridge.port}</td>
-                    <td>${bridge.network_id || '-'}</td>
-                    <td>
-                      <input
-                        type="password"
-                        placeholder="API Key"
-                        .value=${this.newBridgeApiKey}
-                        @input=${(e: Event) => this.newBridgeApiKey = (e.target as HTMLInputElement).value}
-                      />
-                    </td>
-                    <td>
-                      <button class="btn btn-primary" ?disabled=${this.saving} @click=${() => this.selectBridge(bridge)}>
-                        Select
-                      </button>
-                    </td>
-                  </tr>
-                `)}
-              </tbody>
-            </table>
-          </div>
-        ` : nothing}
-
-        ${this.configuredBridges.length > 0 ? html`
-          <div class="bridge-list-container">
-            <h3>Configured Bridges</h3>
-            <table class="bridge-table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Name</th>
-                  <th>Hostname</th>
-                  <th>IP</th>
-                  <th>Port</th>
-                  <th>Network ID</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${this.configuredBridges.map(bridge => html`
-                  <tr class="${this.isBridgeActive(bridge) ? 'active-row' : ''}">
-                    <td>
-                      <span class="bridge-status ${this.isBridgeConnected(bridge) ? 'connected' : 'disconnected'}">
-                        ${this.isBridgeConnected(bridge) ? 'connected' : 'disconnected'}
-                      </span>
-                      ${this.isBridgeActive(bridge) ? html`<span class="active-badge">Active</span>` : nothing}
-                      ${this.bridgeSkippedReason(bridge)
-                        ? html`<div class="bridge-skip-reason">${this.bridgeSkippedReason(bridge)}</div>`
-                        : nothing}
-                    </td>
-                    <td>
-                      ${bridge.name || '-'}
-                      ${this.isSerial(bridge) ? html`<span class="active-badge">Serial</span>` : nothing}
-                    </td>
-                    <td>${this.bridgeHostname(bridge)}</td>
-                    <td>${this.bridgeAddress(bridge)}</td>
-                    <td>${this.isSerial(bridge) ? '-' : (bridge.port || '-')}</td>
-                    <td>${bridge.network_id || '-'}</td>
-                    <td class="actions-cell">
-                      ${this.editingBridgeId === bridge.uuid ? html`
-                        <input
-                          type="password"
-                          placeholder="API Key"
-                          .value=${this.editApiKey}
-                          @input=${(e: Event) => this.editApiKey = (e.target as HTMLInputElement).value}
-                        />
-                        <input
-                          type="password"
-                          placeholder="OTA password"
-                          title="The ESPHome OTA password this bridge was compiled with — required to update it over the air"
-                          .value=${this.editOtaPassword}
-                          @input=${(e: Event) => this.editOtaPassword = (e.target as HTMLInputElement).value}
-                        />
-                        <button class="btn btn-primary" ?disabled=${this.saving} @click=${() => this.saveBridgeCredentials(bridge)}>Save</button>
-                        <button class="btn" ?disabled=${this.saving} @click=${this.cancelEditing}>Cancel</button>
-                      ` : html`
-                        ${this.isBridgeActive(bridge)
-                          ? html`<button class="btn" ?disabled=${this.saving} @click=${() => this.deactivateBridge(bridge)}>Deactivate</button>`
-                          : html`<button class="btn btn-primary" ?disabled=${this.saving} @click=${() => this.activateBridge(bridge)}>Activate</button>`}
-                        <button class="btn" ?disabled=${this.saving} @click=${() => this.startEditingBridge(bridge)}>Edit credentials</button>
-                        <button class="btn btn-danger" ?disabled=${this.saving} @click=${() => this.deleteBridge(bridge)}>Delete</button>
-                      `}
-                    </td>
-                  </tr>
-                `)}
-              </tbody>
-            </table>
-          </div>
-        ` : nothing}
-
-        ${this.error ? html`<p class="error">${this.error}</p>` : nothing}
-        ${this.saved ? html`<p class="saved">${this.saved}</p>` : nothing}
-      </section>
-
-      <section class="card integration-status-card settings-card" id="settings-integration">
-        <div class="title">
-          <span class="section-mark">02</span>
-          <span class="section-copy"><h2>Home Assistant integration</h2><p>Connection state, entity counts, and restart requirements.</p></span>
-        </div>
-        <div class="int-status-row-layout">
-          ${this.renderIntegrationStatus()}
-          <div class="actions">
-            <a href="#/activity-log" class="btn">
-              Open activity
-              <span class="sub">Bridge, remote, and protobuf events</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section class="card settings-card" id="settings-build">
-        <div class="title">
-          <span class="section-mark">03</span>
-          <span class="section-copy"><h2>Build environment</h2><p>The local ESPHome toolchain used for firmware compilation.</p></span>
-        </div>
-
-        <div class="current">
-          <div><span>Status</span><strong class=${this.containerStatus?.available ? 'ok' : 'danger'}>${this.containerStatus?.available ? 'Available' : 'Unavailable'}</strong></div>
-          <div><span>ESPHome</span><strong>${this.containerStatus?.tag || 'unknown'}</strong></div>
-          ${this.containerStatus?.error ? html`<div><span>Error</span><strong>${this.containerStatus.error}</strong></div>` : nothing}
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-danger" ?disabled=${this.cleaningArtifacts} @click=${this.cleanArtifacts}>Clean build artifacts</button>
-        </div>
-
-        ${this.artifactsMessage ? html`<p class="info">${this.artifactsMessage}</p>` : nothing}
-
-        <p class="hint">Removes the PlatformIO cache and ESPHome build output. Useful for freeing space or resolving stale build state; the next compile will be slower.</p>
-      </section>
-        </div>
+      <div class="status-line">
+        <span class="chip ok"><span class="dot ok"></span>Connected</span>
+        <span>Version ${int.version || 'unknown'}</span>
+        ${bridge_count > 0 ? html`<span>${bridge_count} ${bridge_count === 1 ? 'bridge' : 'bridges'}</span>` : nothing}
+        ${hasOnline
+          ? html`<span>${online} of ${remote_count} remotes online${offline > 0 ? html` · <span class="warn-text">${offline} offline</span>` : nothing}</span>`
+          : html`<span>${remote_count} ${remote_count === 1 ? 'remote' : 'remotes'} known</span>`}
       </div>
     `;
   }
 
-  static styles = css`
-    .card {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      padding: 16px 20px;
-      display: grid;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .title span,
-    .current span {
-      color: var(--primary);
-      font-size: 11px;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    h2 {
-      margin: 3px 0 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    h3 {
-      margin: 8px 0 4px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-    }
-
-    .current {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 8px;
-    }
-
-    .current > div {
-      background: #f8fafc;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #f1f5f9;
-    }
-
-    .current span {
-      display: block;
-      color: #94a3b8;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .current strong {
-      display: block;
-      margin-top: 4px;
-      overflow-wrap: anywhere;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .ok { color: var(--ok); }
-    .danger { color: var(--danger); }
-
-    .bridge-list-container {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      padding: 16px 20px;
-      margin-bottom: 16px;
-    }
-
-    .bridge-list {
-      background: #f8fafc;
-      border: 1px solid #f1f5f9;
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .bridge-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    .bridge-table th {
-      text-align: left;
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 600;
-      padding: 6px 8px;
-      border-bottom: 2px solid var(--line);
-    }
-
-    .bridge-table td {
-      padding: 8px;
-      border-bottom: 1px solid #f1f5f9;
-    }
-
-    .bridge-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .bridge-table .actions-cell {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .bridge-table input[type="password"] {
-      padding: 4px 8px;
-      font-size: 12px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-    }
-
-    .bridge-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #f1f5f9;
-      gap: 12px;
-    }
-
-    .bridge-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .bridge-item:first-child {
-      padding-top: 0;
-    }
-
-    .bridge-item.default {
-      background: #dcfce7;
-      margin: -12px;
-      padding: 10px 12px;
-      border-radius: 8px;
-    }
-
-    .bridge-info {
-      display: flex;
-      flex-direction: row;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .bridge-info strong {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .bridge-info span {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .bridge-info .version {
-      color: var(--ok);
-    }
-
-    .bridge-info .via {
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-
-    .bridge-status {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid;
-    }
-
-    .bridge-status.connected {
-      color: var(--ok);
-      border-color: var(--ok);
-      background: #dcfce7;
-    }
-
-    .bridge-status.disconnected {
-      color: var(--danger);
-      border-color: var(--danger);
-      background: #fee2e2;
-    }
-
-    /* Why a bridge has no client (e.g. "bridge has no api_key"). Without this the
-       row looked healthy while no client was ever started. */
-    .bridge-skip-reason {
-      margin-top: 4px;
-      font-size: 10px;
-      line-height: 1.25;
-      color: var(--danger);
-      text-transform: none;
-      font-weight: 500;
-      max-width: 22ch;
-    }
-
-    .active-badge {
-      color: var(--ok);
-      background: #dcfce7;
-      border: 1px solid var(--ok);
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      text-transform: uppercase;
-    }
-
-    .bridge-form {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .manual-entry {
-      background: #f8fafc;
-      border: 1px solid #f1f5f9;
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .manual-form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 100px;
-      gap: 12px;
-    }
-
-    .manual-form label {
-      display: grid;
-      gap: 4px;
-      font-weight: 500;
-      font-size: 13px;
-    }
-
-    .manual-form input {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      min-height: 38px;
-      padding: 8px 12px;
-      font: inherit;
-      font-size: 14px;
-      background: var(--surface);
-      color: var(--ink);
-    }
-
-    .manual-form input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(11,59,75,0.1);
-    }
-
-    .bridge-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .unavailable-note {
-      background: #fef2f2;
-      border: 1px solid var(--danger);
-      padding: 12px;
-      border-radius: 8px;
-    }
-    .unavailable-note strong {
-      color: var(--danger);
-      font-size: 14px;
-      display: block;
-      margin-bottom: 4px;
-    }
-    .unavailable-note p {
-      margin: 2px 0;
-      font-size: 12px;
-      color: var(--ink);
-    }
-
-    .form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 140px;
-      gap: 12px;
-    }
-
-    label {
-      display: grid;
-      gap: 4px;
-      font-weight: 500;
-      font-size: 13px;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      min-height: 38px;
-      padding: 8px 12px;
-      font: inherit;
-      font-size: 14px;
-      background: var(--surface);
-      color: var(--ink);
-      transition: border-color 0.12s;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(11,59,75,0.1);
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      color: var(--ink);
-      cursor: pointer;
-      transition: all 0.12s;
-      min-height: 38px;
-    }
-
-    .btn:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
-    }
-
-    a.btn {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 2px;
-      text-decoration: none;
-    }
-
-    a.btn .sub {
-      font-size: 10px;
-      font-weight: 400;
-      color: var(--muted);
-      line-height: 1;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: #0d4d5e;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
-    button:disabled,
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .error,
-    .saved,
-    .info {
-      margin: 0;
-      font-weight: 500;
-      font-size: 13px;
-    }
-
-    .error {
-      color: var(--danger);
-      padding: 10px 12px;
-      background: #fef2f2;
-      border: 1px solid var(--danger);
-      border-radius: 6px;
-    }
-
-    .saved {
-      color: var(--ok);
-      padding: 10px 12px;
-      background: #dcfce7;
-      border: 1px solid var(--ok);
-      border-radius: 6px;
-    }
-
-    .info {
-      color: var(--primary);
-    }
-
-    .hint {
-      font-size: 11px;
-      color: var(--muted);
-      margin: 0;
-    }
-
-    .toggle-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .toggle {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .toggle input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--primary);
-      cursor: pointer;
-    }
-
-    .toggle-label {
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    .scan-log {
-      margin-top: 12px;
-    }
-
-    .scan-log h3 {
-      margin: 0 0 8px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .scan-log-content {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 12px;
-      border-radius: 6px;
-      font-family: 'Menlo', 'Consolas', monospace;
-      font-size: 12px;
-      line-height: 1.5;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-      max-height: 400px;
-      overflow-y: auto;
-      margin: 0;
-    }
-
-    
-
-    .int-status-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .status-dot.red { background: #ef4444; }
-    .status-dot.yellow { background: #eab308; }
-    .status-dot.gray { background: #9ca3af; }
-    .status-dot.green { background: #22c55e; }
-
-    .status-dot.green.pulse {
-      animation: pulse-green 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-green {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.85); }
-    }
-
-    .int-status-note {
-      font-size: 13px;
-    }
-
-    .int-configure-hint {
-      margin-top: 8px;
-      padding: 12px;
-      background: #f8fafc;
-      border-radius: 8px;
-      border: 1px solid #f1f5f9;
-    }
-
-    .int-configure-hint strong {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .int-configure-hint p {
-      margin: 0;
-      font-size: 13px;
-      color: #64748b;
-    }
-
-    .int-connected-box {
-      border: 2px solid #22c55e;
-      border-radius: 10px;
-      padding: 14px 16px;
-      background: #f0fdf4;
-    }
-
-    .int-connected-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .int-connected-label {
-      font-size: 15px;
-      font-weight: 600;
-      color: #166534;
-    }
-
-    .int-connected-counts {
-      margin-top: 6px;
-      display: flex;
-      gap: 16px;
-      font-size: 13px;
-      color: #15803d;
-    }
-
-    .int-status-row-layout {
-      display: flex;
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    .int-status-row-layout .actions {
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
+  private confirmDeleteBridge(bridge: ConfiguredBridge): void {
+    this.confirm = {
+      title: `Remove ${bridge.name || 'this bridge'}?`,
+      message: 'ESP Tree forgets this bridge and its credentials. The bridge itself keeps running and can be added again later.',
+      detail: this.isBridgeActive(bridge) ? 'This is the active bridge: the network goes offline in ESP Tree until another bridge is activated.' : undefined,
+      confirmLabel: 'Remove bridge',
+      danger: true,
+      run: () => this.deleteBridge(bridge),
+    };
+  }
+
+  private confirmCleanArtifacts(): void {
+    this.confirm = {
+      title: 'Clear the build cache?',
+      message: 'Deletes the PlatformIO cache and ESPHome build output. Use it to free disk space or recover from a stale build.',
+      detail: 'The next build of every device downloads toolchains again and is much slower.',
+      confirmLabel: 'Clear cache',
+      run: () => this.cleanArtifacts(),
+    };
+  }
+
+  private renderBridge(bridge: ConfiguredBridge) {
+    const active = this.isBridgeActive(bridge);
+    const connected = this.isBridgeConnected(bridge);
+    const skipped = this.bridgeSkippedReason(bridge);
+    const editing = this.editingBridgeId === bridge.uuid;
+    return html`
+      <li class=${active ? 'active' : ''}>
+        <div class="bridge-row">
+          <span class="node-icon ${active ? 'on' : ''}" aria-hidden="true">${icon(this.isSerial(bridge) ? 'usb' : 'wifi')}</span>
+          <span class="what">
+            <strong>${bridge.name || this.bridgeHostname(bridge)}
+              ${active ? html`<span class="chip primary">Active</span>` : nothing}
+            </strong>
+            <small>
+              ${this.isSerial(bridge) ? 'Serial' : 'WiFi'} ·
+              <span class="mono">${this.bridgeAddress(bridge)}${!this.isSerial(bridge) && bridge.port ? `:${bridge.port}` : ''}</span>
+              ${bridge.network_id ? html` · network ${bridge.network_id}` : nothing}
+            </small>
+          </span>
+          <span class="conn">
+            ${connected
+              ? html`<span class="chip ok"><span class="dot ok"></span>Connected</span>`
+              : html`<span class="chip ${active ? 'danger' : ''}" title=${skipped || ''}>${active ? html`<span class="dot danger"></span>` : nothing}${active ? 'Not connected' : 'Standby'}</span>`}
+          </span>
+          <span class="row-actions">
+            ${editing ? nothing : html`
+              ${active
+                ? html`<button class="btn sm" ?disabled=${this.saving} @click=${() => this.deactivateBridge(bridge)}>Deactivate</button>`
+                : html`<button class="btn sm primary" ?disabled=${this.saving} @click=${() => this.activateBridge(bridge)}>Activate</button>`}
+              <button class="btn sm text" ?disabled=${this.saving} @click=${() => this.startEditingBridge(bridge)}>Credentials</button>
+              <button class="btn sm text danger-text" ?disabled=${this.saving} aria-label=${`Remove ${bridge.name || 'bridge'}`} @click=${() => this.confirmDeleteBridge(bridge)}>${icon('trash')}</button>
+            `}
+          </span>
+        </div>
+        ${skipped && !connected && active ? html`<p class="skip">${skipped}</p>` : nothing}
+        ${editing ? html`
+          <form class="inline-form" @submit=${(e: Event) => { e.preventDefault(); void this.saveBridgeCredentials(bridge); }}>
+            <div class="field">
+              <label for=${`k-${bridge.uuid}`}>API key</label>
+              <input id=${`k-${bridge.uuid}`} type="password" autocomplete="off" placeholder="Leave blank to keep the current key" .value=${this.editApiKey}
+                @input=${(e: Event) => this.editApiKey = (e.target as HTMLInputElement).value} />
+            </div>
+            <div class="field">
+              <label for=${`o-${bridge.uuid}`}>OTA password</label>
+              <input id=${`o-${bridge.uuid}`} type="password" autocomplete="off" placeholder="Needed to update the bridge over WiFi" .value=${this.editOtaPassword}
+                @input=${(e: Event) => this.editOtaPassword = (e.target as HTMLInputElement).value} />
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn" ?disabled=${this.saving} @click=${this.cancelEditing}>Cancel</button>
+              <button type="submit" class="btn primary" ?disabled=${this.saving}>Save</button>
+            </div>
+          </form>
+        ` : nothing}
+      </li>
+    `;
+  }
+
+  render() {
+    if (this.loading) return html`<div class="card loading"><span class="spinner"></span>Loading settings…</div>`;
+
+    return html`
+      <div class="page">
+        <div class="page-head">
+          <div>
+            <h1>Settings</h1>
+            <p class="sub">Bridges, the Home Assistant integration, secrets and the build host.</p>
+          </div>
+        </div>
+
+        ${this.error ? html`<div class="notice danger" role="alert">${icon('alert')}<span>${this.error}</span></div>` : nothing}
+        ${this.saved ? html`<div class="notice ok" role="status">${icon('checkCircle')}<span>${this.saved}</span></div>` : nothing}
+
+        <section class="card" id="settings-connection">
+          <div class="card-head">
+            <div>
+              <h2>Bridges</h2>
+              <p class="sub">One bridge is active at a time. Others are kept on standby.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn sm" @click=${this.viewScanLog}>${this.showScanLog ? 'Hide scan log' : 'Scan log'}</button>
+              <button class="btn sm" ?disabled=${this.saving} @click=${() => this.showManualEntry = !this.showManualEntry}>${this.showManualEntry ? 'Cancel' : 'Add by address'}</button>
+              <button class="btn sm primary" ?disabled=${this.discovering} @click=${this.triggerScan}>
+                ${this.discovering ? html`<span class="spinner"></span>Searching…` : html`${icon('search')}Find bridges`}
+              </button>
+            </div>
+          </div>
+
+          ${this.configuredBridges.length > 0
+            ? html`<ul class="bridges">${this.configuredBridges.map((b) => this.renderBridge(b))}</ul>`
+            : html`<div class="empty">${icon('bridge')}<strong>No bridges yet</strong><p>Find a bridge on your network, or add one by address.</p></div>`}
+
+          ${this.discovering ? html`<p class="pad hint">Searching your network for ESP Tree bridges. This takes about 8 seconds.</p>` : nothing}
+
+          ${this.discoveredBridges.length > 0 ? html`
+            <div class="sub-section">
+              <h3>Found on your network</h3>
+              <ul class="bridges">
+                ${this.discoveredBridges.map((bridge) => html`
+                  <li>
+                    <div class="bridge-row">
+                      <span class="node-icon" aria-hidden="true">${icon('wifi')}</span>
+                      <span class="what">
+                        <strong>${bridge.name || bridge.host}</strong>
+                        <small><span class="mono">${bridge.host}:${bridge.port}</span>${bridge.hostname ? ` · ${bridge.hostname}` : ''}${bridge.network_id ? ` · network ${bridge.network_id}` : ''}</small>
+                      </span>
+                      <input class="key" type="password" autocomplete="off" aria-label="API key" placeholder="API key" .value=${this.newBridgeApiKey}
+                        @input=${(e: Event) => this.newBridgeApiKey = (e.target as HTMLInputElement).value} />
+                      <span class="row-actions"><button class="btn sm primary" ?disabled=${this.saving} @click=${() => this.selectBridge(bridge)}>Use this bridge</button></span>
+                    </div>
+                  </li>
+                `)}
+              </ul>
+            </div>
+          ` : nothing}
+
+          ${this.showManualEntry ? html`
+            <form class="sub-section manual" @submit=${(e: Event) => { e.preventDefault(); void this.addManualBridge(); }}>
+              <h3>Add a bridge by address</h3>
+              <div class="manual-grid">
+                <div class="field">
+                  <label for="mh">Host or IP address</label>
+                  <input id="mh" type="text" placeholder="192.168.1.50 or bridge.local" .value=${this.manualHost} @input=${(e: Event) => this.manualHost = (e.target as HTMLInputElement).value} />
+                </div>
+                <div class="field">
+                  <label for="mp">Port</label>
+                  <input id="mp" type="number" min="1" max="65535" .value=${String(this.manualPort)} @input=${(e: Event) => this.manualPort = Number((e.target as HTMLInputElement).value || 80)} />
+                </div>
+                <div class="field">
+                  <label for="mk">API key</label>
+                  <input id="mk" type="password" autocomplete="off" .value=${this.manualApiKey} @input=${(e: Event) => this.manualApiKey = (e.target as HTMLInputElement).value} />
+                </div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn primary" ?disabled=${this.saving}>Connect</button></div>
+            </form>
+          ` : nothing}
+
+          ${this.showScanLog ? html`
+            <div class="sub-section">
+              <h3>Scan log</h3>
+              ${this.scanLogLoading ? html`<p class="hint"><span class="spinner"></span></p>` : html`<pre class="log">${this.scanLogContent || 'No scans yet.'}</pre>`}
+            </div>
+          ` : nothing}
+        </section>
+
+        <section class="card" id="settings-integration">
+          <div class="card-head">
+            <div>
+              <h2>Home Assistant integration</h2>
+              <p class="sub">Turns remotes into Home Assistant devices and entities.</p>
+            </div>
+            <a href="#/activity-log" class="btn sm">${icon('activity')}Activity</a>
+          </div>
+          <div class="card-body">${this.renderIntegrationStatus()}</div>
+        </section>
+
+        <section class="card">
+          <div class="setting">
+            <span class="what">
+              <strong>Secrets</strong>
+              <small>secrets.yaml holds the WiFi and ESP-NOW credentials every build uses.</small>
+            </span>
+            <a class="btn sm" href="#/secrets?from=${encodeURIComponent('/settings')}">${icon('key')}Edit secrets</a>
+          </div>
+        </section>
+
+        <section class="card" id="settings-build">
+          <div class="card-head">
+            <div>
+              <h2>Build host</h2>
+              <p class="sub">The ESPHome toolchain inside the add-on that compiles firmware.</p>
+            </div>
+          </div>
+          <div class="setting">
+            <span class="what">
+              <strong>ESPHome ${this.containerStatus?.tag || ''}</strong>
+              <small>${this.containerStatus?.error || (this.containerStatus?.available ? 'Ready to build' : 'Not available')}</small>
+            </span>
+            ${this.containerStatus?.available
+              ? html`<span class="chip ok"><span class="dot ok"></span>Available</span>`
+              : html`<span class="chip danger"><span class="dot danger"></span>Unavailable</span>`}
+          </div>
+          <div class="setting">
+            <span class="what">
+              <strong>Build cache</strong>
+              <small>${this.artifactsMessage || 'Clear it to free disk space or recover from a stale build. The next build is slower.'}</small>
+            </span>
+            <button class="btn sm" ?disabled=${this.cleaningArtifacts} @click=${() => this.confirmCleanArtifacts()}>${this.cleaningArtifacts ? 'Clearing…' : 'Clear cache…'}</button>
+          </div>
+        </section>
+
+        <esp-confirm-dialog .request=${this.confirm} @closed=${() => { this.confirm = null; }}></esp-confirm-dialog>
+      </div>
+    `;
+  }
+
+  static styles = [shared, css`
+    :host { display: block; }
+    .loading { display: flex; align-items: center; gap: 12px; padding: 24px 16px; color: var(--muted); }
+    .card { overflow: hidden; }
+    .card-head .page-actions .btn svg, .card-head > .btn svg, .setting .btn svg { width: 16px; height: 16px; }
+    .card-head .spinner { width: 14px; height: 14px; border-color: currentColor; border-top-color: transparent; }
+    .pad { padding: 0 16px 16px; }
+    .bridges { list-style: none; margin: 0; padding: 0; }
+    .bridges li { border-top: 1px solid var(--line); }
+    .bridges li:first-child { border-top: 0; }
+    .bridge-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+    .node-icon { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--surface-subtle); color: var(--muted); }
+    .node-icon.on { background: var(--primary-soft); color: var(--primary); }
+    .node-icon svg { width: 20px; height: 20px; }
+    .what { display: grid; gap: 2px; flex: 1 1 220px; min-width: 0; }
+    .what strong { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    .what small { color: var(--muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
+    .row-actions { display: flex; gap: 4px; align-items: center; margin-left: auto; }
+    .danger-text { color: var(--danger); }
+    .danger-text:hover:not(:disabled) { background: var(--danger-soft); }
+    .row-actions .btn svg { width: 18px; height: 18px; }
+    .skip { margin: -6px 16px 12px 64px; color: var(--muted); font-size: var(--text-sm); }
+    .key { width: 180px; min-height: 30px; }
+    .inline-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0 16px 16px 64px; }
+    .form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
+    .sub-section { display: grid; gap: 10px; padding: 14px 16px 16px; border-top: 1px solid var(--line); background: var(--surface-subtle); }
+    .sub-section h3 { font-size: var(--text-md); font-weight: 500; }
+    .sub-section .bridges li { border-color: var(--line); }
+    .sub-section .bridge-row { padding: 8px 0; }
+    .manual-grid { display: grid; grid-template-columns: minmax(0, 2fr) 110px minmax(0, 1.5fr); gap: 12px; }
+    .status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; color: var(--ink-2); }
+    .warn-text { color: var(--accent); }
+    .setting { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-top: 1px solid var(--line); }
+    .card > .setting:first-child { border-top: 0; }
+    .card-head + .setting { border-top: 0; }
+    .hint .spinner { display: inline-block; }
     @media (max-width: 760px) {
-      .current,
-      .form,
-      .manual-form {
-        grid-template-columns: 1fr;
-      }
-
-      .bridge-item,
-      .bridge-form,
-      .bridge-actions {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .bridge-info {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .int-status-row-layout {
-        flex-direction: column;
-      }
+      .inline-form { grid-template-columns: minmax(0, 1fr); padding-left: 16px; }
+      .manual-grid { grid-template-columns: minmax(0, 1fr); }
+      .row-actions { margin-left: 48px; }
+      .key { flex: 1 1 100%; width: auto; }
+      .skip { margin-left: 16px; }
     }
-
-    /* ---- Settings page shell and section rhythm ---- */
-    :host { display: block; color: var(--ink); }
-    * { box-sizing: border-box; }
-    .settings-page { display: flex; flex-direction: column; gap: 18px; }
-    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
-    .page-heading { display: flex; flex-direction: column; gap: 5px; }
-    .eyebrow { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-    h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; }
-    .page-heading p { margin: 2px 0 0; max-width: 66ch; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .page-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .settings-nav { display: flex; align-items: center; gap: 3px; padding: 3px; width: fit-content; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-sm); }
-    .settings-nav button { min-height: 29px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 10px; font-weight: 600; cursor: pointer; }
-    .settings-nav button:hover { background: var(--surface-subtle); color: var(--ink); }
-    .settings-nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .settings-stack { display: flex; flex-direction: column; gap: 16px; }
-    .settings-card { margin: 0 !important; padding: 20px 22px !important; border: 1px solid var(--line) !important; border-radius: var(--radius-lg) !important; background: var(--surface) !important; box-shadow: var(--shadow-sm) !important; scroll-margin-top: 82px; }
-    .settings-card .title { display: flex; align-items: flex-start; gap: 11px; }
-    .section-mark { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 24px; border-radius: 6px; background: var(--primary-soft); color: var(--primary) !important; font-family: var(--font-mono); font-size: 9px !important; font-weight: 700 !important; letter-spacing: 0 !important; text-transform: none !important; }
-    .section-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .section-copy h2 { margin: 0 !important; color: var(--ink); font-size: 16px !important; line-height: 1.3; font-weight: 650 !important; letter-spacing: -.015em; }
-    .section-copy p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
-    .settings-card .actions { gap: 6px; }
-    .settings-card .btn { min-height: 34px; padding: 0 12px; border-radius: 6px; font-size: 11px; }
-    .settings-card .btn-primary { background: var(--primary); border-color: var(--primary); }
-    .settings-card .btn-primary:hover { background: var(--primary-strong); }
-    .settings-card .btn-danger { background: var(--surface); border-color: #e5c2c4; color: var(--danger); }
-    .settings-card .btn-danger:hover { background: var(--danger-soft); }
-    .settings-card .bridge-list-container { padding: 0; border: 0; box-shadow: none; margin: 0; background: transparent; }
-    .settings-card .bridge-list-container > h3, .settings-card .bridge-list > h3 { margin: 8px 0 0; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-    .settings-card .bridge-table { font-size: 11px; }
-    .settings-card .bridge-table th { padding: 8px; border-bottom: 1px solid var(--line); color: var(--faint); font-size: 9px; letter-spacing: .06em; }
-    .settings-card .bridge-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: middle; }
-    .settings-card .bridge-table .actions-cell { gap: 5px; }
-    .settings-card .bridge-table .btn { min-height: 29px; padding: 0 8px; font-size: 10px; }
-    .settings-card .bridge-status { font-size: 8px; padding: 2px 6px; border-radius: 3px; }
-    .settings-card .active-badge { font-size: 8px; padding: 2px 6px; border-radius: 3px; border-color: #cfe5d5; color: var(--ok); background: var(--ok-soft); }
-    .settings-card .manual-entry, .settings-card .scan-log { margin-top: 13px; border: 1px solid var(--line); background: var(--surface-subtle); border-radius: 8px; padding: 13px; }
-    .settings-card .current { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-    .settings-card .current > div { min-height: 64px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); padding: 11px 12px; }
-    .settings-card .current span { color: var(--faint); font-size: 9px; letter-spacing: .06em; }
-    .settings-card .current strong { color: var(--ink); font-size: 12px; }
-    .settings-card .int-status-row-layout { align-items: flex-start; gap: 18px; }
-    .settings-card .int-connected-box { border: 1px solid #cfe5d5; border-radius: 8px; background: var(--ok-soft); padding: 14px 15px; }
-    .settings-card .int-connected-label { color: var(--ok); font-size: 13px; }
-    .settings-card .int-connected-counts { color: var(--muted); font-size: 11px; }
-    .settings-card .hint { color: var(--muted); font-size: 10px; line-height: 1.45; }
-    .settings-card .error, .settings-card .saved { border-radius: 6px; font-size: 11px; }
-    .loading-card { padding: 30px; color: var(--muted); font-size: 12px; }
-
-    @media (max-width: 800px) {
-      .page-head { align-items: flex-start; flex-direction: column; gap: 13px; }
-      h1 { font-size: 24px; }
-      .page-actions { width: 100%; }
-      .page-actions .btn { width: 100%; }
-      .settings-nav { width: 100%; overflow-x: auto; }
-      .settings-nav button { flex: 1 0 auto; }
-      .settings-card { padding: 17px 15px !important; }
-      .settings-card .bridge-list-container { overflow-x: auto; }
-      .settings-card .bridge-table { min-width: 650px; }
-      .settings-card .title { gap: 9px; }
-      .settings-card .int-status-row-layout { flex-direction: column; }
-      .settings-card .current { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-      .settings-card .actions { width: 100%; }
-      .settings-card .actions .btn { flex: 1; }
-      .settings-nav button { font-size: 9px; padding: 0 8px; }
-    }
-  `;
+  `];
 }

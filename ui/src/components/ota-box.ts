@@ -2,6 +2,8 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { OtaJob, PreflightComparison, TopologyNode, api, fmtBytes, fmtTime, normalizeMac } from '../api/client';
 import './ota-progress';
+import { shared } from '../styles/shared';
+import { icon } from '../styles/icons';
 
 const TERMINAL_STATUSES = new Set(['success', 'failed', 'aborted', 'rejoin_timeout', 'version_mismatch']);
 
@@ -147,11 +149,9 @@ private async start(): Promise<void> {
 
     return html`
       <section class="ota">
-        <div class="title-row">
-          <div>
-            <h2>Firmware</h2>
-          </div>
-          ${activeForThis && this.currentJob && !terminalJob && !showResult && !isQueued && !isCompileQueued && !isCompiling && !pending && !isFlashing ? html`<button class="btn btn-danger" ?disabled=${this.busy} @click=${this.abort}>Abort</button>` : nothing}
+        <div class="card-head">
+          <h2>Firmware</h2>
+          ${activeForThis && this.currentJob && !terminalJob && !showResult && !isQueued && !isCompileQueued && !isCompiling && !pending && !isFlashing ? html`<button class="btn sm danger" ?disabled=${this.busy} @click=${this.abort}>Abort</button>` : nothing}
         </div>
 
         ${showResult && terminalJob
@@ -171,11 +171,12 @@ private async start(): Promise<void> {
 
               ${!pending && !isQueued && !isFlashing && !isCompileQueued && !isCompiling
                 ? html`
+                    ${this.renderRunning()}
                     <div class="idle-controls">
-                      ${this.showEditYaml ? html`<button class="btn btn-edit-yaml" @click=${this.goToConfig}>Edit Firmware YAML</button>` : nothing}
-                      <label class="upload ${this.busy ? 'busy' : ''}">
+                      ${this.showEditYaml ? html`<button class="btn" @click=${this.goToConfig}>${icon('code')}Edit YAML &amp; compile</button>` : nothing}
+                      <label class="btn upload ${this.busy ? 'busy' : ''}">
                         <input type="file" accept=".ota.bin" ?disabled=${this.busy} @change=${this.upload} />
-                        <strong>${this.busy ? 'Processing firmware...' : 'Upload .ota.bin firmware to flash'}</strong>
+                        ${this.busy ? html`<span class="spinner"></span>Reading firmware…` : html`${icon('upload')}Upload .ota.bin`}
                       </label>
                     </div>
                   `
@@ -184,8 +185,21 @@ private async start(): Promise<void> {
               ${pending ? this.renderPending(pending, canStart) : nothing}
             `}
         ${this.showAbortModal ? this.renderAbortModal() : nothing}
-        ${this.error ? html`<p class="error">${this.error}</p>` : nothing}
+        ${this.error ? html`<div class="notice danger error" role="alert">${icon('alert')}<span>${this.error}</span></div>` : nothing}
       </section>
+    `;
+  }
+
+  private renderRunning() {
+    const n = this.node;
+    if (!n) return nothing;
+    const version = n.project_version || n.firmware_version;
+    return html`
+      <dl class="facts running">
+        <div><dt>Running</dt><dd>${version || 'Unknown'}${n.project_name ? html` <span class="sub">${n.project_name}</span>` : nothing}</dd></div>
+        <div><dt>Built</dt><dd>${n.firmware_build_date || '—'}</dd></div>
+        ${n.firmware_version && n.project_version ? html`<div><dt>ESPHome</dt><dd>${n.firmware_version}</dd></div>` : nothing}
+      </dl>
     `;
   }
 
@@ -195,10 +209,10 @@ private async start(): Promise<void> {
       <div class="queued-wrapper">
         <esp-ota-progress .job=${job}></esp-ota-progress>
         <div class="queued-overlay">
-          <span class="queued-icon">⏳</span>
-          <strong>Firmware Update Queued</strong>
-          <small>#${position} in queue</small>
-          <button class="btn btn-danger" ?disabled=${this.busy} @click=${this.abortQueued}>Abort</button>
+          <span class="queued-icon">${icon('clock')}</span>
+          <strong>Upload queued</strong>
+          <small>Position ${position} in the upload queue</small>
+          <button class="btn sm danger" ?disabled=${this.busy} @click=${this.abortQueued}>Abort</button>
         </div>
       </div>
     `;
@@ -209,10 +223,10 @@ private async start(): Promise<void> {
     return html`
       <div class="queued-wrapper">
         <div class="queued-overlay compile-overlay">
-          <span class="queued-icon">⏳</span>
-          <strong>Compiling Firmware...</strong>
-          <small>#${position} in compile queue</small>
-          <button class="btn btn-danger" ?disabled=${this.busy} @click=${this.abortCompileQueuedJob}>Cancel</button>
+          <span class="queued-icon">${icon('clock')}</span>
+          <strong>Build queued</strong>
+          <small>Position ${position} in the build queue</small>
+          <button class="btn sm danger" ?disabled=${this.busy} @click=${this.abortCompileQueuedJob}>Cancel</button>
         </div>
       </div>
     `;
@@ -222,10 +236,10 @@ private async start(): Promise<void> {
     return html`
       <div class="queued-wrapper">
         <div class="queued-overlay compile-overlay compiling-overlay">
-          <span class="queued-icon">⚙</span>
-          <strong>Building Firmware...</strong>
-          <a class="view-logs-link" href=${`#/device/${encodeURIComponent(this.mac)}/config`}>View compile logs →</a>
-          <button class="btn btn-danger" ?disabled=${this.busy} @click=${this.cancelCompile}>Cancel</button>
+          <span class="queued-icon"><span class="spinner"></span></span>
+          <strong>Building firmware</strong>
+          <a class="view-logs-link" href=${`#/device/${encodeURIComponent(this.mac)}/config`}>View build log</a>
+          <button class="btn sm danger" ?disabled=${this.busy} @click=${this.cancelCompile}>Cancel</button>
         </div>
       </div>
     `;
@@ -262,11 +276,11 @@ private async start(): Promise<void> {
     return html`
       <div class="modal-backdrop" @click=${() => { this.showAbortModal = false; this.pendingJob = null; this.preflight = null; }}>
         <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
-          <h3>Other queued jobs waiting</h3>
-          <p>Continue running the next queued job after aborting this one?</p>
+          <h3>Other uploads are waiting</h3>
+          <p>After aborting this upload, should the next queued job start, or should the queue pause?</p>
           <div class="actions">
-            <button class="start" @click=${this.abortAndContinue}>Yes, continue queue</button>
-            <button class="btn btn-danger" @click=${this.abortAndPause}>No, pause queue</button>
+            <button class="btn primary" @click=${this.abortAndContinue}>Abort, keep queue running</button>
+            <button class="btn" @click=${this.abortAndPause}>Abort and pause queue</button>
             <button @click=${() => { this.showAbortModal = false; this.pendingJob = null; this.preflight = null; }}>Cancel</button>
           </div>
         </div>
@@ -309,38 +323,38 @@ private async start(): Promise<void> {
     const p = this.preflight;
     const jobLabel = job.parsed_esphome_name || job.esphome_name || job.firmware_name || 'Selected firmware';
     const nameBadge = p?.name.match ? 'match' : 'mismatch';
-    const nameBadgeClass = `tag ${nameBadge}`;
-    const nameBadgeText = p?.name.match ? 'MATCH' : 'MISMATCH';
+    const nameBadgeClass = `chip ${nameBadge === 'match' ? 'ok' : 'danger'}`;
+    const nameBadgeText = p?.name.match ? 'Match' : 'Different';
 
     const chipBadge = p?.chip.match ? 'match' : 'mismatch';
-    const chipBadgeClass = `tag ${chipBadge}`;
-    const chipBadgeText = p?.chip.match ? 'MATCH' : 'MISMATCH';
+    const chipBadgeClass = `chip ${chipBadge === 'match' ? 'ok' : 'danger'}`;
+    const chipBadgeText = p?.chip.match ? 'Match' : 'Different';
 
     const dateStatus = p?.build_date.status || 'unknown';
-    let dateBadgeClass = 'tag ';
+    let dateBadgeClass = 'chip ';
     let dateBadgeText = '';
     if (dateStatus === 'same') {
-      dateBadgeClass += 'same';
-      dateBadgeText = 'SAME';
+      dateBadgeClass += '';
+      dateBadgeText = 'Same build';
     } else if (dateStatus === 'newer') {
-      dateBadgeClass += 'newer';
-      dateBadgeText = `NEWER ${p?.build_date.delta}`;
+      dateBadgeClass += 'ok';
+      dateBadgeText = `Newer · ${p?.build_date.delta}`;
     } else if (dateStatus === 'older') {
-      dateBadgeClass += 'older';
-      dateBadgeText = `OLDER ${p?.build_date.delta}`;
+      dateBadgeClass += 'warn';
+      dateBadgeText = `Older · ${p?.build_date.delta}`;
     }
 
     if (p?.metadata_unavailable) {
       return html`
         <div class="pending">
           <h3>${jobLabel}</h3>
-          <p class="meta-unavailable">Metadata not available for ESP8266 Arduino firmware.</p>
+          <p class="meta-unavailable">ESP8266 Arduino builds carry no metadata, so name, date and chip can't be checked before flashing.</p>
           <div class="meta-info">
             <span>Size: ${fmtBytes(job.firmware_size)}</span>
             <span>MD5: ${job.firmware_md5 || '-'}</span>
           </div>
           <div class="actions">
-            <button class="btn btn-primary" ?disabled=${!canStart} @click=${this.start}>Flash</button>
+            <button class="btn primary" ?disabled=${!canStart} @click=${this.start}>Flash</button>
             <button class="btn" ?disabled=${this.busy} @click=${this.abort}>Cancel</button>
           </div>
         </div>
@@ -352,7 +366,7 @@ private async start(): Promise<void> {
         <h3>${jobLabel}</h3>
         <table class="compare-table">
           <thead>
-            <tr><th>Field</th><th>Current (Remote)</th><th>New (Firmware)</th></tr>
+            <tr><th></th><th>On the remote</th><th>New firmware</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -361,12 +375,12 @@ private async start(): Promise<void> {
               <td>${p?.name.new || '-'}<br><span class="${nameBadgeClass}">${nameBadgeText}</span></td>
             </tr>
             <tr>
-              <td>Build Date</td>
+              <td>Build date</td>
               <td>${p?.build_date.current || '-'}</td>
               <td>${p?.build_date.new || '-'}<br><span class="${dateBadgeClass}">${dateBadgeText}</span></td>
             </tr>
             <tr>
-              <td>Chip Type</td>
+              <td>Chip</td>
               <td>${p?.chip.current || '-'}</td>
               <td>${p?.chip.new || '-'}<br><span class="${chipBadgeClass}">${chipBadgeText}</span></td>
             </tr>
@@ -382,13 +396,13 @@ private async start(): Promise<void> {
                 ${p.warnings.map((warning) => html`<p>${warning}</p>`)}
                 <label>
                   <input type="checkbox" .checked=${this.acceptedWarnings} @change=${(event: Event) => (this.acceptedWarnings = (event.target as HTMLInputElement).checked)} />
-                  Flash anyway
+                  Flash anyway, I understand the warnings
                 </label>
               </div>
             `
           : nothing}
         <div class="actions">
-          <button class="btn btn-primary" ?disabled=${!canStart} @click=${this.start}>Flash</button>
+          <button class="btn primary" ?disabled=${!canStart} @click=${this.start}>Flash</button>
           <button class="btn" ?disabled=${this.busy} @click=${this.abort}>Cancel</button>
         </div>
       </div>
@@ -398,7 +412,7 @@ private async start(): Promise<void> {
   private renderFlashResult(job: OtaJob) {
     const isSuccess = job.status === 'success';
     const resultClass = isSuccess ? 'success' : 'failure';
-    const resultLabel = isSuccess ? 'FLASH SUCCESSFUL' : job.status.replaceAll('_', ' ').toUpperCase();
+    const resultLabel = isSuccess ? 'Update complete' : (() => { const t = job.status.replaceAll('_', ' '); return t.charAt(0).toUpperCase() + t.slice(1); })();
     const resultMessage = isSuccess
       ? 'The device accepted the new firmware and rejoined the network.'
       : job.error_msg || 'The firmware update did not complete successfully.';
@@ -423,13 +437,13 @@ private async start(): Promise<void> {
       return html`
         <div class="flash-result ${resultClass}">
           <div class="result-banner">
-            <span class="result-icon">✓</span>
+            <span class="result-icon">${icon('checkCircle')}</span>
             <span class="result-label">${resultLabel}</span>
           </div>
           <h3>${jobName}</h3>
           <p class="result-message">${resultMessage}</p>
           <div class="actions">
-            <button class="btn btn-primary" @click=${this.dismissAndClear}>Done</button>
+            <button class="btn primary" @click=${this.dismissAndClear}>Done</button>
           </div>
         </div>
       `;
@@ -438,35 +452,35 @@ private async start(): Promise<void> {
     return html`
       <div class="flash-result ${resultClass}">
         <div class="result-banner">
-          <span class="result-icon">✗</span>
+          <span class="result-icon">${icon('alert')}</span>
           <span class="result-label">${resultLabel}</span>
         </div>
         <h3>${jobName}</h3>
         <p class="result-message">${resultMessage}</p>
         <table class="compare-table">
           <thead>
-            <tr><th>Field</th><th>Flashed</th><th>Device Now</th></tr>
+            <tr><th></th><th>Flashed</th><th>Remote now</th></tr>
           </thead>
           <tbody>
             <tr>
               <td>Name</td>
               <td>${jobName}</td>
-              <td>${nodeName} ${!nameMatch ? html`<span class="tag mismatch">CHANGED</span>` : nothing}</td>
+              <td>${nodeName} ${!nameMatch ? html`<span class="chip warn">Changed</span>` : nothing}</td>
             </tr>
             <tr>
-              <td>Build Date</td>
+              <td>Build date</td>
               <td>${jobDate}</td>
-              <td>${nodeDate} ${!dateMatch ? html`<span class="tag mismatch">CHANGED</span>` : nothing}</td>
+              <td>${nodeDate} ${!dateMatch ? html`<span class="chip warn">Changed</span>` : nothing}</td>
             </tr>
             <tr>
-              <td>Chip Type</td>
+              <td>Chip</td>
               <td>${jobChip}</td>
-              <td>${nodeChip} ${!chipMatch ? html`<span class="tag mismatch">CHANGED</span>` : nothing}</td>
+              <td>${nodeChip} ${!chipMatch ? html`<span class="chip warn">Changed</span>` : nothing}</td>
             </tr>
             <tr>
-              <td>Firmware MD5</td>
+              <td>MD5</td>
               <td>${jobMd5}</td>
-              <td>${nodeMd5} ${!md5Match ? html`<span class="tag mismatch">CHANGED</span>` : nothing}</td>
+              <td>${nodeMd5} ${!md5Match ? html`<span class="chip warn">Changed</span>` : nothing}</td>
             </tr>
           </tbody>
         </table>
@@ -475,427 +489,70 @@ private async start(): Promise<void> {
           ${job.completed_at ? html`<span>Completed: ${fmtTime(job.completed_at)}</span>` : nothing}
         </div>
         <div class="actions">
-          <button class="btn btn-primary" @click=${this.dismissAndClear}>Done</button>
+          <button class="btn primary" @click=${this.dismissAndClear}>Done</button>
         </div>
       </div>
     `;
   }
 
-  static styles = css`
-    .ota {
-      display: grid;
-      gap: 16px;
-    }
+  static styles = [shared, css`
+    :host { display: block; }
+    .ota { display: grid; }
+    .card-head { border-bottom: 0; padding-bottom: 4px; }
+    .ota > :not(.card-head) { margin: 0 16px 16px; }
+    .running { margin-bottom: 16px; }
+    .running .sub { color: var(--muted); font-size: var(--text-sm); }
+    .idle-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .upload { position: relative; overflow: hidden; }
+    .upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .upload .spinner { width: 14px; height: 14px; }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .card-header h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .title-row {
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .title-row span {
-      color: var(--primary);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .title-row h2 {
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.1;
-    }
-
-    .upload {
-      display: grid;
-      gap: 6px;
-      place-items: center;
-      min-height: 42px;
-      border: 2px dashed var(--line);
-      background: #fafbfc;
-      border-radius: 8px;
-      cursor: pointer;
-      padding: 6px 18px;
-      text-align: center;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 700;
-      transition: all 0.12s;
-    }
-
-    .upload:hover {
-      border-color: var(--primary);
-      background: #f0f7fa;
-    }
-
-    .idle-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    button.btn-edit-yaml {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--primary);
-      background: var(--primary);
-      color: #fff;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.12s, border-color 0.12s;
-      width: 100%;
-      min-height: 38px;
-      box-sizing: border-box;
-      padding: 0 12px;
-    }
-
-    button.btn-edit-yaml:hover {
-      background: #115e59;
-      border-color: #115e59;
-    }
-
-    input[type='file'] {
-      position: absolute;
-      inline-size: 1px;
-      block-size: 1px;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    small,
-    .meta {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .pending {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .pending h3 {
-      margin: 0 0 12px;
-    }
-
-    .meta-unavailable {
-      color: var(--muted);
-      font-style: italic;
-      margin: 0 0 12px;
-    }
-
-    .compare-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 12px 0;
-      font-size: 13px;
-    }
-
-    .compare-table th,
-    .compare-table td {
-      border: 1px solid var(--line);
-      padding: 8px 10px;
-      text-align: left;
-    }
-
-    .compare-table th {
-      background: #f8fafc;
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .compare-table td:first-child {
-      font-weight: 500;
-      color: var(--muted);
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      margin-top: 4px;
-    }
-
-    .tag.match {
-      background: #dcfce7;
-      color: var(--ok);
-    }
-
-    .tag.same {
-      background: #f1f5f9;
-      color: var(--muted);
-    }
-
-    .tag.mismatch,
-    .tag.newer {
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .tag.older {
-      background: #dcfce7;
-      color: var(--ok);
-    }
-
-    .meta-info {
-      display: flex;
-      gap: 16px;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-
-    .warnings {
-      border-left: 4px solid var(--accent);
-      background: #fffbeb;
-      padding: 12px;
-      display: grid;
-      gap: 8px;
-      margin-bottom: 12px;
-      border-radius: 6px;
-    }
-
-    .warnings p {
-      margin: 0;
-      font-size: 13px;
-    }
-
-    .warnings label {
-      font-weight: 500;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .flash-result {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .result-message {
-      margin: 0 0 12px;
-      color: var(--ink);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .flash-result.failure {
-      border-color: var(--danger);
-    }
-
-    .result-banner {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      margin: -16px -16px 12px -16px;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 14px;
-      border-radius: 8px 8px 0 0;
-    }
-
-    .flash-result.success .result-banner {
-      background: #dcfce7;
-      color: var(--ok);
-    }
-
-    .flash-result.failure .result-banner {
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .result-icon {
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      color: var(--ink);
-      cursor: pointer;
-      transition: all 0.12s;
-      min-height: 38px;
-    }
-
-    .btn:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-strong);
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-
-    .btn-danger:hover {
-      background: var(--danger);
-    }
-
-    button:disabled,
-    .btn:disabled {
-      opacity: 0.48;
-      cursor: not-allowed;
-    }
-
-    .notice,
-    .error {
-      margin: 0;
-      padding: 10px 12px;
-      border: 1px solid var(--accent);
-      background: #fffbeb;
-      color: #7c3f00;
-      font-weight: 500;
-      border-radius: 6px;
-    }
-
-    .error {
-      border-color: var(--danger);
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .queued-wrapper {
-      position: relative;
-      overflow: visible;
-    }
-
+    .queued-wrapper { display: grid; gap: 12px; }
     .queued-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-areas: 'icon title action' 'icon sub action';
       align-items: center;
-      justify-content: center;
-      gap: 2px;
-      background: rgba(255, 247, 223, 0.92);
-      z-index: 2;
-      text-align: center;
-      padding: 8px;
-      overflow: visible;
-      border-radius: 8px;
+      column-gap: 12px;
+      padding: 14px 16px;
+      border-top: 1px solid var(--line);
+      padding-left: 0; padding-right: 0;
     }
+    .compiling-overlay { grid-template-areas: 'icon title action' 'icon sub action'; }
+    .queued-icon { grid-area: icon; display: grid; place-items: center; width: 32px; height: 32px; color: var(--accent); }
+    .compiling-overlay .queued-icon { color: var(--info); }
+    .queued-icon svg { width: 24px; height: 24px; }
+    .queued-overlay strong { grid-area: title; font-weight: 500; }
+    .queued-overlay small, .queued-overlay .view-logs-link { grid-area: sub; color: var(--muted); font-size: var(--text-sm); }
+    .queued-overlay .view-logs-link { color: var(--primary); }
+    .queued-overlay .btn { grid-area: action; }
 
-    .queued-icon {
-      font-size: 24px;
-    }
+    .pending, .flash-result { display: grid; gap: 12px; }
+    .pending h3, .flash-result h3 { font-size: var(--text-lg); font-weight: 500; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+    .compare-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: var(--text-xs); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    .compare-table td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+    .compare-table td:first-child { color: var(--muted); white-space: nowrap; }
+    .compare-table .chip { margin-top: 4px; }
+    .meta-info { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
+    .meta-unavailable { color: var(--muted); }
+    .warnings { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--ink); }
+    .warnings label { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+    .warnings input { accent-color: var(--primary); width: 16px; height: 16px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-    .queued-overlay strong {
-      font-size: 14px;
-    }
+    .result-banner { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    .result-icon { display: inline-flex; }
+    .result-icon svg { width: 22px; height: 22px; }
+    .flash-result.success .result-banner { color: var(--ok); }
+    .flash-result.failure .result-banner { color: var(--danger); }
+    .result-message { color: var(--ink-2); }
 
-    .queued-overlay small {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .queued-overlay .btn-danger {
-      margin-top: 8px;
-    }
-
-    .compile-overlay {
-      background: rgba(255, 249, 230, 0.95);
-    }
-
-    .compiling-overlay {
-      background: rgba(232, 248, 245, 0.95);
-    }
-
-    .view-logs-link {
-      color: var(--primary);
-      font-size: 12px;
-      font-weight: 500;
-      text-decoration: underline;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .modal h3 {
-      margin: 0 0 8px 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .modal p {
-      margin: 0 0 16px 0;
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    @media (max-width: 760px) {
-      .compare-table {
-        font-size: 11px;
-      }
-    }
-  `;
+    .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: var(--scrim); }
+    .modal { display: grid; gap: 12px; width: min(460px, 100%); padding: 22px; border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-md); }
+    .modal h3 { font-size: var(--text-xl); font-weight: 500; }
+    .modal p { color: var(--ink-2); }
+    .modal .actions { justify-content: flex-end; margin-top: 4px; }
+  `];
 }

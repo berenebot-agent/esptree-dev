@@ -2,6 +2,8 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { ChipInfo, api, normalizeMac } from '../api/client';
 import '../components/compile-log-viewer';
+import { shared } from '../styles/shared';
+import { icon } from '../styles/icons';
 import { acquirePort, openInstallDialog, detectChip as detectConnectedChip, usbFlashSupported } from '../lib/browser-flash';
 
 /**
@@ -564,10 +566,6 @@ export class EspRemoteWizard extends LitElement {
     this.haNotice = '';
   }
 
-  private goTopology(): void {
-    window.location.hash = '/';
-  }
-
   /**
    * The "make it appear in Home Assistant" step.
    *
@@ -577,17 +575,28 @@ export class EspRemoteWizard extends LitElement {
    * on the device page, which links to the generic add-integration page and cannot
    * succeed while the hub integration is already installed.
    */
+  private renderSteps() {
+    const order = ['config', 'compiling', 'ready', 'done'] as const;
+    const stage = this.stage === 'flashing' ? 'ready' : this.stage === 'error' ? 'config' : this.stage;
+    const at = order.indexOf(stage as typeof order[number]);
+    const labels = ['Describe', 'Build', 'Flash', 'Join'];
+    return html`<ol class="steps" aria-label="Progress">
+      ${labels.map((label, i) => html`<li class=${i < at ? 'done' : i === at ? 'current' : ''} aria-current=${i === at ? 'step' : 'false'}>
+        <span class="n">${i < at ? icon('check') : i + 1}</span>${label}</li>`)}
+    </ol>`;
+  }
+
   private renderHaIntegrationStep() {
     if (this.haStatus === 'managed') {
       return html`
         <div class="ha-step ha-ok">
-          <span class="ha-icon">\u2705</span>
+          <span class="ha-icon ok">${icon('checkCircle')}</span>
           <div>
             <strong>Added to Home Assistant</strong>
             <p class="hint">
               This remote's entities are available in Home Assistant.
             </p>
-            <a class="btn" href=${`/config/devices/device/${this.haDeviceId}`} target="_blank" rel="noopener">
+            <a class="btn" href=${`/config/devices/device/${this.haDeviceId}`} target="_top" rel="noopener">
               Open device in Home Assistant
             </a>
           </div>
@@ -611,7 +620,7 @@ export class EspRemoteWizard extends LitElement {
 
     return html`
       <div class="ha-step ha-action">
-        <span class="ha-icon">\u26A0\uFE0F</span>
+        <span class="ha-icon warn">${icon('ha')}</span>
         <div>
           <strong>Last step: add it to Home Assistant</strong>
           <p class="hint">
@@ -642,29 +651,23 @@ export class EspRemoteWizard extends LitElement {
 
   render() {
     return html`
-      <div class="remote-page">
-        <div class="page-head">
-          <div class="page-heading">
-            <span class="eyebrow">Add device</span>
-            <h1>Create remote</h1>
-            <p>Compile ESP-NOW firmware, write it from this browser, and let the remote join automatically.</p>
-          </div>
-          <div class="page-actions">
-            <button class="btn" @click=${this.goTopology}>← Back to network</button>
+      <div class="page remote-page">
+        <div>
+          <nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Network</a>${icon('chevronRight')}<span aria-current="page">Add remote</span></nav>
+          <div class="page-head">
+            <div>
+              <h1>Add a remote</h1>
+              <p class="sub">Plug a board into this computer by USB. The add-on builds ESP-NOW firmware, your browser writes it, and the remote joins on its own.</p>
+            </div>
           </div>
         </div>
+        ${this.renderSteps()}
       <section class="card">
         <div class="card-body">
-          ${this.error ? html`<div class="error">${this.error}</div>` : nothing}
+          ${this.error ? html`<div class="notice danger" role="alert">${icon('alert')}<span>${this.error}</span></div>` : nothing}
 
           ${this.stage === 'config'
             ? html`
-                <p class="hint">
-                  Flashes a new ESP-NOW remote from this browser. Plug the remote into
-                  <strong>this computer</strong> by USB — the add-on compiles the firmware, then
-                  your browser writes it.
-                </p>
-
                 <label class="field">
                   <span>Device name</span>
                   <input
@@ -694,7 +697,7 @@ export class EspRemoteWizard extends LitElement {
                           </option>`,
                     )}
                   </select>
-                  <small class="hint">Connect the remote to this computer by USB, then detect the chip automatically or select it manually.</small>
+
                   ${this.selectedChip && this.selectedChip.buildable === false
                     ? html`<span class="hint warn-text">${this.selectedChip.unbuildable_reason}</span>`
                     : nothing}
@@ -702,7 +705,7 @@ export class EspRemoteWizard extends LitElement {
 
                 <div class="chip-detect">
                   <button class="btn" ?disabled=${this.detectingChip || this.loadingChips} @click=${() => void this.detectChip()}>
-                    ${this.detectingChip ? 'Detecting chip…' : 'Detect connected chip'}
+                    ${this.detectingChip ? html`<span class="spinner"></span>Detecting…` : html`${icon('usb')}Detect from USB`}
                   </button>
                   ${this.usbSupported
                     ? html`<button class="btn" ?disabled=${this.detectingChip || this.loadingChips} @click=${() => void this.detectChip(true)}>
@@ -720,9 +723,11 @@ export class EspRemoteWizard extends LitElement {
                     : nothing}
                 </div>
 
-                <div class="creds ${this.credentialsComplete ? 'ok' : 'warn'}">
+                <div class="creds notice ${this.credentialsComplete ? 'ok' : 'warn'}">
+                  ${icon(this.credentialsComplete ? 'lock' : 'alert')}
+                  <div class="creds-body">
                   <div class="creds-row">
-                    <strong>Network</strong>
+                    <strong>ESP-NOW network</strong>
                     <span>${this.credentialsLabel()}</span>
                   </div>
                   ${this.credentialsComplete
@@ -747,13 +752,14 @@ export class EspRemoteWizard extends LitElement {
                       </p>`
                     : nothing}
                   ${this.credentialsMismatch
-                    ? html`<p class="hint warn-text">
+                    ? html`<p class="hint warn-text mismatch">
                         Note: the saved bridge record says the network ID is
                         <code>${this.bridgeNetworkId}</code>, which disagrees with secrets.yaml.
                         The bridge firmware reads secrets.yaml, so that value is used here — but
                         the record is stale and worth correcting.
                       </p>`
                     : nothing}
+                  </div>
                 </div>
 
                 <div class="actions">
@@ -773,7 +779,7 @@ export class EspRemoteWizard extends LitElement {
 
           ${this.stage === 'compiling'
             ? html`
-                <div class="status">
+                <div class="status info">
                   <div class="spinner"></div>
                   <div>
                     <strong
@@ -793,13 +799,16 @@ export class EspRemoteWizard extends LitElement {
 
           ${this.stage === 'ready'
             ? html`
-                <div class="status">
-                  <strong>Firmware compiled.</strong>
+                <div class="status ok">
+                  ${icon('checkCircle')}
+                  <div>
+                  <strong>Firmware built.</strong>
                   <p class="hint">
                     ${this.autoInstall && this.flashing
                       ? 'Flashing to the selected USB device…'
                       : 'Plug the remote into this computer by USB, then flash it below.'}
                   </p>
+                  </div>
                 </div>
                 ${this.preparingManifest
                   ? html`<div class="status"><div class="spinner"></div><span>Preparing firmware…</span></div>`
@@ -808,11 +817,11 @@ export class EspRemoteWizard extends LitElement {
                   ? html`
                       <div class="actions">
                         <button class="btn primary" ?disabled=${this.flashing} @click=${() => void this.flashInBrowser()}>
-                          ${this.flashing ? 'Flashing…' : 'Flash via Browser USB'}
+                          ${this.flashing ? html`<span class="spinner"></span>Flashing…` : html`${icon('usb')}Flash by USB`}
                         </button>
                       </div>
                       ${this.flashError
-                        ? html`<div class="error">${this.flashError}</div>`
+                        ? html`<div class="notice danger" role="alert">${icon('alert')}<span>${this.flashError}</span></div>`
                         : nothing}
                       ${this.flashNeedsConfirm
                         ? html`
@@ -826,9 +835,7 @@ export class EspRemoteWizard extends LitElement {
                     `
                   : nothing}
                 ${!this.usbSupported
-                  ? html`<div class="error">
-                      This browser cannot flash over USB. Open the add-on in Chrome or Edge over HTTPS.
-                    </div>`
+                  ? html`<div class="notice warn">${icon('info')}<span>This browser can't flash over USB. Open the add-on in Chrome or Edge over HTTPS, or download the factory image below.</span></div>`
                   : nothing}
                 <p class="hint">
                   The button above writes the firmware from this computer. If your browser cannot,
@@ -844,7 +851,7 @@ export class EspRemoteWizard extends LitElement {
                           Download .ota.bin
                         </a>
                         <a class="btn" href=${'#/device/' + encodeURIComponent(this.mac) + '/config'}>
-                          Edit config / YAML
+                          Edit YAML
                         </a>
                       </div>
                       <p class="hint">
@@ -861,20 +868,23 @@ export class EspRemoteWizard extends LitElement {
           ${this.stage === 'done'
             ? html`
                 <div class="status ok">
-                  <strong>${this.esphomeName} flashed.</strong>
+                  ${icon('checkCircle')}
+                  <div>
+                  <strong>${this.esphomeName} is flashed.</strong>
                   <p class="hint">
                     Power the remote. Once it joins, the bridge reports it and it appears in the
-                    topology view automatically.
+                    network view automatically.
                   </p>
+                  </div>
                 </div>
                 ${this.renderHaIntegrationStep()}
-                <button class="btn primary" @click=${this.goTopology}>Go to topology</button>
+                <div class="actions"><a class="btn primary" href="#/">Go to network</a></div>
               `
             : nothing}
 
           ${this.stage === 'error'
             ? html`
-                <button class="btn" @click=${() => this.startOver()}>Start over</button>
+                <div class="actions"><button class="btn" @click=${() => this.startOver()}>Start over</button></div>
               `
             : nothing}
         </div>
@@ -883,298 +893,55 @@ export class EspRemoteWizard extends LitElement {
     `;
   }
 
-  static styles = css`
-    .card {
-      background: var(--surface);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--line);
-      margin-bottom: 20px;
+  static styles = [shared, css`
+    :host { display: block; }
+    .remote-page { max-width: 760px; }
+    .crumbs svg { width: 14px; height: 14px; color: var(--faint); }
+    .steps { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; counter-reset: s; }
+    .steps li {
+      display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+      padding: 8px 0; border-top: 3px solid var(--line); color: var(--muted); font-size: var(--text-sm); font-weight: 500;
     }
-
-    /* Post-flash Home Assistant integration step. */
-    .ha-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--surface);
-      margin: 0 0 16px;
+    .steps li.current { border-color: var(--primary); color: var(--ink); }
+    .steps li.done { border-color: var(--primary); color: var(--ink-2); }
+    .steps .n {
+      display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 50%;
+      background: var(--surface-subtle); color: var(--muted); font-size: var(--text-xs);
     }
-
-    .ha-step .ha-icon {
-      font-size: 18px;
-      line-height: 1.2;
-      flex: 0 0 auto;
+    .steps .current .n { background: var(--primary); color: var(--on-primary); }
+    .steps .done .n { background: var(--primary-soft); color: var(--primary); }
+    .steps .n svg { width: 14px; height: 14px; }
+    .card-body { display: grid; gap: 18px; padding: 20px; }
+    label.field { display: grid; gap: 6px; }
+    label.field > span { font-size: var(--text-sm); font-weight: 500; color: var(--ink-2); }
+    .chip-detect { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: -6px; }
+    .chip-detect .btn svg, .actions .btn svg { width: 18px; height: 18px; }
+    .chip-detect .spinner, .actions .spinner { width: 14px; height: 14px; }
+    .warn-text { color: var(--accent); }
+    .creds .creds-body { display: grid; gap: 6px; flex: 1; min-width: 0; }
+    .creds-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .creds-row code { font-family: var(--font-mono); font-size: var(--text-sm); }
+    .creds .src { color: var(--muted); font-size: var(--text-xs); margin-left: 4px; }
+    .creds .mismatch { margin-top: 4px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .download-actions { margin-top: 4px; }
+    .status { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--surface-subtle); }
+    .status.info { background: var(--info-soft); }
+    .status.ok { background: var(--ok-soft); }
+    .status > svg { width: 22px; height: 22px; flex: none; color: var(--ok); }
+    .status strong { font-weight: 500; }
+    .status .hint { margin-top: 2px; }
+    .ha-step { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-md); }
+    .ha-step > div { display: grid; gap: 8px; justify-items: start; }
+    .ha-step strong { font-weight: 500; }
+    .ha-icon { display: grid; place-items: center; width: 24px; height: 24px; flex: none; color: var(--muted); }
+    .ha-icon.ok { color: var(--ok); }
+    .ha-icon.warn { color: var(--accent); }
+    .ha-icon svg { width: 22px; height: 22px; }
+    .ha-error { color: var(--danger); }
+    @media (max-width: 560px) {
+      .steps li { flex-direction: column; align-items: flex-start; gap: 4px; font-size: var(--text-xs); }
+      .card-body { padding: 16px; }
     }
-
-    .ha-step strong {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .ha-step .hint {
-      margin: 0 0 10px;
-    }
-
-    .ha-step .hint:last-child {
-      margin-bottom: 0;
-    }
-
-    .ha-step .btn {
-      margin-top: 2px;
-    }
-
-    .ha-step.ha-ok {
-      border-color: var(--ok, #2e7d32);
-    }
-
-    .ha-step.ha-action {
-      border-color: var(--warn, #b26a00);
-    }
-
-    .ha-error {
-      color: var(--err, #c62828);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .card-header h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .card-body {
-      padding: 16px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--ink, #0f172a);
-    }
-
-    .chip-detect {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-
-    input,
-    select {
-      font: inherit;
-      font-size: 14px;
-      padding: 8px 10px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--ink, #0f172a);
-      min-width: 180px;
-    }
-
-    .creds {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 13px;
-    }
-
-    .creds.ok {
-      border-color: #bbf7d0;
-      background: #f0fdf4;
-    }
-
-    .creds.warn {
-      border-color: #fed7aa;
-      background: #fffbeb;
-    }
-
-    .creds-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .creds-row code {
-      font-size: 12px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 2px 6px;
-      max-width: 240px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .src {
-      color: var(--muted, #64748b);
-      font-size: 11px;
-    }
-
-    .warn-text {
-      color: #b45309;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--surface, #fff);
-      color: var(--ink, #0f172a);
-      cursor: pointer;
-      min-height: 36px;
-      white-space: nowrap;
-    }
-
-    .btn:hover:not(:disabled) {
-      background: #f8fafc;
-    }
-
-    .btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .btn.primary {
-      background: #0f766e;
-      border-color: #0f766e;
-      color: #fff;
-    }
-
-    .btn.primary:hover:not(:disabled) {
-      background: #0d5f58;
-    }
-
-    .hint {
-      margin: 0;
-      color: var(--muted, #64748b);
-      font-size: 13px;
-      font-weight: 400;
-      line-height: 1.5;
-    }
-
-    .error {
-      background: #fef2f2;
-      border: 1px solid var(--danger, #dc2626);
-      color: var(--danger, #dc2626);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 13px;
-      font-weight: 400;
-    }
-
-    .status {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      font-size: 14px;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    /* Download / edit-config links sit under the flash action and must not be
-       mistaken for the primary flash path. */
-    .download-actions {
-      margin-top: 4px;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-    }
-
-    .download-actions a {
-      text-decoration: none;
-    }
-
-    .status.ok strong {
-      color: var(--ok, #15803d);
-    }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--line);
-      border-top-color: var(--primary, #0f766e);
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    :host { display: block; color: var(--ink); }
-    * { box-sizing: border-box; }
-    .remote-page { display: flex; flex-direction: column; gap: 16px; }
-    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
-    .page-heading { display: flex; flex-direction: column; gap: 5px; max-width: 720px; }
-    .eyebrow { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-    .page-head h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; }
-    .page-heading p { margin: 2px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .page-actions { display: flex; gap: 7px; flex-shrink: 0; }
-    .card { margin: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
-    .card-body { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px 22px; }
-    .hint { color: var(--muted); font-size: 11px; line-height: 1.5; }
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field > span { color: var(--ink-2); font-size: 10px; font-weight: 650; }
-    .field input, .field select { min-height: 36px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
-    .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
-    .creds { padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
-    .creds.ok { border-color: #cfe5d5; background: var(--ok-soft); }
-    .creds.warn { border-color: #e5d3ae; background: var(--accent-soft); }
-    .creds-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 4px 0; font-size: 11px; }
-    .creds-row code { color: var(--ink); font-family: var(--font-mono); font-size: 10px; }
-    .chip-detect { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .btn { min-height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-    .btn:hover { background: var(--surface-subtle); }
-    .btn.primary { border-color: var(--primary); background: var(--primary); color: #fff; }
-    .btn.primary:hover { background: var(--primary-strong); }
-    .btn:disabled { opacity: .5; cursor: default; }
-    .status { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); font-size: 12px; }
-    .status.ok { border-color: #cfe5d5; background: var(--ok-soft); color: #235e43; }
-    .error { padding: 10px 12px; border: 1px solid #e7c2c5; border-radius: 7px; background: var(--danger-soft); color: #8c3037; font-size: 11px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 7px; }
-    @media (max-width: 760px) {
-      .page-head { align-items: flex-start; flex-direction: column; gap: 12px; }
-      .page-head h1 { font-size: 24px; }
-      .page-actions { width: 100%; }
-      .page-actions .btn { width: 100%; }
-      .card-body { padding: 15px; }
-    }
-  `;
+  `];
 }
