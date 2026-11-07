@@ -2415,6 +2415,8 @@ def create_app() -> FastAPI:
         bridge = db.get_bridge(str(bridge["uuid"])) or bridge
         return bridge
 
+    relay_overrides: dict[str, tuple[bool, Any]] = {}
+
     @app.get("/api/bridge/topology.json")
     async def topology() -> list[dict[str, Any]]:
         manager = control_manager()
@@ -2441,6 +2443,12 @@ def create_app() -> FastAPI:
         hidden_macs = db.get_hidden_macs()
         for node in nodes:
             node["hidden"] = node.get("mac") in hidden_macs
+            # The remote never reports its relay flag, so show the last value it
+            # acked. The override is tied to the session it was set in: a reboot
+            # or rejoin starts a new session and the remote reverts to its YAML.
+            override = relay_overrides.get(normalize_mac(str(node.get("mac") or "")))
+            if override and override[1] == node.get("session_id"):
+                node["relay_enabled"] = override[0]
 
         # Append remotes the integration still retains from earlier sessions. The
         # bridge only advertises what is currently reachable, so a retained remote
@@ -2766,7 +2774,15 @@ def create_app() -> FastAPI:
 
     @app.post("/api/devices/{mac}/relay")
     async def set_device_relay(mac: str, body: RelayConfigRequest) -> JSONResponse:
-        return await post_device_config(mac, "relay", {"enable": body.enable})
+        node = await require_remote_node(mac)
+        response = await post_device_config(mac, "relay", {"enable": body.enable})
+        try:
+            acked = json.loads(response.body).get("result") == "ok"
+        except (ValueError, AttributeError):
+            acked = False
+        if acked:
+            relay_overrides[normalize_mac(mac)] = (body.enable, node.get("session_id"))
+        return response
 
 
     @app.get("/api/devices")
