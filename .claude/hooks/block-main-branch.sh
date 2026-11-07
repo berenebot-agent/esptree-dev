@@ -50,4 +50,11 @@ if printf '%s' "$flat" | grep -qE 'git[[:space:]]+branch[[:space:]]+(-D|-d|--del
   block "deleting a branch is a human decision: $COMMAND"
 fi
 
+# 4. Never create history while standing on the retired branch.
+if printf '%s' "$flat" | grep -qE 'git[[:space:]]+(commit|merge|rebase|cherry-pick|am)([[:space:]]|$)'; then
+  repo=${CLAUDE_PROJECT_DIR:-$PWD}
+  current=$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  [ "$current" = "main" ] && block "the checkout is on 'main' — switch to master before committing"
+fi
+
 exit 0
