@@ -428,6 +428,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   config: () => request<AppConfig>('/api/config'),
+  health: () => request<{ ok: boolean; version?: string }>('/api/health'),
   updateConfig: (patch: Partial<AppConfig>) =>
     request<AppConfig>('/api/config', {
       method: 'PUT',

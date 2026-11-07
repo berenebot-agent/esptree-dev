@@ -403,7 +403,7 @@ def create_app() -> FastAPI:
         bridge_manager=bridge_manager,
     )
 
-    app = FastAPI(title="ESP Tree Add-on", version="0.1.342")
+    app = FastAPI(title="ESP Tree Add-on", version="0.1.343")
     # HA ingress authenticates the user, but host networking otherwise exposes
     # this unauthenticated API on the LAN. Restrict the actual socket peer.
     app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
@@ -1289,9 +1289,12 @@ def create_app() -> FastAPI:
         await ota_worker.stop()
 
     @app.get("/api/health")
-    async def health() -> dict[str, Any]:
+    async def health(request: Request) -> dict[str, Any]:
         return {
             "ok": True,
+            # The panel shows this; a version baked into the bundle at build time is
+            # always one release behind, because the bump lands after the build.
+            "version": request.app.version,
             "ws_connected": bridge_manager.connected,
             "integration_ws_connected": app.state.integration_clients > 0,
         }

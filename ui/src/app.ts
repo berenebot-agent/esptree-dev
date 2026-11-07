@@ -37,6 +37,7 @@ export class EspnowApp extends LitElement {
   @state() private integrationConfigured = false;
   @state() private restartRequired = false;
   @state() private bridgeLabel = '';
+  @state() private addonVersion = '';
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private bridgeStreamHandle: { close: () => void } | null = null;
   private setupDismissed = false;
@@ -57,7 +58,19 @@ export class EspnowApp extends LitElement {
     }, 3000);
     void this.fetchConfig();
     void this.checkRestartRequired();
+    void this.fetchVersion();
     this.maybeRedirectToSetup();
+  }
+
+  /** The running add-on version, read live: a value compiled into the bundle is
+   *  always one release behind, because the bump lands after the build. */
+  private async fetchVersion(): Promise<void> {
+    try {
+      const health = await api.health();
+      if (health.version) this.addonVersion = health.version;
+    } catch {
+      // Leave the badge blank rather than showing a version that may be wrong.
+    }
   }
 
   private async checkRestartRequired(): Promise<void> {
@@ -283,7 +296,7 @@ export class EspnowApp extends LitElement {
                 <small>${statusText}</small>
               </span>
             </div>
-            <div class="sidebar-version">Add-on v0.1.339</div>
+            <div class="sidebar-version">Add-on v${this.addonVersion || '—'}</div>
           </div>
         </aside>
 
