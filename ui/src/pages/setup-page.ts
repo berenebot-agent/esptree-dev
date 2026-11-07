@@ -745,7 +745,7 @@ export class EspSetupWizard extends LitElement {
     return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  private async detectFlashBoardInBrowser(): Promise<void> {
+  private async detectFlashBoardInBrowser(forcePicker = false): Promise<void> {
     this.flashBrowserDetecting = true;
     this.flashBrowserDetectError = '';
     this.flashDetectedChip = '';
@@ -755,7 +755,7 @@ export class EspSetupWizard extends LitElement {
         throw new Error('Browser USB detection requires a secure HTTPS page in Chrome or Edge');
       }
 
-      const port = await acquirePort();
+      const port = await acquirePort({ forcePicker });
       if (port === 'cancelled') {
         this.flashBrowserDetecting = false;
         return;
@@ -1515,6 +1515,9 @@ export class EspSetupWizard extends LitElement {
             </select>
             <button class="btn btn-outline btn-sm" @click=${() => void this.detectFlashBoardInBrowser()} ?disabled=${this.flashBrowserDetecting}>
               ${this.flashBrowserDetecting ? 'Detecting...' : 'Detect Connected ESP'}
+            </button>
+            <button class="btn btn-outline btn-sm" @click=${() => void this.detectFlashBoardInBrowser(true)} ?disabled=${this.flashBrowserDetecting}>
+              Choose device…
             </button>
           </div>
         </label>

@@ -98,27 +98,29 @@ export async function grantedPorts(): Promise<SerialPort[]> {
 }
 
 /**
- * Return a port to flash with, preferring one already granted.
+ * Granted ports whose device is still attached.
  *
- * `requestPort()` fallback needs a real user gesture — call this from a click handler.
+ * Chrome keeps previously-granted ports in `getPorts()` long after the device is gone:
+ * those entries return an empty `getInfo()` and fail every `open()` with "Failed to open
+ * serial port". Only a port that still reports a USB identity is worth offering.
  */
-export async function acquirePort(): Promise<SerialPort | 'cancelled'> {
+export async function listLivePorts(): Promise<SerialPort[]> {
   const granted = await grantedPorts();
-  // Prefer a port that still reports a USB identity. Chrome keeps previously-granted
-  // ports in `getPorts()` long after the device is gone: those entries return an empty
-  // `getInfo()` and fail every `open()` with "Failed to open serial port". Taking the
-  // last entry blindly lands on one of those dead handles and the whole flash flow
-  // stalls before it starts, so keep the dead ones as a fallback only.
-  const live = granted.filter((port) => {
+  return granted.filter((port) => {
     try {
       return Boolean(port.getInfo().usbVendorId);
     } catch {
       return false;
     }
   });
-  if (live.length > 0) return live[live.length - 1];
-  if (granted.length > 0) return granted[granted.length - 1];
+}
 
+/**
+ * Show the browser's own device chooser.
+ *
+ * Needs a real user gesture. Resolves `'cancelled'` when the chooser is dismissed.
+ */
+export async function pickPort(): Promise<SerialPort | 'cancelled'> {
   if (!navigator.serial) throw new Error('Web Serial is not available in this browser.');
   try {
     return await navigator.serial.requestPort();
@@ -127,6 +129,27 @@ export async function acquirePort(): Promise<SerialPort | 'cancelled'> {
     if (err instanceof DOMException && err.name === 'NotFoundError') return 'cancelled';
     throw err;
   }
+}
+
+/**
+ * Return a port to use, asking the user whenever the choice is not obvious.
+ *
+ * Exactly one attached, already-granted device is reused silently (no prompt). With none,
+ * or with several, the native chooser opens: guessing among several boards would flash or
+ * identify the wrong one, and a never-granted board could not otherwise be reached while an
+ * old grant exists. `forcePicker` always opens the chooser.
+ *
+ * Needs a real user gesture for the chooser — call this from a click handler.
+ */
+export async function acquirePort(options: { forcePicker?: boolean } = {}): Promise<SerialPort | 'cancelled'> {
+  if (!usbFlashSupported() || !navigator.serial) {
+    throw new Error('Web Serial is not available in this browser.');
+  }
+  if (!options.forcePicker) {
+    const live = await listLivePorts();
+    if (live.length === 1) return live[0];
+  }
+  return pickPort();
 }
 
 export interface ChipDetectionResult {

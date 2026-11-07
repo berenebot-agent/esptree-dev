@@ -64,6 +64,12 @@ export class EspRemoteWizard extends LitElement {
    * install dialog is what removes the browser's second device chooser.
    */
   private browserFlashPort: SerialPort | null = null;
+  /**
+   * True when the user pressed "Compile & install": flash starts by itself once the build
+   * finishes. The USB port was chosen on that click (the only moment the browser allows a
+   * chooser), so no further click is needed.
+   */
+  @state() private autoInstall = false;
 
   /**
    * Post-flash Home Assistant integration status.
@@ -115,7 +121,7 @@ export class EspRemoteWizard extends LitElement {
    * The granted port is kept (`browserFlashPort`) so the flash step needs no second
    * chooser from the browser.
    */
-  private async detectChip(): Promise<void> {
+  private async detectChip(forcePicker = false): Promise<void> {
     this.chipDetectionError = '';
     this.detectedChipName = '';
     this.detectingChip = true;
@@ -124,7 +130,7 @@ export class EspRemoteWizard extends LitElement {
       if (!this.detectUsbSupport()) {
         throw new Error('USB chip detection requires Chrome or Edge on a secure HTTPS page. You can select the chip manually instead.');
       }
-      const port = await acquirePort();
+      const port = await acquirePort({ forcePicker });
       if (port === 'cancelled') {
         this.detectingChip = false;
         return;
@@ -206,14 +212,53 @@ export class EspRemoteWizard extends LitElement {
     return this.chipName || null;
   }
 
-  private canSubmit(): boolean {
+  private canSubmit(opts: { chipOptional?: boolean } = {}): boolean {
     // A chip the API marks unbuildable must not be submittable: the job would run
     // for minutes and end in a compiler error about a header that is absent by
     // design. Refuse here and let the reason render under the chip field.
     if (this.selectedChip?.buildable === false) return false;
-    return Boolean(
-      this.name.trim() && this.chipName && this.selectedChip && this.networkId.trim() && this.psk.trim(),
-    );
+    const chipOk = opts.chipOptional ? !this.chipName || Boolean(this.selectedChip) : Boolean(this.chipName && this.selectedChip);
+    return Boolean(this.name.trim() && chipOk && this.networkId.trim() && this.psk.trim());
+  }
+
+  /**
+   * One click: choose the board, confirm the chip, compile, then flash.
+   *
+   * The port is chosen here because `requestPort()` needs a user gesture and the build
+   * takes minutes -- by the time it finishes the click is long gone. A granted port stays
+   * valid, so the install dialog can open it later with no further click.
+   */
+  private async compileAndInstall(): Promise<void> {
+    if (!this.canSubmit({ chipOptional: true })) return;
+    this.chipDetectionError = '';
+    this.flashError = '';
+    this.flashNeedsConfirm = false;
+    try {
+      const port = this.browserFlashPort ?? (await acquirePort());
+      if (port === 'cancelled') return;
+      this.browserFlashPort = port;
+
+      // Identify the board now, even when a chip is already selected: a mismatch between
+      // the chosen chip and the plugged-in board would otherwise flash the wrong image.
+      this.detectingChip = true;
+      const { detected, family } = await detectConnectedChip(port);
+      const supported = family && this.chips.find((c) => c.chip_name.toUpperCase() === family);
+      if (!family || !supported) {
+        throw new Error(`Detected ${detected}, but this chip is not in the supported firmware list. Choose a different device or select a chip and use Compile only.`);
+      }
+      if (this.chipName && this.chipName.toUpperCase() !== family) {
+        throw new Error(`The connected board is ${detected}, but ${this.chipName} is selected. Choose the matching chip, or pick a different device.`);
+      }
+      this.chipName = supported.chip_name;
+      this.detectedChipName = detected;
+    } catch (err) {
+      this.chipDetectionError = err instanceof Error ? err.message : String(err);
+      return;
+    } finally {
+      this.detectingChip = false;
+    }
+    this.autoInstall = true;
+    await this.submit();
   }
 
   private async submit(): Promise<void> {
@@ -282,7 +327,9 @@ export class EspRemoteWizard extends LitElement {
         this.compilePercent = 100;
         this.clearPoll();
         this.stage = 'ready';
-        void this.prepareManifest();
+        void this.prepareManifest().then(() => {
+          if (this.autoInstall && this.manifestUrl && this.browserFlashPort) void this.flashInBrowser();
+        });
         return;
       }
       if (state === 'failed') {
@@ -506,6 +553,7 @@ export class EspRemoteWizard extends LitElement {
     this.clearPoll();
     this.clearHaPoll();
     this.stage = 'config';
+    this.autoInstall = false;
     this.error = '';
     this.compileStatus = '';
     this.compilePercent = 0;
@@ -656,6 +704,11 @@ export class EspRemoteWizard extends LitElement {
                   <button class="btn" ?disabled=${this.detectingChip || this.loadingChips} @click=${() => void this.detectChip()}>
                     ${this.detectingChip ? 'Detecting chip…' : 'Detect connected chip'}
                   </button>
+                  ${this.usbSupported
+                    ? html`<button class="btn" ?disabled=${this.detectingChip || this.loadingChips} @click=${() => void this.detectChip(true)}>
+                        Choose a different device…
+                      </button>`
+                    : nothing}
                   ${this.detectedChipName
                     ? html`<span class="hint">Detected ${this.detectedChipName}; selected ${this.chipName}.</span>`
                     : nothing}
@@ -703,9 +756,18 @@ export class EspRemoteWizard extends LitElement {
                     : nothing}
                 </div>
 
-                <button class="btn primary" ?disabled=${!this.canSubmit()} @click=${() => void this.submit()}>
-                  Compile firmware
-                </button>
+                <div class="actions">
+                  ${this.usbSupported
+                    ? html`<button class="btn primary" ?disabled=${!this.canSubmit({ chipOptional: true }) || this.detectingChip} @click=${() => void this.compileAndInstall()}>
+                          ${this.detectingChip ? 'Checking board…' : 'Compile & install'}
+                        </button>
+                        <button class="btn" ?disabled=${!this.canSubmit()} @click=${() => { this.autoInstall = false; void this.submit(); }}>
+                          Compile only
+                        </button>`
+                    : html`<button class="btn primary" ?disabled=${!this.canSubmit()} @click=${() => { this.autoInstall = false; void this.submit(); }}>
+                          Compile firmware
+                        </button>`}
+                </div>
               `
             : nothing}
 
@@ -720,6 +782,9 @@ export class EspRemoteWizard extends LitElement {
                         : ''}</strong
                     >
                     <p class="hint">This uses the add-on's own compiler. It can take a few minutes.</p>
+                    ${this.autoInstall
+                      ? html`<p class="hint">It will flash to the selected USB device automatically when the build finishes. Keep the board plugged in.</p>`
+                      : nothing}
                   </div>
                 </div>
                 <esp-compile-log-viewer .mac=${this.mac} .visible=${true}></esp-compile-log-viewer>
@@ -730,7 +795,11 @@ export class EspRemoteWizard extends LitElement {
             ? html`
                 <div class="status">
                   <strong>Firmware compiled.</strong>
-                  <p class="hint">Plug the remote into this computer by USB, then flash it below.</p>
+                  <p class="hint">
+                    ${this.autoInstall && this.flashing
+                      ? 'Flashing to the selected USB device…'
+                      : 'Plug the remote into this computer by USB, then flash it below.'}
+                  </p>
                 </div>
                 ${this.preparingManifest
                   ? html`<div class="status"><div class="spinner"></div><span>Preparing firmware…</span></div>`
