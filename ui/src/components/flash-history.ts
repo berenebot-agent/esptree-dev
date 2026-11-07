@@ -59,12 +59,14 @@ export class EspFlashHistory extends LitElement {
 
 
   render() {
+    // Builds belong to Build history; this list is uploads only.
+    const jobs = this.jobs.filter((j) => j.status !== 'compile_success');
     return html`
       <div class="card-head"><h2>Upload history</h2></div>
       ${this.error ? html`<div class="notice danger pad" role="alert">${icon('alert')}<span>${this.error}</span></div>` : nothing}
-      ${this.jobs.length
+      ${jobs.length
         ? html`<ul class="hist">
-            ${this.jobs.map((job) => {
+            ${jobs.map((job) => {
               const duration = job.completed_at && job.started_at ? fmtDuration(job.completed_at - job.started_at) : '';
               return html`
                 <li>

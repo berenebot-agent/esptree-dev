@@ -186,7 +186,6 @@ export class EspDeviceDetail extends LitElement {
               ${node.ha_device_id
                 ? html`<a class="btn" href=${haHref} target="_top" rel="noopener">${icon('ha')}Open in Home Assistant</a>`
                 : html`<button class="btn" ?disabled=${this.haBusy} @click=${() => void this.addToHomeAssistant()}>${this.haBusy ? html`<span class="spinner"></span>Adding…` : html`${icon('ha')}Add to Home Assistant`}</button>`}
-              ${isRemote ? html`<a class="btn primary" href=${`#/device/${encodeURIComponent(node.mac)}/config`}>${icon('code')}Edit YAML</a>` : nothing}
             </div>
           </div>
         </div>
@@ -228,7 +227,7 @@ export class EspDeviceDetail extends LitElement {
             </section>`
           : nothing}
 
-        <div class="layout">
+        <div class="history-layout">
           <section class="card">
             <esp-flash-history .jobs=${this.history} @ota-changed=${() => void this.load(false)} @ota-reflash-result=${this.handleReflashResult}></esp-flash-history>
           </section>
@@ -260,7 +259,8 @@ export class EspDeviceDetail extends LitElement {
     .q.weak { color: var(--danger); }
     .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
     .layout.single { grid-template-columns: minmax(0, 1fr); }
-    .layout > .card { overflow: hidden; }
+    .history-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .layout > .card, .history-layout > .card { overflow: hidden; }
     .loading { display: flex; align-items: center; gap: 12px; padding: 24px 16px; color: var(--muted); }
     @media (max-width: 960px) {
       .layout { grid-template-columns: minmax(0, 1fr); }
