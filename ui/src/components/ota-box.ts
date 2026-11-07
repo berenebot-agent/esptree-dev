@@ -552,8 +552,8 @@ private async start(): Promise<void> {
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #0f766e;
-      background: #0f766e;
+      border: 1px solid var(--primary);
+      background: var(--primary);
       color: #fff;
       font-family: inherit;
       font-size: 14px;
@@ -642,7 +642,7 @@ private async start(): Promise<void> {
 
     .tag.match {
       background: #dcfce7;
-      color: #166534;
+      color: var(--ok);
     }
 
     .tag.same {
@@ -658,7 +658,7 @@ private async start(): Promise<void> {
 
     .tag.older {
       background: #dcfce7;
-      color: #166534;
+      color: var(--ok);
     }
 
     .meta-info {
@@ -729,7 +729,7 @@ private async start(): Promise<void> {
 
     .flash-result.success .result-banner {
       background: #dcfce7;
-      color: #166534;
+      color: var(--ok);
     }
 
     .flash-result.failure .result-banner {
@@ -771,7 +771,7 @@ private async start(): Promise<void> {
     }
 
     .btn-primary:hover {
-      background: #0d4d5e;
+      background: var(--primary-strong);
     }
 
     .btn-danger {
@@ -781,7 +781,7 @@ private async start(): Promise<void> {
     }
 
     .btn-danger:hover {
-      background: #dc2626;
+      background: var(--danger);
     }
 
     button:disabled,

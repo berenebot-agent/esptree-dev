@@ -124,30 +124,60 @@ export class EspDeviceDetail extends LitElement {
         </div>
       `;
     }
-    const isRemote = !this.node.is_bridge && (this.node.hops ?? 0) > 0;
+    const isRemote = !this.node.is_bridge;
     const relayNodes = this.topology.filter((node) => {
       if (!node.online) return false;
       if (normalizeMac(node.mac) === normalizeMac(this.node!.mac)) return false;
       return !!node.is_bridge || !!node.can_relay || (node.hops ?? 0) > 0;
     });
+    const parent = this.topology.find((node) => normalizeMac(node.mac) === normalizeMac(this.node?.parent_mac || ''));
+    const name = this.node.friendly_name || this.node.esphome_name || this.node.label || this.node.mac;
+    const statusLabel = this.node.online ? 'Online' : (this.node.offline_reason || 'Offline');
+    const firmware = this.node.firmware_version || this.node.project_version || '—';
     return html`
-      <button class="back" @click=${this.goBack}>Back to topology</button>
-      <section class="hero">
-        <div class="hero-left">
-          <h2>${this.node.friendly_name || this.node.esphome_name || this.node.label || this.node.mac}<span class="mac-suffix"> ${this.node.mac}</span></h2>
-          <div class="hero-stats">
-            <div class="hero-box sm ${this.node.online ? 'box-online' : 'box-offline'}" title="${this.node.firmware_md5 ? `firmware MD5: ${this.node.firmware_md5}` : 'firmware MD5: —'}"><span class="lbl">Status</span><span class="val">${this.node.online ? 'Online' : (this.node.offline_reason || 'Offline')}</span></div>
-            <div class="hero-box sm"><span class="lbl">Hops</span><span class="val">${this.node.hops ?? 0}</span></div>
-            <div class="hero-box sm"><span class="lbl">Uptime</span><span class="val">${fmtDuration(this.node.uptime_s)}</span></div>
-            <div class="hero-box sm"><span class="lbl">Last Seen</span><span class="val">${this.node.last_seen_ago != null ? `${fmtDuration(this.node.last_seen_ago)}${!this.node.is_bridge ? ' ago' : ''}` : '-'}</span></div>
-            ${this.node.chip_name ? html`<div class="hero-box sm"><span class="lbl">Chip</span><span class="val">${this.node.chip_name}</span></div>` : nothing}
-            <div class="hero-box sm"><span class="lbl">RSSI</span><span class="val">${this.node.rssi == null ? '-' : `${this.node.rssi}`}<span class="unit">dBm</span></span></div>
-            <a class="hero-entities ${this.node.ha_device_id ? '' : 'not-added'}" href="${this.node.ha_device_id ? `/config/devices/device/${this.node.ha_device_id}` : '/config/integrations/dashboard/add?domain=esp_tree'}" target="_blank" rel="noopener"><span class="lbl">Entities</span><span class="val">${this.node.ha_device_id ? 'View in HA' : 'Not Yet Added'}</span></a>
+      <div class="device-page">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <button @click=${this.goBack}>Network</button><span aria-hidden="true">/</span><span>${name}</span>
+        </nav>
+        <section class="hero ${this.node.online ? 'online' : 'offline'}">
+          <div class="hero-top">
+            <div class="hero-identity">
+              <span class="device-glyph" aria-hidden="true">
+                ${this.node.is_bridge
+                  ? html`<svg viewBox="0 0 32 32"><path d="M16 27V14M16 14l-6-5M16 14l6-5M10 9L7 6M22 9l3-3"/><circle cx="16" cy="6" r="2.3"/><circle cx="10" cy="9" r="2"/><circle cx="22" cy="9" r="2"/></svg>`
+                  : html`<svg viewBox="0 0 32 32"><rect x="9" y="7" width="14" height="11" rx="2"/><rect x="12" y="10" width="8" height="5" rx="1"/><path d="M16 18v7M11 25h10"/></svg>`}
+              </span>
+              <div class="hero-copy">
+                <div class="hero-flags">
+                  <span class="status-pill ${this.node.online ? 'ok' : 'bad'}"><span class="dot"></span>${statusLabel}</span>
+                  <span class="type-pill">${this.node.is_bridge ? 'Bridge' : 'ESP-NOW remote'}</span>
+                  ${(this.node.hops ?? 0) > 0 ? html`<span class="type-pill">${this.node.hops} hop${this.node.hops === 1 ? '' : 's'}</span>` : nothing}
+                </div>
+                <h1>${name}</h1>
+                <div class="hero-meta">
+                  <span class="mono">${this.node.mac}</span>
+                  ${this.node.chip_name ? html`<span>${this.node.chip_name}</span>` : nothing}
+                  ${parent ? html`<span>via ${parent.friendly_name || parent.esphome_name || parent.label || parent.mac}</span>` : nothing}
+                </div>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <a class="btn ${this.node.ha_device_id ? '' : 'attention'}" href="${this.node.ha_device_id ? `/config/devices/device/${this.node.ha_device_id}` : '/config/integrations/dashboard/add?domain=esp_tree'}" target="_blank" rel="noopener">
+                ${this.node.ha_device_id ? 'Open in Home Assistant' : 'Add to Home Assistant'}
+              </a>
+            </div>
           </div>
-        </div>
-      </section>
+          <div class="stat-row">
+            <div class="stat"><span class="stat-label">Uptime</span><span class="stat-value">${fmtDuration(this.node.uptime_s)}</span></div>
+            <div class="stat"><span class="stat-label">Last seen</span><span class="stat-value">${this.node.last_seen_ago != null ? `${fmtDuration(this.node.last_seen_ago)} ago` : '—'}</span></div>
+            <div class="stat"><span class="stat-label">Signal</span><span class="stat-value">${this.node.rssi == null ? '—' : `${this.node.rssi} dBm`}</span></div>
+            <div class="stat"><span class="stat-label">Route</span><span class="stat-value">${this.node.is_bridge ? 'Root' : parent ? parent.friendly_name || parent.esphome_name || parent.label || parent.mac : 'Retained'}</span></div>
+            <div class="stat"><span class="stat-label">Firmware</span><span class="stat-value">${firmware}</span></div>
+            <div class="stat"><span class="stat-label">Relay</span><span class="stat-value">${this.node.relay_enabled ? 'Enabled' : this.node.can_relay ? 'Available' : 'No'}</span></div>
+          </div>
+        </section>
 
-      <div class="layout">
+        <div class="layout">
         ${isRemote
           ? html`
               <section class="card config-card">
@@ -160,27 +190,27 @@ export class EspDeviceDetail extends LitElement {
                   @config-changed=${() => void this.load(false)}
                 ></esp-device-config>
               </section>
-              <section class="card">
+              <section class="card ota-card">
                 <esp-ota-box .mac=${this.node.mac} .node=${this.node} .currentJob=${this.currentJob} .showEditYaml=${isRemote} @ota-changed=${() => void this.load(false)}></esp-ota-box>
               </section>
-              <section class="layout-empty"></section>
             `
           : html`
-              <section class="card">
+              <section class="card ota-card">
                 <esp-ota-box .mac=${this.node.mac} .node=${this.node} .currentJob=${this.currentJob} @ota-changed=${() => void this.load(false)}></esp-ota-box>
               </section>
             `}
         <section class="card history">
           <esp-flash-history .jobs=${this.history} @ota-changed=${() => void this.load(false)} @ota-reflash-result=${this.handleReflashResult}></esp-flash-history>
         </section>
-        <section class="panel history">
+        <section class="card history">
           <esp-compile-history .jobs=${this.compileHistoryList} .mac=${this.mac}></esp-compile-history>
         </section>
         ${COMPILE_ACTIVE_STATUSES.includes(this.compileStatus) || this.compileStatus === 'failed'
-          ? html`<section class="panel history">
+          ? html`<section class="card history compile-log-card">
               <esp-compile-log-viewer .mac=${this.mac} .visible=${true}></esp-compile-log-viewer>
             </section>`
           : nothing}
+        </div>
       </div>
     `;
   }
@@ -432,5 +462,75 @@ static styles = css`
         flex-direction: column;
       }
     }
+
+    /* ---- Device detail shell ---- */
+    :host { display: block; color: var(--ink); }
+    * { box-sizing: border-box; }
+    .device-page { display: flex; flex-direction: column; gap: 16px; }
+    .breadcrumb { display: flex; align-items: center; gap: 7px; color: var(--faint); font-size: 10px; }
+    .breadcrumb button { padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-weight: 600; cursor: pointer; }
+    .breadcrumb button:hover { text-decoration: underline; }
+    .breadcrumb button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .hero { display: block; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; padding: 0; margin: 0; }
+    .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 22px 24px 18px; }
+    .hero-identity { display: flex; align-items: flex-start; gap: 15px; min-width: 0; }
+    .device-glyph { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-subtle); }
+    .hero.online .device-glyph { border-color: #cfe5d5; background: var(--ok-soft); }
+    .hero.offline .device-glyph { border-color: #e7c2c5; background: var(--danger-soft); }
+    .device-glyph svg { width: 29px; height: 29px; fill: none; stroke: var(--primary); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .hero.offline .device-glyph svg { stroke: var(--danger); }
+    .hero-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .hero-flags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 5px; min-height: 21px; padding: 0 7px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+    .status-pill .dot { width: 5px; height: 5px; border-radius: 50%; }
+    .status-pill.ok { background: var(--ok-soft); color: var(--ok); }
+    .status-pill.ok .dot { background: var(--ok); }
+    .status-pill.bad { background: var(--danger-soft); color: #95343a; }
+    .status-pill.bad .dot { background: var(--danger); }
+    .type-pill { display: inline-flex; align-items: center; min-height: 21px; padding: 0 7px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 9px; font-weight: 600; }
+    .hero h1 { margin: 1px 0 0; color: var(--ink); font-size: 25px; line-height: 1.18; letter-spacing: -.035em; font-weight: 700; overflow-wrap: anywhere; }
+    .hero-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 10px; }
+    .hero-meta span + span::before { content: '·'; margin-right: 10px; color: #83928a; }
+    .mono { font-family: var(--font-mono); }
+    .hero-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 35px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+    .btn:hover { background: var(--surface-subtle); border-color: var(--faint); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn.attention { border-color: #e4d2ae; background: var(--accent-soft); color: #855d15; }
+    .stat-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; border-top: 1px solid var(--line); background: var(--line); }
+    .stat { display: flex; flex-direction: column; gap: 4px; min-height: 73px; padding: 13px 16px; background: var(--surface-subtle); }
+    .stat-label { color: var(--faint); font-size: 8px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .stat-value { overflow: hidden; text-overflow: ellipsis; color: var(--ink); font-size: 12px; font-weight: 650; white-space: nowrap; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .layout .card { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); padding: 16px 18px; min-width: 0; }
+    .layout .history, .layout .compile-log-card { grid-column: 1 / -1; }
+    .layout .ota-card { padding: 0; }
+    .layout .ota-card > * { display: block; padding: 16px 18px; }
+    .loading-state { display: flex; align-items: center; gap: 9px; min-height: 120px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); color: var(--muted); font-size: 12px; }
+    .spinner { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .callout { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid #e7c2c5; border-radius: 8px; background: var(--danger-soft); color: #8c3037; font-size: 12px; }
+    .callout.error { border-color: #e7c2c5; background: var(--danger-soft); color: #8c3037; }
+    .empty-page { padding: 32px; text-align: center; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); background: var(--surface-subtle); }
+    .empty-page h2 { margin: 20px 0 3px; font-size: 17px; }
+    .empty-page p { margin: 0 auto; max-width: 56ch; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .back { border: 0; background: none; color: var(--primary); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+    @media (max-width: 1120px) { .stat-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .hero-top { flex-direction: column; gap: 15px; }
+      .hero-actions { width: 100%; }
+      .hero-actions .btn { width: 100%; }
+    }
+    @media (max-width: 620px) {
+      .hero-top { padding: 17px 16px 15px; }
+      .device-glyph { width: 40px; height: 40px; flex-basis: 40px; border-radius: 9px; }
+      .device-glyph svg { width: 24px; height: 24px; }
+      .hero h1 { font-size: 21px; }
+      .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stat { min-height: 65px; padding: 11px 13px; }
+      .layout .card { padding: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   `;
 }

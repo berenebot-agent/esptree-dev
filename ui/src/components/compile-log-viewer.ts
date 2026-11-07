@@ -195,7 +195,7 @@ export class EspCompileLogViewer extends LitElement {
       background: transparent;
       color: var(--muted);
       font: inherit;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
       font-size: 10px;
       padding: 2px 8px;
       border-radius: 4px;

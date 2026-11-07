@@ -186,7 +186,7 @@ export class EspOtaProgress extends LitElement {
     }
 
     .abort-btn:hover {
-      background: #dc2626;
+      background: var(--danger);
     }
   `;
 }

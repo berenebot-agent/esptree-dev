@@ -408,7 +408,7 @@ export class EspDeviceConfig extends LitElement {
     }
 
     .busy {
-      color: #0f766e;
+      color: var(--primary);
       font-weight: 700;
       text-transform: uppercase;
     }
@@ -459,8 +459,8 @@ export class EspDeviceConfig extends LitElement {
     }
 
     button {
-      border: 1px solid #0f766e;
-      background: #0f766e;
+      border: 1px solid var(--primary);
+      background: var(--primary);
       color: #fff;
       padding: 0 12px;
       font-weight: 700;
@@ -475,8 +475,8 @@ export class EspDeviceConfig extends LitElement {
     }
 
     button.danger {
-      background: #b91c1c;
-      border-color: #b91c1c;
+      background: var(--danger);
+      border-color: var(--danger);
     }
 
     button.danger:hover:not(:disabled) {
@@ -502,7 +502,7 @@ export class EspDeviceConfig extends LitElement {
     .check input {
       width: 42px;
       min-height: 22px;
-      accent-color: #0f766e;
+      accent-color: var(--primary);
     }
 
     .check span {

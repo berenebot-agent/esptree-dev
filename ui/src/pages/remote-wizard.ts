@@ -594,11 +594,18 @@ export class EspRemoteWizard extends LitElement {
 
   render() {
     return html`
-      <section class="card">
-        <div class="card-header">
-          <h2>Create Remote</h2>
-          <button class="btn" @click=${this.goTopology}>Back to topology</button>
+      <div class="remote-page">
+        <div class="page-head">
+          <div class="page-heading">
+            <span class="eyebrow">Add device</span>
+            <h1>Create remote</h1>
+            <p>Compile ESP-NOW firmware, write it from this browser, and let the remote join automatically.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn" @click=${this.goTopology}>← Back to network</button>
+          </div>
         </div>
+      <section class="card">
         <div class="card-body">
           ${this.error ? html`<div class="error">${this.error}</div>` : nothing}
 
@@ -803,6 +810,7 @@ export class EspRemoteWizard extends LitElement {
             : nothing}
         </div>
       </section>
+      </div>
     `;
   }
 
@@ -1059,6 +1067,45 @@ export class EspRemoteWizard extends LitElement {
       to {
         transform: rotate(360deg);
       }
+    }
+
+    :host { display: block; color: var(--ink); }
+    * { box-sizing: border-box; }
+    .remote-page { display: flex; flex-direction: column; gap: 16px; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+    .page-heading { display: flex; flex-direction: column; gap: 5px; max-width: 720px; }
+    .eyebrow { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .page-head h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; }
+    .page-heading p { margin: 2px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .page-actions { display: flex; gap: 7px; flex-shrink: 0; }
+    .card { margin: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+    .card-body { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px 22px; }
+    .hint { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field > span { color: var(--ink-2); font-size: 10px; font-weight: 650; }
+    .field input, .field select { min-height: 36px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .creds { padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
+    .creds.ok { border-color: #cfe5d5; background: var(--ok-soft); }
+    .creds.warn { border-color: #e5d3ae; background: var(--accent-soft); }
+    .creds-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 4px 0; font-size: 11px; }
+    .creds-row code { color: var(--ink); font-family: var(--font-mono); font-size: 10px; }
+    .chip-detect { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .btn { min-height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .btn:hover { background: var(--surface-subtle); }
+    .btn.primary { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .btn.primary:hover { background: var(--primary-strong); }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .status { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); font-size: 12px; }
+    .status.ok { border-color: #cfe5d5; background: var(--ok-soft); color: #235e43; }
+    .error { padding: 10px 12px; border: 1px solid #e7c2c5; border-radius: 7px; background: var(--danger-soft); color: #8c3037; font-size: 11px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 7px; }
+    @media (max-width: 760px) {
+      .page-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .page-head h1 { font-size: 24px; }
+      .page-actions { width: 100%; }
+      .page-actions .btn { width: 100%; }
+      .card-body { padding: 15px; }
     }
   `;
 }

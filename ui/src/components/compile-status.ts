@@ -170,11 +170,11 @@ export class EspCompileStatus extends LitElement {
       border-color: var(--primary);
     }
     .btn-primary:hover {
-      background: #0d4d5e;
+      background: var(--primary-strong);
     }
     .success-banner {
       background: #dcfce7;
-      color: #166534;
+      color: var(--ok);
       border: 1px solid var(--ok);
       border-radius: 8px;
       padding: 8px 12px;
@@ -234,7 +234,7 @@ export class EspCompileStatus extends LitElement {
       font-weight: 600;
       border-radius: 4px;
     }
-    .badge.match { background: #dcfce7; color: #166534; }
+    .badge.match { background: #dcfce7; color: var(--ok); }
     .badge.mismatch { background: #fef2f2; color: #991b1b; }
     .warnings { margin-top: 6px; border-left: 4px solid var(--accent); background: #fffbeb; padding: 12px; border-radius: 6px; display: grid; gap: 8px; }
     .warnings p {
@@ -284,7 +284,7 @@ export class EspCompileStatus extends LitElement {
       border-color: var(--primary);
     }
     .flash-btn:hover {
-      background: #0d4d5e;
+      background: var(--primary-strong);
     }
     .download-btn {
       background: var(--surface);

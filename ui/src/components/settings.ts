@@ -423,14 +423,38 @@ export class EspSettings extends LitElement {
     }
   }
 
+  private scrollToSection(id: string): void {
+    this.shadowRoot?.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   render() {
-    if (this.loading) return html`<section class="card">Loading settings...</section>`;
+    if (this.loading) return html`<section class="card loading-card">Loading settings…</section>`;
 
     return html`
-      <section class="card">
-        <div class="title">
-          <h2>Connection</h2>
+      <div class="settings-page">
+        <div class="page-head">
+          <div class="page-heading">
+            <span class="eyebrow">Configuration</span>
+            <h1>Settings</h1>
+            <p>Manage the bridge connection, Home Assistant integration, and the local build environment.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn" @click=${() => { window.location.hash = '/secrets'; }}>Open secrets</button>
+          </div>
         </div>
+
+        <nav class="settings-nav" aria-label="Settings sections">
+          <button @click=${() => this.scrollToSection('settings-connection')}>Bridge connection</button>
+          <button @click=${() => this.scrollToSection('settings-integration')}>Integration</button>
+          <button @click=${() => this.scrollToSection('settings-build')}>Build environment</button>
+        </nav>
+
+        <div class="settings-stack">
+          <section class="card settings-card" id="settings-connection">
+            <div class="title">
+              <span class="section-mark">01</span>
+              <span class="section-copy"><h2>Bridge connection</h2><p>Discover, activate, or update the bridge that carries this network.</p></span>
+            </div>
 
         <div class="actions">
           <button class="btn btn-primary" ?disabled=${this.discovering} @click=${this.triggerScan}>
@@ -589,25 +613,26 @@ export class EspSettings extends LitElement {
         ${this.saved ? html`<p class="saved">${this.saved}</p>` : nothing}
       </section>
 
-      <section class="card integration-status-card">
+      <section class="card integration-status-card settings-card" id="settings-integration">
         <div class="title">
-          <h2>Integration Status</h2>
-          
+          <span class="section-mark">02</span>
+          <span class="section-copy"><h2>Home Assistant integration</h2><p>Connection state, entity counts, and restart requirements.</p></span>
         </div>
         <div class="int-status-row-layout">
           ${this.renderIntegrationStatus()}
           <div class="actions">
             <a href="#/activity-log" class="btn">
-              Activity Log
-              <span class="sub">Bridge/remote/protobuf events</span>
+              Open activity
+              <span class="sub">Bridge, remote, and protobuf events</span>
             </a>
           </div>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card settings-card" id="settings-build">
         <div class="title">
-          <h2>ESPHome</h2>
+          <span class="section-mark">03</span>
+          <span class="section-copy"><h2>Build environment</h2><p>The local ESPHome toolchain used for firmware compilation.</p></span>
         </div>
 
         <div class="current">
@@ -622,8 +647,10 @@ export class EspSettings extends LitElement {
 
         ${this.artifactsMessage ? html`<p class="info">${this.artifactsMessage}</p>` : nothing}
 
-        <p class="hint">Clean build artifacts removes PlatformIO cache and ESPHome build output. Useful for freeing space or resolving stale build state.</p>
+        <p class="hint">Removes the PlatformIO cache and ESPHome build output. Useful for freeing space or resolving stale build state; the next compile will be slower.</p>
       </section>
+        </div>
+      </div>
     `;
   }
 
@@ -1234,6 +1261,75 @@ export class EspSettings extends LitElement {
       .int-status-row-layout {
         flex-direction: column;
       }
+    }
+
+    /* ---- Settings page shell and section rhythm ---- */
+    :host { display: block; color: var(--ink); }
+    * { box-sizing: border-box; }
+    .settings-page { display: flex; flex-direction: column; gap: 18px; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+    .page-heading { display: flex; flex-direction: column; gap: 5px; }
+    .eyebrow { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; }
+    .page-heading p { margin: 2px 0 0; max-width: 66ch; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .page-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .settings-nav { display: flex; align-items: center; gap: 3px; padding: 3px; width: fit-content; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-sm); }
+    .settings-nav button { min-height: 29px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 10px; font-weight: 600; cursor: pointer; }
+    .settings-nav button:hover { background: var(--surface-subtle); color: var(--ink); }
+    .settings-nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .settings-stack { display: flex; flex-direction: column; gap: 16px; }
+    .settings-card { margin: 0 !important; padding: 20px 22px !important; border: 1px solid var(--line) !important; border-radius: var(--radius-lg) !important; background: var(--surface) !important; box-shadow: var(--shadow-sm) !important; scroll-margin-top: 82px; }
+    .settings-card .title { display: flex; align-items: flex-start; gap: 11px; }
+    .section-mark { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 24px; border-radius: 6px; background: var(--primary-soft); color: var(--primary) !important; font-family: var(--font-mono); font-size: 9px !important; font-weight: 700 !important; letter-spacing: 0 !important; text-transform: none !important; }
+    .section-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .section-copy h2 { margin: 0 !important; color: var(--ink); font-size: 16px !important; line-height: 1.3; font-weight: 650 !important; letter-spacing: -.015em; }
+    .section-copy p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .settings-card .actions { gap: 6px; }
+    .settings-card .btn { min-height: 34px; padding: 0 12px; border-radius: 6px; font-size: 11px; }
+    .settings-card .btn-primary { background: var(--primary); border-color: var(--primary); }
+    .settings-card .btn-primary:hover { background: var(--primary-strong); }
+    .settings-card .btn-danger { background: var(--surface); border-color: #e5c2c4; color: var(--danger); }
+    .settings-card .btn-danger:hover { background: var(--danger-soft); }
+    .settings-card .bridge-list-container { padding: 0; border: 0; box-shadow: none; margin: 0; background: transparent; }
+    .settings-card .bridge-list-container > h3, .settings-card .bridge-list > h3 { margin: 8px 0 0; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .settings-card .bridge-table { font-size: 11px; }
+    .settings-card .bridge-table th { padding: 8px; border-bottom: 1px solid var(--line); color: var(--faint); font-size: 9px; letter-spacing: .06em; }
+    .settings-card .bridge-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: middle; }
+    .settings-card .bridge-table .actions-cell { gap: 5px; }
+    .settings-card .bridge-table .btn { min-height: 29px; padding: 0 8px; font-size: 10px; }
+    .settings-card .bridge-status { font-size: 8px; padding: 2px 6px; border-radius: 3px; }
+    .settings-card .active-badge { font-size: 8px; padding: 2px 6px; border-radius: 3px; border-color: #cfe5d5; color: var(--ok); background: var(--ok-soft); }
+    .settings-card .manual-entry, .settings-card .scan-log { margin-top: 13px; border: 1px solid var(--line); background: var(--surface-subtle); border-radius: 8px; padding: 13px; }
+    .settings-card .current { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+    .settings-card .current > div { min-height: 64px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); padding: 11px 12px; }
+    .settings-card .current span { color: var(--faint); font-size: 9px; letter-spacing: .06em; }
+    .settings-card .current strong { color: var(--ink); font-size: 12px; }
+    .settings-card .int-status-row-layout { align-items: flex-start; gap: 18px; }
+    .settings-card .int-connected-box { border: 1px solid #cfe5d5; border-radius: 8px; background: var(--ok-soft); padding: 14px 15px; }
+    .settings-card .int-connected-label { color: var(--ok); font-size: 13px; }
+    .settings-card .int-connected-counts { color: var(--muted); font-size: 11px; }
+    .settings-card .hint { color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .settings-card .error, .settings-card .saved { border-radius: 6px; font-size: 11px; }
+    .loading-card { padding: 30px; color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 800px) {
+      .page-head { align-items: flex-start; flex-direction: column; gap: 13px; }
+      h1 { font-size: 24px; }
+      .page-actions { width: 100%; }
+      .page-actions .btn { width: 100%; }
+      .settings-nav { width: 100%; overflow-x: auto; }
+      .settings-nav button { flex: 1 0 auto; }
+      .settings-card { padding: 17px 15px !important; }
+      .settings-card .bridge-list-container { overflow-x: auto; }
+      .settings-card .bridge-table { min-width: 650px; }
+      .settings-card .title { gap: 9px; }
+      .settings-card .int-status-row-layout { flex-direction: column; }
+      .settings-card .current { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .settings-card .actions { width: 100%; }
+      .settings-card .actions .btn { flex: 1; }
+      .settings-nav button { font-size: 9px; padding: 0 8px; }
     }
   `;
 }

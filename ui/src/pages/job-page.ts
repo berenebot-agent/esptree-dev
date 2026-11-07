@@ -195,15 +195,20 @@ export class EspJobPage extends LitElement {
     const backLabel = backPath.startsWith('/device/') ? 'Device' : backPath === '/queue' ? 'Queue' : backPath.replace(/^\//, '');
 
     return html`
-      <section>
-        <div class="title-row">
-          <a class="back-link" href="#${backPath}">&larr; ${backLabel}</a>
-          <div>
-            <h2>${jobLabel}</h2>
+      <div class="job-page">
+        <div class="page-head">
+          <div class="page-heading">
+            <span class="eyebrow">Job #${this.jobId}</span>
+            <h1>${jobLabel}</h1>
+            <p>Compile and upload trace for this firmware operation.</p>
+          </div>
+          <div class="page-actions">
+            ${!isTerminal ? html`<span class="live-indicator"><span class="pulse"></span>Live</span>` : nothing}
+            <a class="btn" href="#${backPath}">← ${backLabel}</a>
           </div>
         </div>
 
-        ${this.error ? html`<p class="error">${this.error}</p>` : nothing}
+        ${this.error ? html`<p class="error" role="alert">${this.error}</p>` : nothing}
 
         ${job ? html`
           <div class="meta">
@@ -254,12 +259,12 @@ export class EspJobPage extends LitElement {
         </div>
         <div class="log-body">
           ${this.loading
-            ? html`<span class="empty">Loading...</span>`
+            ? html`<span class="empty">Loading…</span>`
             : events.length === 0
               ? html`<span class="empty">No events recorded for this job.</span>`
               : events.map((ev, idx) => this.renderEvent(ev, idx))}
         </div>
-      </section>
+      </div>
     `;
   }
 
@@ -527,6 +532,48 @@ export class EspJobPage extends LitElement {
         grid-template-columns: 1fr;
       }
     }
+
+    /* ---- Job page header and meta ---- */
+    :host { display: block; color: var(--ink); }
+    * { box-sizing: border-box; }
+    .job-page { display: flex; flex-direction: column; gap: 13px; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+    .page-heading { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .eyebrow { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .page-head h1 { margin: 0; color: var(--ink); font-size: 25px; line-height: 1.18; letter-spacing: -.03em; font-weight: 700; overflow-wrap: anywhere; }
+    .page-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .page-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+    .btn:hover { background: var(--surface-subtle); border-color: var(--faint); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .live-indicator { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-size: 10px; font-weight: 650; }
+    .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+    .job-page .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--line); overflow: hidden; padding: 0; }
+    .job-page .meta-item { min-height: 68px; padding: 11px 14px; background: var(--surface); gap: 4px; }
+    .job-page .meta-item small { color: var(--faint); font-size: 8px; letter-spacing: .07em; }
+    .job-page .meta-item span { color: var(--ink); font-size: 11px; font-weight: 600; overflow-wrap: anywhere; }
+    .job-page .meta-item span.error { color: var(--danger); }
+    .job-page .meta-full { grid-column: 1 / -1; }
+    .job-page .status-chip { width: fit-content; padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 9px; }
+    .job-page .log-header { margin-top: 3px; padding: 10px 14px; background: #142a25; border-color: #223b35; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .job-page .label { color: #c5d5ce; font-size: 9px; letter-spacing: .06em; }
+    .job-page .count { color: #7f978d; font-size: 9px; }
+    .job-page .log-body { max-height: 620px; padding: 9px 0 13px; background: #101f1c; border-color: #223b35; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+    .job-page .event { padding: 4px 15px; }
+    .job-page .event-time { color: #6f887e; font-size: 10px; }
+    .job-page .event-type { color: #c4d5cc; font-size: 10px; }
+    .job-page .event-detail { color: #91a79d; font-size: 9px; }
+    .job-page .event-icon { font-size: 10px; width: 15px; }
+    .job-page .compile-output { margin-left: 22px; padding: 9px; background: #0b1714; color: #a8bdb3; font-size: 10px; }
+    .job-page .empty { color: #8fa79c; font-size: 11px; font-style: normal; padding: 18px 15px; }
+    .job-page > .error { margin: 0; padding: 10px 12px; border: 1px solid #e7c2c5; border-radius: 7px; background: var(--danger-soft); color: #8c3037; font-size: 11px; }
+    @media (max-width: 760px) {
+      .page-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .page-head h1 { font-size: 21px; }
+      .page-actions { width: 100%; justify-content: space-between; }
+      .job-page .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; } }
   `;
 }
 

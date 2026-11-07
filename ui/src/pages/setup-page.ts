@@ -1119,11 +1119,17 @@ export class EspSetupWizard extends LitElement {
     return html`
       <div class="wizard-page">
         <header class="wizard-header">
-          <div>
-            <h1>ESP-Tree Setup</h1>
-            <p class="tagline">Connect your ESP-NOW bridge and get started.</p>
+          <div class="setup-brand">
+            <span class="setup-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><path d="M16 27V14M16 14l-6-5M16 14l6-5M10 9L7 6M22 9l3-3"/><circle cx="16" cy="6" r="2.3"/><circle cx="10" cy="9" r="2"/><circle cx="22" cy="9" r="2"/></svg>
+            </span>
+            <div>
+              <span class="setup-eyebrow">First-run setup</span>
+              <h1>Connect your network</h1>
+              <p class="tagline">Add an ESP-NOW bridge, then hand the network to Home Assistant.</p>
+            </div>
           </div>
-          <button class="dismiss-btn" @click=${this.dismiss}>Close and go to topology</button>
+          <button class="dismiss-btn" @click=${this.dismiss}>Skip for now</button>
         </header>
 
         <div class="stepper">
@@ -1927,22 +1933,38 @@ export class EspSetupWizard extends LitElement {
 
   static styles = css`
     :host {
-      --bg: #f5f7fa;
-      --surface: #ffffff;
-      --ink: #1c1c1e;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --primary: #0b3b4b;
-      --accent: #f39c12;
-      --danger: #ef4444;
-      --ok: #22c55e;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --bg: #f2f5f1;
+      --canvas: #f2f5f1;
+      --surface-subtle: #f7faf6;
+      --line-strong: #cbd5cd;
+      --ink: #17221f;
+      --ink-2: #34433e;
+      --muted: #5f6e68;
+      --faint: #64726c;
+      --line: #dfe6df;
+      --primary: #1e5b4f;
+      --primary-strong: #16483f;
+      --primary-soft: #e8f1eb;
+      --accent: #c88b27;
+      --accent-soft: #fbf2df;
+      --danger: #b63c43;
+      --danger-soft: #fdf0f0;
+      --ok: #2f7b58;
+      --ok-soft: #eaf5ee;
+      --shadow-sm: 0 1px 2px rgba(19, 38, 32, 0.05), 0 1px 3px rgba(19, 38, 32, 0.03);
+      --shadow: var(--shadow-sm);
+      --radius-lg: 14px;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       display: block;
       min-height: 100vh;
       background: var(--bg);
       color: var(--ink);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
     }
+
+    * { box-sizing: border-box; }
 
     .wizard-page {
       max-width: 680px;
@@ -2351,7 +2373,7 @@ export class EspSetupWizard extends LitElement {
       padding: 24px 16px;
       border: 2px solid var(--line);
       border-radius: 12px;
-      background: var(--card);
+      background: var(--surface);
       cursor: pointer;
       transition: all 0.15s;
       text-align: center;
@@ -2685,5 +2707,79 @@ export class EspSetupWizard extends LitElement {
       border-radius: 4px;
       transition: width 0.3s;
     }
+
+    /* ---- Setup shell aligned with the redesigned console ---- */
+    .wizard-page { max-width: 760px; padding: 34px 24px 56px; }
+    .wizard-header { align-items: center; gap: 20px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .setup-brand { display: flex; align-items: flex-start; gap: 13px; min-width: 0; }
+    .setup-mark { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 10px; background: #143a33; }
+    .setup-mark svg { width: 27px; height: 27px; fill: none; stroke: #d6b15c; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .setup-eyebrow { display: block; margin-bottom: 2px; color: var(--primary); font-size: 9px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .wizard-header h1 { margin: 0; color: var(--ink); font-size: 26px; line-height: 1.15; letter-spacing: -.035em; font-weight: 700; }
+    .tagline { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .dismiss-btn { min-height: 34px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--muted); font: inherit; font-size: 10px; font-weight: 600; cursor: pointer; }
+    .dismiss-btn:hover { border-color: var(--faint); background: var(--surface-subtle); color: var(--ink); }
+    .stepper { gap: 12px; }
+    .step { border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+    .step.done { border-color: #cfe5d5; }
+    .step.has-error { border-color: #e7c2c5; }
+    .step-header { padding: 16px 18px; gap: 12px; }
+    .step-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-subtle); color: var(--muted); font-size: 12px; font-weight: 700; margin-top: 0; }
+    .step.done .step-icon, .step.complete .step-icon { background: var(--ok-soft); color: var(--ok); }
+    .step.has-error .step-icon { background: var(--danger-soft); }
+    .step-title-area h2 { color: var(--ink); font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+    .step-summary { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .step-body { padding: 0 18px 18px 60px; }
+    .step-body.done-body { padding: 0 18px 18px 60px; }
+    .choice-cards { gap: 10px; margin-bottom: 14px; }
+    .choice-card { align-items: flex-start; min-height: 122px; padding: 16px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-subtle); color: var(--ink); text-align: left; }
+    .choice-card:hover { border-color: #aebfb5; background: var(--surface); transform: none; box-shadow: var(--shadow-sm); }
+    .choice-icon { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font-size: 15px; }
+    .choice-card h3 { margin: 0 0 4px !important; font-size: 13px !important; font-weight: 650 !important; }
+    .choice-card p { color: var(--muted); font-size: 10px !important; line-height: 1.5 !important; }
+    .tab { padding: 8px 12px; font-size: 11px; }
+    .tab.active { border-bottom-color: var(--primary); color: var(--primary); }
+    .step-tabs { margin-bottom: 13px; border-bottom: 1px solid var(--line); }
+    .flash-form, .manual-form { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
+    .flash-form label, .manual-form label { color: var(--muted); font-size: 10px; letter-spacing: .05em; }
+    .flash-form input, .flash-form select, .manual-form input, .api-key-row input { min-height: 34px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
+    .flash-form input:focus, .flash-form select:focus, .manual-form input:focus, .api-key-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .bridge-card { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
+    .bridge-info { font-size: 11px; }
+    .bridge-info strong { font-size: 12px; }
+    .btn { min-height: 34px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .btn:hover { background: var(--surface-subtle); }
+    .btn-primary { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-strong); border-color: var(--primary-strong); }
+    .btn-outline { border-color: var(--line-strong); color: var(--ink-2); background: transparent; }
+    .btn-outline:hover { background: var(--surface-subtle); }
+    .btn-sm { min-height: 28px; padding: 0 9px; font-size: 10px; }
+    .transport-badge { padding: 3px 7px; border: 1px solid var(--line); background: var(--surface-subtle); color: var(--muted); font-size: 9px; }
+    .prefill-tag { background: var(--primary-soft); border-color: #d5e4da; color: var(--primary); font-size: 8px; }
+    .advanced-section { border-color: var(--line); background: var(--surface-subtle); }
+    .advanced-section summary { color: var(--muted); font-size: 10px; }
+    .flash-warning, .fallback-state { border: 1px solid #e5d3ae; background: var(--accent-soft); color: #72531d; font-size: 11px; }
+    .error-block { border: 1px solid #e7c2c5; background: var(--danger-soft); }
+    .error-block p { color: #8c3037; font-size: 11px; }
+    .chip-badge { font-size: 11px; }
+    .chip-badge.detected { border-color: #cfe5d5; background: var(--ok-soft); color: var(--ok); }
+    .chip-badge.detecting { border-color: #d7e2e7; background: var(--info-soft); color: var(--info); }
+    .chip-badge.error { border-color: #e7c2c5; background: var(--danger-soft); color: var(--danger); }
+    .stage-dot.active { background: var(--primary-soft); color: var(--primary); }
+    .stage-dot.done { background: var(--ok-soft); color: var(--ok); }
+    .flash-log-viewer { background: #101f1c; color: #b9cdc4; font-family: var(--font-mono); font-size: 10px; border-radius: 7px; }
+    .progress-bar-container { background: var(--line); }
+    @media (max-width: 620px) {
+      .wizard-page { padding: 20px 14px 40px; }
+      .wizard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .setup-mark { width: 36px; height: 36px; flex-basis: 36px; border-radius: 9px; }
+      .setup-mark svg { width: 23px; height: 23px; }
+      .wizard-header h1 { font-size: 23px; }
+      .dismiss-btn { width: 100%; min-height: 38px; }
+      .step-body, .step-body.done-body { padding: 0 14px 15px; }
+      .choice-cards { flex-direction: column; }
+      .choice-card { min-height: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   `;
 }

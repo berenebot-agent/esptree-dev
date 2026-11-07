@@ -60,8 +60,8 @@ export class EspFlashHistory extends LitElement {
 
   private statusStyle(status: string): string {
     const map: Record<string, string> = {
-      success: 'background:#dcfce7;color:#15803d;',
-      failed: 'background:#fef2f2;color:#dc2626;',
+      success: 'background:#dcfce7;color:var(--ok);',
+      failed: 'background:#fef2f2;color:var(--danger);',
       aborted: 'background:#fef3c7;color:#b45309;',
       rejoin_timeout: 'background:#fef3c7;color:#b45309;',
       version_mismatch: 'background:#fef3c7;color:#b45309;',

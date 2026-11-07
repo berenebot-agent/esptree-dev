@@ -625,15 +625,21 @@ export class EspConfigPage extends LitElement {
             `
           : nothing}
         <header class="config-header">
-          <div class="back-buttons">
-            <button class="back" @click=${this.goToTopology}>&#8592; Back to Topology</button>
-            <button class="back" @click=${this.goBack}>&#8592; Back to Device Settings</button>
-          </div>
           <div class="header-info">
-            <h2>${esphomeName}${isRemote ? html`<span class="device-type-tag">Remote</span>` : nothing}</h2>
-            <p>${this.mac} &middot; ${chipName} &middot; <span class=${online ? 'ok' : 'danger'}>${online ? 'online' : 'offline'}</span></p>
+            <div class="back-buttons">
+              <button class="back" @click=${this.goToTopology}>Network</button>
+              <span aria-hidden="true">/</span>
+              <button class="back" @click=${this.goBack}>Device</button>
+              <span aria-hidden="true">/</span>
+              <span class="current">Configuration</span>
+            </div>
+            <span class="eyebrow">Device configuration</span>
+            <h1>${esphomeName}${isRemote ? html`<span class="device-type-tag">Remote</span>` : nothing}</h1>
+            <p><span class="mono">${this.mac}</span> &middot; ${chipName} &middot; <span class=${online ? 'ok' : 'danger'}>${online ? 'Online' : 'Offline'}</span></p>
           </div>
-          <button class="btn btn-edit-config" @click=${this.goToSecrets}>Secrets &#9881;</button>
+          <div class="header-actions">
+            <button class="btn btn-edit-config" @click=${this.goToSecrets}>Open secrets</button>
+          </div>
         </header>
 
         ${this.state === 'loading'
@@ -812,7 +818,7 @@ export class EspConfigPage extends LitElement {
       height: 100vh;
       overflow: hidden;
       color: var(--ink);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
     }
     .config-header {
       display: flex;
@@ -925,7 +931,7 @@ export class EspConfigPage extends LitElement {
       border-color: var(--primary);
     }
     .btn-primary:hover {
-      background: #0d4d5e;
+      background: var(--primary-strong);
     }
     .btn-success {
       background: var(--ok);
@@ -941,16 +947,16 @@ export class EspConfigPage extends LitElement {
       border-color: var(--danger);
     }
     .btn-danger:hover {
-      background: #dc2626;
+      background: var(--danger);
     }
     .btn-edit-config {
-      border: 1px solid #0f766e;
-      background: #0f766e;
+      border: 1px solid var(--primary);
+      background: var(--primary);
       color: #fff;
     }
     .btn-edit-config:hover {
-      background: #0d5f58;
-      border-color: #0d5f58;
+      background: var(--primary-strong);
+      border-color: var(--primary-strong);
     }
     .hint {
       font-size: 12px;
@@ -1035,7 +1041,7 @@ export class EspConfigPage extends LitElement {
       background: transparent;
       color: var(--muted);
       font: inherit;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
       font-size: 10px;
       font-weight: 500;
       cursor: pointer;
@@ -1064,7 +1070,7 @@ export class EspConfigPage extends LitElement {
     }
     .success-banner {
       background: #dcfce7;
-      color: #166534;
+      color: var(--ok);
       border: 1px solid var(--ok);
       border-radius: 8px;
       padding: 8px 12px;
@@ -1131,7 +1137,7 @@ export class EspConfigPage extends LitElement {
     .browser-flash-error {
       margin: 6px 0 0;
       font-size: 12px;
-      color: var(--danger, #dc2626);
+      color: var(--danger, var(--danger));
     }
     .warnings {
       border-left: 4px solid var(--accent);
@@ -1165,7 +1171,7 @@ export class EspConfigPage extends LitElement {
 
     .chip-error-banner {
       background: #fef2f2;
-      border: 2px solid #b91c1c;
+      border: 2px solid var(--danger);
       color: #991b1b;
       border-radius: 8px;
       padding: 12px 16px;
@@ -1226,7 +1232,7 @@ export class EspConfigPage extends LitElement {
     }
     .tag.match {
       background: #dcfce7;
-      color: #166534;
+      color: var(--ok);
     }
     .tag.mismatch {
       background: #fef2f2;
@@ -1324,6 +1330,35 @@ export class EspConfigPage extends LitElement {
       gap: 12px;
       margin-top: 16px;
       justify-content: flex-end;
+    }
+
+    /* ---- Configuration page header ---- */
+    :host { display: block; }
+    * { box-sizing: border-box; }
+    .config-page { gap: 14px; }
+    .config-header { display: flex !important; align-items: flex-end !important; justify-content: space-between; gap: 24px !important; padding: 0 0 15px !important; border-bottom: 1px solid var(--line); }
+    .header-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .back-buttons { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; color: var(--faint); font-size: 10px; }
+    .back-buttons .back { padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-weight: 600; cursor: pointer; }
+    .back-buttons .back:hover { text-decoration: underline; }
+    .back-buttons .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .back-buttons .current { color: var(--faint); }
+    .config-header .eyebrow { color: var(--primary); font-size: 9px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .config-header h1 { margin: 0; color: var(--ink); font-size: 25px; line-height: 1.17; letter-spacing: -.032em; font-weight: 700; overflow-wrap: anywhere; }
+    .config-header p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
+    .config-header p .mono { font-family: var(--font-mono); }
+    .config-header p .ok { color: var(--ok); font-weight: 600; }
+    .config-header p .danger { color: var(--danger); font-weight: 600; }
+    .device-type-tag { display: inline-flex; align-items: center; margin-left: 7px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 8px; font-weight: 650; vertical-align: 4px; }
+    .header-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .config-header .btn { min-height: 34px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .config-header .btn:hover { background: var(--surface-subtle); }
+    .config-page > .card { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); }
+    @media (max-width: 760px) {
+      .config-header { align-items: flex-start !important; flex-direction: column; gap: 13px !important; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { width: 100%; }
+      .config-header h1 { font-size: 21px; }
     }
   `;
 }

@@ -19,9 +19,9 @@ export class EspCompileHistory extends LitElement {
 
   private statusStyle(status: string): string {
     const map: Record<string, string> = {
-      compile_success: 'background:#dcfce7;color:#15803d;',
-      success: 'background:#dcfce7;color:#15803d;',
-      failed: 'background:#fef2f2;color:#dc2626;',
+      compile_success: 'background:#dcfce7;color:var(--ok);',
+      success: 'background:#dcfce7;color:var(--ok);',
+      failed: 'background:#fef2f2;color:var(--danger);',
     };
     return map[status] || 'background:#f1f5f9;color:#475569;';
   }
