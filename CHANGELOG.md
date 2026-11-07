@@ -8,6 +8,8 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+## 0.1.349
+
 - **A bridge flash no longer claims a failed update it cannot prove.** A bridge reports no project version and no firmware MD5, so the post-reboot check compared the build date it reported before and after the upload and called an unchanged value "the upload did not take effect". That date is `__DATE__`/`__TIME__` expanded in the bridge's own `setup()`, i.e. the compile time of one translation unit, and the add-on compiles into a persistent build tree — an image rebuilt from unchanged components boots with the same string, so a real reflash read as a failure and an absent baseline quietly read as success. The job now closes `rejoined_unverified` (amber, "…so the image it booted could not be confirmed"), with a `flash_identity_unverified` event carrying the build date either side of the upload and why it settled nothing. The job page shows the artifact's own descriptor date as **Image build** and prints expected/reported builds on those events, and a project-less image no longer advertises the ESPHome toolchain version as its firmware version.
 
 ## 0.1.348
