@@ -175,6 +175,8 @@ project's `tools/archive/` directory. It is not part of the add-on.
 - Working repository: `berenebot-agent/esptree-dev`, branch `master`. The former pull-request fork `berenebot-agent/esp-tree-devbranch` has been deleted; do not reference it.
 - Open a pull request from `berenebot-agent/esptree-dev:master` to `dellarb:master` when a change is ready upstream. PR #6 was merged; PR #5 (from the retired `consolidate-latest` branch) is closed.
 - `master` on `berenebot-agent/esptree-dev` is the single consolidated branch and the release path; any other branch name on a remote is stale.
+- **`master` is the only branch. Do not recreate `main`.** The repository was created with `main` as its default; that branch was retired when work consolidated onto `master`, and it came back once already because a clone still had `main` checked out and pushed to it. Always push by explicit refspec — `git push origin HEAD:master` — after `git rev-parse --abbrev-ref HEAD` and `git rev-parse --abbrev-ref @{u}` both report `master`. If `git ls-remote --heads` shows anything besides `master`, stop and report it rather than pushing.
+- The installed add-on follows the repository's **default branch** (`master`) from the Supervisor's own clone. Nothing else reaches the test instance, so a commit on any other branch is not deployed no matter how it was pushed.
 - Once implementation is requested, work on `master` and commit focused changes in place. Do not create a separate branch for an ordinary change.
 - Push `master` to the working repository and update the open pull request, or open one when there is none.
 - Never push directly to the canonical repository.
