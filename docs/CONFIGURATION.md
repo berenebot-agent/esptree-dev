@@ -322,6 +322,14 @@ unicast TX report `status=FAIL` (`espnow_82xx_remote.cpp:320-331`). Both ESP8266
 demos therefore set `channel: 11` on the component *and* `channel: 11` under
 `wifi: ap:` so the two agree (`espnow-remote-esp01.yml:37-53`).
 
+The wizard's ESP8266 scaffold deliberately pins neither: it emits no `channel:` on
+the component and no `channel:` under `ap:`, leaving the component's default to set
+the radio and letting the AP follow it. That is the one place a wizard-generated
+remote differs from the demos. It also does not offer station credentials — a
+single radio cannot be associated to an access point on one channel and run ESP-NOW
+on another, and the component forces `wifi_set_channel(espnow_channel_)` before
+transmit (`espnow_82xx_remote.cpp:526`).
+
 **`espnow_mode` is not read at runtime on this component.** `set_espnow_mode()`
 stores the string (`espnow_82xx_remote.h:79`) and `dump_config()` prints the
 hardcoded line `"  Mode: regular"` (`espnow_82xx_remote.cpp:1187`). Since the

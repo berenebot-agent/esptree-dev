@@ -175,8 +175,14 @@ while discovering and then lock to the selected parent's channel.
 
 The ESP8266 component is different: its demos retain a `wifi: ap:` block because
 ESPHome owns the radio, and `espnow_mode` accepts only `regular`. Its `channel`
-option defaults to channel 11. In every configuration, the bridge and remotes
-must use the same `network_id`, PSK and ESP-NOW mode.
+option defaults to channel 11. The wizard scaffolds the same shape for an ESP8266
+remote — `wifi:` with a password-protected `ap:` for recovery, plus
+`captive_portal:`, `network:` and `ota: - platform: esphome` — because the
+component's receiver links ESPHome's ESP8266 OTA backend and the WiFi API, and
+those blocks are what make them exist in the build tree. It pins no channel: the
+component sets the radio channel for ESP-NOW and the access point follows it.
+In every configuration, the bridge and remotes must use the same `network_id`,
+PSK and ESP-NOW mode.
 
 Bridge transport options:
 

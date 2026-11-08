@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 CHIP_TYPE_TO_BOARD: dict[int, dict[str, str]] = {
@@ -11,8 +12,8 @@ CHIP_TYPE_TO_BOARD: dict[int, dict[str, str]] = {
     13: {"platform": "esp32-c6", "board": "esp32-c6-devkitc", "framework": "esp-idf", "variant": "esp32c6"},
     16: {"platform": "esp32-h2", "board": "esp32-h2-devkitm-1", "framework": "esp-idf", "variant": "esp32h2"},
     23: {"platform": "esp32-c5", "board": "esp32-c5-devkitc-1", "framework": "esp-idf", "variant": "esp32c5"},
-    0x8266: {"platform": "esp8266", "board": "esp01_1m", "framework": "arduino"},
-    0x8236: {"platform": "esp8266", "board": "esp01_1m", "framework": "arduino"},
+    0x8266: {"platform": "esp8266", "board": "esp12e", "framework": "arduino"},
+    0x8236: {"platform": "esp8266", "board": "esp12e", "framework": "arduino"},
 }
 
 CHIP_NAME_TO_BOARD: dict[str, dict[str, str]] = {
@@ -26,8 +27,25 @@ CHIP_NAME_TO_BOARD: dict[str, dict[str, str]] = {
     "ESP32-C5": {"platform": "esp32-c5", "board": "esp32-c5-devkitc-1", "framework": "esp-idf", "variant": "esp32c5"},
     "ESP32-C61": {"platform": "esp32-c5", "board": "esp32-c5-devkitc-1", "framework": "esp-idf", "variant": "esp32c5"},
     "ESP32-P4": {"platform": "esp32-s3", "board": "esp32-s3-devkitc-1", "framework": "esp-idf", "variant": "esp32s3"},
-    "ESP8266": {"platform": "esp8266", "board": "esp01_1m", "framework": "arduino"},
+    "ESP8266": {"platform": "esp8266", "board": "esp12e", "framework": "arduino"},
 }
+
+
+def esp8266_ap_password(node: dict[str, Any]) -> str:
+    """Password for an ESP8266 remote's recovery access point.
+
+    Generated once when the wizard creates the device and carried in the node
+    record, so regenerating the scaffold never changes a password the user has
+    already noted. Devices created before this key existed derive a stable one
+    from their name instead. It is deliberately a literal: it is not a shared
+    network credential, and a missing `!secret` is a hard failure at config load.
+    """
+    password = str(node.get("ap_password") or "").strip()
+    if password:
+        return password
+    name = str(node.get("esphome_name") or node.get("label") or "").strip()
+    digest = hashlib.sha256(f"esp-tree-ap:{name}".encode()).hexdigest()[:12]
+    return f"esp-tree-{digest}"
 
 
 def esphome_platform_key(board_info: dict[str, str]) -> str:
@@ -298,6 +316,34 @@ def generate_scaffold(node: dict[str, Any]) -> tuple[str, bool]:
             f"    rx_pin: GPIO{rx}",
         ])
         lines.append("")
+
+    if is_8266 and not is_bridge:
+        # An ESP8266 remote cannot be scaffolded the way an ESP32 one is. Its
+        # receiver includes ESPHome's ESP8266 OTA backend
+        # (esphome/components/ota/ota_backend_esp8266.h) and the component calls
+        # the ESP8266 WiFi API (wifi_set_channel/wifi_get_channel), and ESPHome
+        # only copies a component — and links the ESP8266WiFi library — when it
+        # is loaded. Without `wifi:` + `network:` + `ota:` the build stops on a
+        # header that is missing by design and reads like a broken toolchain.
+        # None of this makes WiFi the transport: firmware still arrives over
+        # ESP-NOW. The access point is a recovery portal (with captive_portal so
+        # it is actually usable), and the ESPHome OTA listener stays inert with
+        # no station joined. No channel is pinned here — the component sets the
+        # radio channel and the AP follows it.
+        lines.extend([
+            "wifi:",
+            "  ap:",
+            f"    ssid: {esphome_name}",
+            f"    password: \"{esp8266_ap_password(node)}\"",
+            "",
+            "captive_portal:",
+            "",
+            "network:",
+            "",
+            "ota:",
+            "  - platform: esphome",
+            "",
+        ])
 
     if not (is_bridge and serial_mode):
         lines.extend([

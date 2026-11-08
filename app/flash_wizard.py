@@ -68,31 +68,19 @@ def validate_remote_network_credentials(
         )
 
 
-# Chips the wizard offers that cannot currently produce a compiling config. Kept
-# next to the validation the wizard already uses so the API and the UI agree.
+# Chips the wizard offers but whose scaffold cannot yet produce a compiling config.
+# Kept next to the validation the wizard already uses so the API and the UI agree.
 #
-# ESP8266 remote firmware is not buildable: espnow_82xx_remote/remote_file_receiver.h
-# includes esphome/components/ota/ota_backend_esp8266.h, and ESPHome only copies a
-# component into the build tree when it is loaded. A remote scaffold emits no
-# ota:/wifi:, so the header is absent and the build stops with a
-# "#include ... No such file or directory" that reads like a broken toolchain.
-# Making it build needs the scaffold to emit wifi: + network: + ota: for ESP8266
-# (verified to compile) — deferred, so say so plainly instead.
-UNBUILDABLE_CHIP_REASON: dict[str, str] = {
-    "ESP8266": (
-        "ESP8266 remote firmware is not buildable in this release. Its receiver links "
-        "ESPHome's ESP8266 OTA backend, which the remote scaffold does not load. "
-        "Choose an ESP32 remote (C3, C5, C6, S3), or build this device outside the wizard. "
-        "Bridge firmware for ESP8266 is unaffected."
-    ),
-}
+# Empty: ESP8266 remotes build now that the scaffold emits wifi:/network:/ota: for
+# them (app/yaml_scaffold.py). The table stays so a regression can disable a chip
+# with a reason instead of letting a multi-minute job end in a raw compiler error
+# naming a header that is missing by design.
+UNBUILDABLE_CHIP_REASON: dict[str, str] = {}
 
 
 def is_unbuildable_chip(chip_name: str, board_info: dict[str, str]) -> bool:
     """True when the wizard must refuse to scaffold this chip as a remote."""
-    if chip_name in UNBUILDABLE_CHIP_REASON:
-        return True
-    return str(board_info.get("platform") or "").strip().lower() == "esp8266"
+    return chip_name in UNBUILDABLE_CHIP_REASON
 
 
 def validate_remote_chip_buildable(chip_name: str, board_info: dict[str, str]) -> None:

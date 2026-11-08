@@ -1794,12 +1794,9 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=400, detail="board_info is required")
 
         validate_board(chip_name, board_info, CHIP_NAME_TO_BOARD)
-        # A remote the compiler cannot build must be refused here, with the reason.
-        # Letting it through produces a multi-minute job that ends in a raw
-        # "#include ... No such file or directory" against a header that is absent
-        # by design, which reads as a broken toolchain rather than a known gap.
-        # Bridges are unaffected: only a remote scaffold omits the ota:/network:
-        # blocks that the ESP8266 receiver's OTA backend depends on.
+        # A remote whose scaffold cannot compile is refused here, with the reason,
+        # rather than after minutes of job time ending in a raw compiler error.
+        # The table is empty today; bridges are never gated by it.
         if is_remote:
             validate_remote_chip_buildable(chip_name, board_info)
 
@@ -1812,11 +1809,18 @@ def create_app() -> FastAPI:
             "transport": transport,
         }
         if is_remote:
-            # A remote is ESP-NOW LR only: no wifi:, no api:/web_server:, no
-            # bridge api_key, no ota password. generate_scaffold already emits the
-            # remote component shape when is_bridge is false, so nothing extra is
-            # needed here beyond not asking for bridge-only blocks.
-            pass
+            # A remote is ESP-NOW LR only: no api:/web_server:, no bridge api_key,
+            # no ota password. generate_scaffold already emits the remote component
+            # shape when is_bridge is false, so nothing extra is needed here beyond
+            # not asking for bridge-only blocks.
+            #
+            # The one per-device value a remote does carry is the password for the
+            # ESP8266 recovery access point. Generate it once here so the scaffold
+            # can be regenerated without silently locking the user out of a portal
+            # they have already noted, and so the value lives in the node record
+            # rather than in a shared !secret.
+            if str(board_info.get("platform") or "").strip().lower() == "esp8266":
+                node["ap_password"] = f"esp-tree-{secrets.token_hex(6)}"
         else:
             node.update({
                 "sdkconfig_options": {
@@ -3464,12 +3468,12 @@ def create_app() -> FastAPI:
                     "chip_name": chip,
                     **info,
                     # Whether the scaffold can currently produce a config that
-                    # compiles. ESP8266 remote firmware is not buildable yet: its
-                    # receiver links ESPHome's ESP8266 OTA backend, which is only
-                    # copied into the build tree when `ota:`/`network:`/`wifi:` are
-                    # present, and the remote scaffold emits none of them. Marked
-                    # so the wizard can say so instead of surfacing a raw
-                    # "md5.h / ota_backend_esp8266.h: No such file" compiler error.
+                    # compiles. ESP8266 remotes now can: generate_scaffold emits
+                    # the wifi:/network:/ota: blocks their receiver needs (it links
+                    # ESPHome's ESP8266 OTA backend and calls the ESP8266 WiFi API).
+                    # The flag stays so the wizard can disable a chip with a reason
+                    # rather than surface a raw "No such file or directory" from the
+                    # compiler after a multi-minute job.
                     "buildable": not is_unbuildable_chip(chip, info),
                     "unbuildable_reason": UNBUILDABLE_CHIP_REASON.get(chip),
                 }

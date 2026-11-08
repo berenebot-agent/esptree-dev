@@ -71,28 +71,41 @@ In **serial** mode this gate is bypassed and the log instead reads
 Check the `wifi:` block and its credentials. If you see it on a serial bridge, you
 are running a build without the serial gate bypass — update.
 
-### Remote is refused before flashing: ESP8266 is "not buildable in this release"
+### ESP8266 remote: what the scaffold has to load, and why
 
-**Symptoms.** The Create Remote wizard disables the ESP8266 chip and shows, in
-place of the raw compiler error:
+**Symptoms.** Not a failure any more — but if you hand-write an ESP8266 remote and
+drop any of these blocks, the build stops with `#include
+"esphome/components/ota/ota_backend_esp8266.h" ... No such file or directory` or
+`ESP8266WiFi.h: No such file or directory`, which reads like a broken toolchain.
 
-> ESP8266 remote firmware is not buildable in this release. Its receiver links
-> ESPHome's ESP8266 OTA backend, which the remote scaffold does not load. Choose an
-> ESP32 remote (C3, C5, C6, S3), or build this device outside the wizard. Bridge
-> firmware for ESP8266 is unaffected.
+**Cause.** `espnow_82xx_remote/remote_file_receiver.h` includes ESPHome's ESP8266
+OTA backend, and the component calls `wifi_set_channel`/`wifi_get_channel`. ESPHome
+copies a component into the build tree — and links the ESP8266WiFi library — only
+when it is loaded, so a WiFi-free leaf cannot build on ESP8266 at all. The chain is
+`ota` → `network` → `mdns` → `wifi`: all four blocks are required together
+(`app/yaml_scaffold.py`, the `is_8266 and not is_bridge` branch).
 
-**Cause.** `espnow_82xx_remote/remote_file_receiver.h` includes
-`esphome/components/ota/ota_backend_esp8266.h`, and ESPHome only copies a component
-into the build tree when it is loaded. A remote scaffold emits no `ota:`/`wifi:`,
-so the header is absent. Before the refusal existed, the user waited minutes and
-then got a `#include ... No such file or directory` naming a header that is missing
-by design (`app/flash_wizard.py:71-88`, `app/server.py:1728-1734`).
+**Fix.** Let the wizard scaffold the device, or add the blocks it emits:
 
-**Fix.** Use an ESP32 remote, or build the ESP8266 firmware outside the wizard. The
-two ESP8266 demos (`device_code/demos/espnow-remote-esp01.yml`,
-`device_code/demos/espnow-remote-esp12e.yml`) are working examples. Making the
-wizard path buildable would need the scaffold to emit `wifi:` + `network:` + `ota:`
-for ESP8266 — deferred, per `app/flash_wizard.py:79-80`.
+```yaml
+wifi:
+  ap:
+    ssid: <device name>
+    password: "<the password in the scaffold comment>"
+captive_portal:
+network:
+ota:
+  - platform: esphome
+```
+
+Firmware is still delivered over ESP-NOW — the `ota:` block exists to make the
+header available, and the recovery AP exists so a device that will not join can be
+reached at `192.168.4.1`. A 1 MB module (ESP-01S) has no second app slot and
+cannot be OTA-updated; the wizard scaffolds 4 MB boards (`esp12e`) for that reason.
+
+**Channel caveat.** No channel is emitted: the component sets the radio channel for
+ESP-NOW and the AP follows it. A remote cannot be a station on one channel and an
+ESP-NOW peer on another — one radio, one channel.
 
 ## Compile failures
 

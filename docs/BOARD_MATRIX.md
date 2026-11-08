@@ -31,7 +31,7 @@ framework the add-on writes into a generated config:
 | `ESP32-C5` | `esp32` | `esp32-c5-devkitc-1` | `esp-idf` | `esp32c5` |
 | `ESP32-C61` | `esp32` | `esp32-c5-devkitc-1` | `esp-idf` | `esp32c5` |
 | `ESP32-P4` | `esp32` | `esp32-s3-devkitc-1` | `esp-idf` | `esp32s3` |
-| `ESP8266` | `esp8266` | `esp01_1m` | `arduino` | — |
+| `ESP8266` | `esp8266` | `esp12e` | `arduino` | — |
 
 Notes on the two aliases, which are deliberate but easy to misread:
 
@@ -100,37 +100,71 @@ chips each wizard offers:
 | `ESP32-S3` | yes | yes | none |
 | `ESP32-C61` | no | yes | none |
 | `ESP32-P4` | no | yes | none |
-| `ESP8266` | registered, but not offered | offered and disabled | remote (`esp01_1m`, `esp12e`) |
+| `ESP8266` | registered, but not offered | offered | remote (`esp12e`) |
 
-The remote wizard reads `/api/chips`, so it lists all eleven registry entries;
-`ESP8266` appears but is disabled. The bridge wizard's list is the eight hardcoded
-chips above (`ui/src/pages/setup-page.ts:6-15`). No ESP8266 bridge demo exists in
-this repository; see "ESP8266 bridge status" above.
+The remote wizard reads `/api/chips`, so it lists all eleven registry entries.
+The bridge wizard's list is the eight hardcoded chips above
+(`ui/src/pages/setup-page.ts:6-15`). No ESP8266 bridge demo exists in this
+repository; see "ESP8266 bridge status" above.
+
+`esp12e` (4 MB) is the board every ESP8266 remote is scaffolded as, whatever the
+chip reports: a 1 MB module such as the ESP-01S uses `eagle.flash.1m256.ld`, which
+has no second app slot, so `ESP.getFreeSketchSpace()` leaves no room to write an
+OTA image at all (a scaffolded remote is ~430 kB). A 1 MB board still works if it
+is built by hand with `esp01_1m`, but it can only be reflashed over USB.
 
 `espnow_mode` is forced to `regular` for ESP8266 and `lr` otherwise
 (`app/yaml_scaffold.py:134`). Both wizards start on `lr` before submission and let
 the scaffold override it (`ui/src/pages/setup-page.ts:78`,
 `ui/src/pages/remote-wizard.ts:238`).
 
-### ESP8266 remotes are refused by the wizard
+### ESP8266 remotes are offered, with a fixed scaffold shape
 
-`app/flash_wizard.py:81-88` defines `UNBUILDABLE_CHIP_REASON`, whose only entry is
-`ESP8266`, with this reason text:
+An ESP8266 remote cannot be scaffolded the way an ESP32 one is. Its receiver
+includes ESPHome's ESP8266 OTA backend
+(`espnow_82xx_remote/remote_file_receiver.h:15`) and the component calls the
+ESP8266 WiFi API (`wifi_set_channel`/`wifi_get_channel`,
+`espnow_82xx_remote.cpp:526`, `remote_protocol.cpp:85`), and ESPHome copies a
+component — and links the ESP8266WiFi library — only when it is loaded. Without
+those blocks the build stops after minutes on a header that is missing by design,
+which reads as a broken toolchain.
 
-> ESP8266 remote firmware is not buildable in this release. Its receiver links
-> ESPHome's ESP8266 OTA backend, which the remote scaffold does not load. Choose an
-> ESP32 remote (C3, C5, C6, S3), or build this device outside the wizard. Bridge
-> firmware for ESP8266 is unaffected.
+So `generate_scaffold()` emits, for ESP8266 remotes only:
 
-`is_unbuildable_chip()` (`app/flash_wizard.py:91-95`) returns true both for a chip
-named in that table and for any `board_info` whose `platform` is `esp8266`, and
-`POST /api/bridge/flash-wizard/submit` calls `validate_remote_chip_buildable()`
-for remotes only (`app/server.py:1735`). The reason for refusing early rather than
-letting the build fail is in the code comment at `app/server.py:1728-1734`: the
-raw compiler error names a header that is absent by design and reads as a broken
-toolchain.
+```yaml
+wifi:
+  ap:
+    ssid: <device name>
+    password: "<generated per device>"
+captive_portal:
+network:
+ota:
+  - platform: esphome
+```
 
-ESP8266 *bridge* firmware is explicitly out of scope of that rejection. **This
+Consequences worth knowing:
+
+- **The AP is a recovery portal, not the transport.** Firmware still arrives over
+  ESP-NOW; the ESPHome OTA listener is inert with no station joined. The password
+  is generated once in the submit handler (`app/server.py`, `ap_password`) and
+  carried in the node record, so regenerating the scaffold does not lock the user
+  out of a portal they have already noted. It is a literal in the YAML, not a
+  `!secret`: a missing secret is a hard failure at config load.
+- **No channel is pinned.** The scaffold emits no `channel:` and no `ap: channel:`;
+  the component sets the radio channel for ESP-NOW and the AP follows it. Joining
+  a real WiFi network is *not* offered: the radio is single-channel, so a station
+  association on another channel and ESP-NOW on the network's channel cannot
+  coexist, and the component currently forces `wifi_set_channel(espnow_channel_)`
+  before transmit.
+- **The build was verified, not assumed**: ESPHome 2026.6.5, `SUCCESS` in 58.6 s,
+  RAM 44.2 %, flash 41.6 %, `firmware.ota.bin`/`.factory.bin`/`.bin` all 438 896 B.
+
+The refusal mechanism remains in `app/flash_wizard.py` (`UNBUILDABLE_CHIP_REASON`,
+`is_unbuildable_chip`, `validate_remote_chip_buildable`) with an **empty table**, so
+a future scaffold regression can disable a chip with a reason instead of letting a
+job end in a raw compiler error.
+
+The bridge is unaffected — nothing above applies to bridge firmware. **This
 repository does not contain an ESP8266 bridge demo and I did not build one**, so
 whether `esp_tree_bridge` compiles for ESP8266 is **undetermined by this
 repository**. What is observable is that `esp_tree_bridge.h` includes
