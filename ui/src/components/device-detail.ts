@@ -76,11 +76,11 @@ export class EspDeviceDetail extends LitElement {
     this.schedulePoll();
   }
 
-  private async load(showLoading = true): Promise<void> {
+  private async load(showLoading = true, fresh = false): Promise<void> {
     if (showLoading) this.loading = true;
     try {
       const [topology, current, queue, history, compileHistory] = await Promise.all([
-        api.topology(),
+        api.topology(fresh),
         api.currentOtaForDevice(this.mac),
         api.getQueue(),
         api.history(this.mac),
@@ -205,7 +205,7 @@ export class EspDeviceDetail extends LitElement {
 
         <div class="layout ${isRemote ? '' : 'single'}">
           <section class="card">
-            <esp-ota-box .mac=${node.mac} .node=${node} .currentJob=${this.currentJob} .showEditYaml=${isRemote} @ota-changed=${() => void this.load(false)}></esp-ota-box>
+            <esp-ota-box .mac=${node.mac} .node=${node} .currentJob=${this.currentJob} .showEditYaml=${isRemote} @ota-changed=${() => void this.load(false, true)}></esp-ota-box>
           </section>
           ${isRemote ? html`
             <section class="card">
@@ -215,7 +215,7 @@ export class EspDeviceDetail extends LitElement {
                 .isRemote=${isRemote}
                 .relayNodes=${relayNodes}
                 .relayEnabled=${!!node.relay_enabled}
-                @config-changed=${() => void this.load(false)}
+                @config-changed=${() => void this.load(false, true)}
               ></esp-device-config>
             </section>` : nothing}
         </div>
@@ -229,7 +229,7 @@ export class EspDeviceDetail extends LitElement {
 
         <div class="history-layout">
           <section class="card">
-            <esp-flash-history .jobs=${this.history} @ota-changed=${() => void this.load(false)} @ota-reflash-result=${this.handleReflashResult}></esp-flash-history>
+            <esp-flash-history .jobs=${this.history} @ota-changed=${() => void this.load(false, true)} @ota-reflash-result=${this.handleReflashResult}></esp-flash-history>
           </section>
           <section class="card">
             <esp-compile-history .jobs=${this.compileHistoryList} .mac=${this.mac}></esp-compile-history>

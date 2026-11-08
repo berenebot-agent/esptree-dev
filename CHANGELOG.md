@@ -8,6 +8,10 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+## 0.1.351
+
+- **The device page refreshes straight after a config change.** The page reloaded the topology through a 30-second client cache, so a relay toggle (or any config or flash change) showed stale state until a hard refresh. It now bypasses the cache after `config-changed` and `ota-changed`.
+
 ## 0.1.350
 
 - **The Relay config button follows the remote's real state.** A remote never reports its relay flag, so the page kept showing the first value it saw and every toggle looked like it did nothing. The add-on now records the value from an `ok` ack and shows it until the remote starts a new session (a reboot or reflash reverts it to its YAML default).
