@@ -6,7 +6,7 @@ import pytest
 from app.access_control import TrustedPeerMiddleware, is_trusted_peer, trusted_peers
 
 
-def _run_request(kind: str, ip: str | None, peers: frozenset[str], headers=()):
+def _run_request(kind: str, ip: str | None, peers: frozenset[str], headers=(), path="/api/secrets"):
     sent = []
     reached = []
 
@@ -19,7 +19,7 @@ def _run_request(kind: str, ip: str | None, peers: frozenset[str], headers=()):
     async def send(message):
         sent.append(message)
 
-    scope = {"type": kind, "path": "/api/secrets", "headers": list(headers),
+    scope = {"type": kind, "path": path, "headers": list(headers),
              "method": "GET", "client": (ip, 12345) if ip is not None else None}
     asyncio.run(TrustedPeerMiddleware(downstream, peers)(scope, receive, send))
     return sent, reached
@@ -39,6 +39,15 @@ def test_direct_clients_denied(kind, ip):
 def test_ha_trusted_clients_allowed(kind, ip):
     messages, reached = _run_request(kind, ip, trusted_peers("fake-supervisor-token"))
     assert reached == [kind]
+    assert messages == []
+
+
+def test_integration_websocket_reaches_its_token_authentication():
+    messages, reached = _run_request(
+        "websocket", "192.168.1.20", trusted_peers("token"),
+        path="/esp-tree/integration/v1/pb",
+    )
+    assert reached == ["websocket"]
     assert messages == []
 
 

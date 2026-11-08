@@ -67,6 +67,13 @@ class TrustedPeerMiddleware:
         if kind not in {"http", "websocket"}:
             await self.app(scope, receive, send)
             return
+        # The integration endpoint has its own shared-token handshake. HA Core
+        # can reach a host-network add-on via its DNS name with a source IP that
+        # varies by installation, so don't require it to match the ingress peer
+        # allowlist. Other direct WebSockets remain restricted to trusted peers.
+        if kind == "websocket" and scope.get("path") == "/esp-tree/integration/v1/pb":
+            await self.app(scope, receive, send)
+            return
         if is_trusted_peer(scope.get("client"), self.peers):
             await self.app(scope, receive, send)
             return
