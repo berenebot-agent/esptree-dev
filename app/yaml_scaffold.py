@@ -230,9 +230,14 @@ def generate_scaffold(node: dict[str, Any]) -> tuple[str, bool]:
         # still emits web_server:/ota:, so request `network` explicitly or
         # validation fails with "Component web_server_base requires component
         # network" and the compile job dies at config load.
+        # esp_tree_bridge declares DEPENDENCIES = ["web_server"], so a bridge
+        # scaffold must always carry web_server:. Gating it on the topology node
+        # (which often omits web_server_port) produced configs that failed with
+        # "Component esp_tree_bridge requires component web_server".
         wants_web_or_ota = (
             node.get("web_server_port") is not None
             or node.get("ota_password") is not None
+            or is_bridge
         )
         if (node.get("wifi_ssid_secret") is None or serial_mode) and wants_web_or_ota:
             lines.extend([
@@ -240,7 +245,7 @@ def generate_scaffold(node: dict[str, Any]) -> tuple[str, bool]:
                 "",
             ])
 
-        if node.get("web_server_port") is not None:
+        if node.get("web_server_port") is not None or is_bridge:
             port = node.get("web_server_port") or 80
             lines.extend([
                 "web_server:",
