@@ -75,6 +75,17 @@ export interface StartResponse {
   queue_position?: number;
 }
 
+/**
+ * The build leg of a job. A "build and upload" is one row per leg — the compile
+ * job, then the flash job the compile worker creates from it — so the job type has
+ * to come from the status, never from a server field alone.
+ */
+const COMPILE_STATUSES = new Set(['compile_queued', 'compiling', 'compile_success']);
+
+export function isCompileStatus(status: string): boolean {
+  return COMPILE_STATUSES.has(status);
+}
+
 export interface QueueResponse {
   active_job: OtaJob | null;
   queued_jobs: OtaJob[];
@@ -581,10 +592,21 @@ export const api = {
       request<{ jobs: OtaJob[] }>(`/api/ota/history?limit=${limit}`),
       request<{ jobs: OtaJob[] }>(`/api/compile/history?limit=${limit}`),
     ]);
-    const merged = [...flash.jobs, ...compile.jobs];
+    // Collapse by id: an add-on that predates the split returned the build row from
+    // both endpoints, and a duplicated row is what made one build read as two jobs.
+    // Keep whichever copy agrees with its own status.
+    const byId = new Map<number, OtaJob>();
+    for (const job of [...flash.jobs, ...compile.jobs]) {
+      const seen = byId.get(job.id);
+      const truthful = (j: OtaJob) => isCompileStatus(j.status) === (j.job_type === 'compile');
+      if (!seen || (truthful(job) && !truthful(seen))) byId.set(job.id, job);
+    }
+    const merged = [...byId.values()];
     merged.sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0));
     return { jobs: merged.slice(0, limit) };
   },
+
+  job: (jobId: number) => request<OtaJob>(`/api/jobs/${jobId}`),
 
   getSecrets: () => request<{ content: string }>('/api/secrets'),
 

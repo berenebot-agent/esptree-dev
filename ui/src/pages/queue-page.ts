@@ -1,9 +1,9 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { OtaJob, QueueResponse, CompileQueueResponse, api, fmtBytes, fmtTime, fmtDuration, fmtTimeAgo } from '../api/client';
+import { OtaJob, QueueResponse, CompileQueueResponse, api, fmtBytes, fmtTime, fmtDuration, fmtTimeAgo, isCompileStatus } from '../api/client';
 import { shared, historyStyles } from '../styles/shared';
 import { icon } from '../styles/icons';
-import { jobChip } from '../lib/job-status';
+import { jobChip, TERMINAL_JOB_STATUSES } from '../lib/job-status';
 
 interface HistoryDisplayEntry {
   type: 'flash' | 'compile' | 'combined';
@@ -194,11 +194,22 @@ export class EspQueuePage extends LitElement {
     return job.device_label || job.parsed_esphome_name || job.esphome_name || job.mac;
   }
 
+  /** Which leg of a run a row belongs to, derived from its status.
+   *
+   *  Never trust `job_type` alone: the add-on stamped every history row "flash",
+   *  which is how a running build appeared in History as an "Upload".
+   */
+  private typeOf(job: OtaJob): 'flash' | 'compile' {
+    if (isCompileStatus(job.status)) return 'compile';
+    return job.job_type === 'compile' ? 'compile' : 'flash';
+  }
+
   private buildDisplayEntries(): HistoryDisplayEntry[] {
-    const filtered = this.historyJobs.filter(j => {
-      if (this.historyFilter === 'all') return true;
-      return (j.job_type || this.inferJobType(j)) === this.historyFilter;
-    });
+    // History is finished work. A run that is still going already occupies its card
+    // above, and listing it here as well is what made one build-and-upload read as
+    // two jobs on the same page.
+    const finished = this.historyJobs.filter((j) => TERMINAL_JOB_STATUSES.includes(j.status));
+    const filtered = finished.filter(j => this.historyFilter === 'all' || this.typeOf(j) === this.historyFilter);
 
     const sorted = [...filtered].sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0));
     const result: HistoryDisplayEntry[] = [];
@@ -206,11 +217,16 @@ export class EspQueuePage extends LitElement {
     for (let i = 0; i < sorted.length; i++) {
       const current = sorted[i];
       const next = sorted[i + 1];
-      const curType: 'flash' | 'compile' = (current.job_type || this.inferJobType(current)) as 'flash' | 'compile';
+      const curType = this.typeOf(current);
 
-      if (next && curType === 'compile' && (next.job_type || this.inferJobType(next)) === 'flash'
+      // The flash leg is created the moment the build finishes, so the join is
+      // measured from the build's completion. Measuring from when the build was
+      // queued split any build longer than the window into a separate row.
+      const buildFinishedAt = current.completed_at ?? current.created_at;
+
+      if (next && curType === 'compile' && this.typeOf(next) === 'flash'
           && current.mac === next.mac
-          && (next.created_at - current.created_at) <= COMBINE_WINDOW_S) {
+          && next.created_at - buildFinishedAt <= COMBINE_WINDOW_S) {
         const status = next.status === 'success' && current.status === 'compile_success' ? 'success' : 'failed';
         result.push({
           type: 'combined',
@@ -238,12 +254,6 @@ export class EspQueuePage extends LitElement {
 
     result.sort((a, b) => b.created_at - a.created_at);
     return result;
-  }
-
-  private inferJobType(job: OtaJob): 'flash' | 'compile' {
-    if (job.status === 'compile_success' || job.status === 'compile_queued' || job.status === 'compiling') return 'compile';
-    if (FLASH_RESULT_STATUSES.has(job.status)) return 'flash';
-    return 'flash';
   }
 
   render() {

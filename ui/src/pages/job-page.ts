@@ -67,6 +67,15 @@ export class EspJobPage extends LitElement {
 
   private async fetchJob(): Promise<void> {
     if (!this.jobId) return;
+    // Ask for the job itself. Upload history carries the transfer leg only, and a
+    // running build is in no history list at all until it finishes, so scanning
+    // history left a live build's page without its header.
+    try {
+      this.job = await api.job(this.jobId);
+      return;
+    } catch {
+      // Older add-on without the endpoint: fall back to the history scan.
+    }
     try {
       const mac = this.logData?.mac;
       if (mac) {

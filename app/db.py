@@ -12,6 +12,7 @@ from .models import (
     COMPILE_QUEUED,
     COMPILING,
     COMPILE_SUCCESS,
+    COMPILE_STATUSES,
     PENDING_CONFIRM,
     QUEUED,
     STARTING,
@@ -611,7 +612,17 @@ class Database:
         }
 
     def list_history(self, mac: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
-        excluded = (PENDING_CONFIRM,)
+        """Upload history: the transfer leg only.
+
+        A "build and upload" is two rows sharing one device -- the compile job and
+        the flash job created from it. This endpoint used to return the compile rows
+        too and stamp every row `job_type = "flash"`, so a build showed up in upload
+        history as an "Upload" (a `compiling` row even read "Upload / Building") and
+        a finished build appeared twice: once here, once from compile_history. The
+        build leg belongs to `compile_history`; nothing that reads upload history
+        wants it.
+        """
+        excluded = (PENDING_CONFIRM,) + tuple(sorted(COMPILE_STATUSES))
         excluded_placeholders = ",".join("?" for _ in excluded)
         with self.connect() as conn:
             if mac:
@@ -629,7 +640,7 @@ class Database:
                     ).fetchall()
                 ))
         for r in rows:
-            r["job_type"] = "flash"
+            r["job_type"] = "compile" if r["status"] in COMPILE_STATUSES else "flash"
         return rows
 
     def compile_history(self, mac: str) -> list[dict[str, Any]]:

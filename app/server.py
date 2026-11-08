@@ -42,6 +42,7 @@ from .models import (
     COMPILING,
     COMPILE_QUEUED,
     COMPILE_SUCCESS,
+    COMPILE_STATUSES,
     FAILED,
     PENDING_CONFIRM,
     QUEUED,
@@ -3883,6 +3884,22 @@ def create_app() -> FastAPI:
             media_type="application/octet-stream",
             filename=f"{esphome_name}.ota.bin",
         )
+
+    @app.get("/api/jobs/{job_id}")
+    async def job_summary(job_id: int) -> dict[str, Any]:
+        """One job's own row, without its event log.
+
+        The job page needs the header fields (firmware, size, timings) for a job
+        that is still running. It used to find them by scanning upload history,
+        which now carries the transfer leg only, so a running build would have
+        had no header at all.
+        """
+        job = db.get_job(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="job not found")
+        job.pop("log_events", None)
+        job["job_type"] = "compile" if job["status"] in COMPILE_STATUSES else "flash"
+        return job
 
     @app.get("/api/jobs/{job_id}/firmware/download")
     async def job_firmware_download(job_id: int) -> FileResponse:

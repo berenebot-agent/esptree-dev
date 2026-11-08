@@ -224,16 +224,23 @@ export class EspnowApp extends LitElement {
     return 'settings';
   }
 
+  /** One number for work running or queued, counted once.
+   *
+   *  `/api/ota/queue` counts queued uploads only, while `/api/compile/queue`
+   *  already includes the build it is running. Adding a bare "something is
+   *  active" back on top double-counted that build and showed a single
+   *  build-and-upload as two jobs on the tab.
+   */
   private queueSummary(): { label: string; count: number; active: boolean; paused: boolean } {
     const q = this.queueData;
     const cq = this.compileData;
-    const queueCount = q?.count ?? 0;
-    const compileCount = cq?.count ?? 0;
-    const active = !!q?.active_job || !!cq?.active_job;
+    const activeUpload = !!q?.active_job;
+    const activeBuild = !!cq?.active_job;
+    const count = (q?.count ?? 0) + (cq?.count ?? 0) + (activeUpload ? 1 : 0);
     return {
-      label: `${queueCount + compileCount}`,
-      count: queueCount + compileCount,
-      active,
+      label: `${count}`,
+      count,
+      active: activeUpload || activeBuild,
       paused: !!q?.paused,
     };
   }
@@ -293,7 +300,7 @@ export class EspnowApp extends LitElement {
 
     const q = this.queueSummary();
     const jobsBadge = q.count > 0 || q.active
-      ? html`<span class="tab-count ${q.active ? 'live' : ''}" aria-label=${`${q.count} queued${q.active ? ', one running' : ''}${q.paused ? ', paused' : ''}`}>${q.paused ? icon('pause') : nothing}${q.count + (q.active ? 1 : 0)}</span>`
+      ? html`<span class="tab-count ${q.active ? 'live' : ''}" aria-label=${`${q.count} job${q.count === 1 ? '' : 's'} running or queued${q.paused ? ', paused' : ''}`}>${q.paused ? icon('pause') : nothing}${q.count}</span>`
       : nothing;
 
     return html`

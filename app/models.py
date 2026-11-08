@@ -28,6 +28,10 @@ VERSION_MISMATCH = "version_mismatch"
 REJOINED_UNVERIFIED = "rejoined_unverified"
 
 TERMINAL_STATUSES = {COMPILE_SUCCESS, SUCCESS, FAILED, ABORTED, REJOIN_TIMEOUT, VERSION_MISMATCH, REJOINED_UNVERIFIED}
+# The build half of a job. A "build and upload" is one row per leg -- the compile
+# row is created by the compile worker and the flash row is created from it -- so
+# anything that lists or counts jobs has to know which leg a row belongs to.
+COMPILE_STATUSES = {COMPILE_QUEUED, COMPILING, COMPILE_SUCCESS}
 ACTIVE_STATUSES = {COMPILE_QUEUED, COMPILING, QUEUED, STARTING, ANNOUNCING, TRANSFERRING, VERIFYING, WAITING_REJOIN}
 FLASH_STATUSES = {STARTING, ANNOUNCING, TRANSFERRING, VERIFYING, WAITING_REJOIN}
 
