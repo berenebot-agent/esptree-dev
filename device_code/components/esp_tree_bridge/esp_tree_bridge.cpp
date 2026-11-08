@@ -346,7 +346,7 @@ static BridgeImageIdentity read_bridge_image_identity_() {
   size_t offset = 0;
   size_t hashed = 0;
   while (offset < running->size) {
-    const size_t read_len = std::min(buf.size(), running->size - offset);
+    const size_t read_len = std::min<size_t>(buf.size(), running->size - offset);
     if (esp_partition_read(running, offset, buf.data(), read_len) != ESP_OK) {
       // A partial digest is worse than none: it would look like a real mismatch and
       // tell the add-on the wrong image is running. Report no MD5 instead.
