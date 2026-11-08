@@ -3079,6 +3079,12 @@ void ESPTreeBridge::expire_state_deliveries_() {
     ESP_LOGW(TAG, "State delivery timeout mac=%s entity=%u tx=%u required=0x%02x delivered=0x%02x",
              mac_key_string_(delivery.leaf_mac.data()).c_str(), delivery.entity_index,
              delivery.message_tx_base, delivery.required_sinks, delivery.delivered_sinks);
+    // Do not leave the leaf waiting. The state was already published on the sinks
+    // that did answer, and holding the STATE_ACK back made the remote retry the
+    // same value until it gave up and rejoined, which in turn rotated the session
+    // and dropped the receipts still in flight. Confirm it so the remote can move on.
+    protocol_.confirm_state_delivery_(delivery.leaf_mac.data(), delivery.entity_index,
+                                      delivery.message_tx_base, delivery.next_hop_mac.data());
     it = pending_state_deliveries_.erase(it);
   }
 }

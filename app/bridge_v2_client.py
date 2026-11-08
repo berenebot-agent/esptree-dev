@@ -855,8 +855,11 @@ class BridgeV2Manager:
             await self._broadcast_binary(raw)
             self._emit_topology()
         elif kind == "event_batch":
-            self._handle_event_batch(client, env.event_batch)
+            # Acknowledge state before any local bookkeeping: the bridge's delivery
+            # timer and the remote's retry both depend on the receipt, so it must not
+            # be skipped because batch processing raised.
             await self._send_state_receipts(client, env.event_batch)
+            self._handle_event_batch(client, env.event_batch)
             await self._broadcast_binary(raw)
             self._emit_topology()
         else:
