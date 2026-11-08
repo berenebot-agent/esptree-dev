@@ -405,7 +405,7 @@ def create_app() -> FastAPI:
         bridge_manager=bridge_manager,
     )
 
-    app = FastAPI(title="ESP Tree Add-on", version="0.1.355")
+    app = FastAPI(title="ESP Tree Add-on", version="0.1.356")
     # HA ingress authenticates the user, but host networking otherwise exposes
     # this unauthenticated API on the LAN. Restrict the actual socket peer.
     app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
