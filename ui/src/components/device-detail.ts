@@ -169,7 +169,7 @@ export class EspDeviceDetail extends LitElement {
           <nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Network</a>${icon('chevronRight')}<span aria-current="page">${name}</span></nav>
           <div class="page-head">
             <div class="ident">
-              <span class="glyph ${node.online ? '' : 'off'} ${node.is_bridge ? 'bridge' : ''}" aria-hidden="true">${icon(node.is_bridge ? 'bridge' : node.relay_enabled ? 'relay' : 'chip')}</span>
+              <span class="glyph ${node.online ? '' : 'off'} ${node.is_bridge ? 'bridge' : ''}" aria-hidden="true">${icon(node.is_bridge ? 'bridge' : node.relay_enabled ? 'relay' : 'remote')}</span>
               <div>
                 <h1>${name}</h1>
                 <p class="sub">

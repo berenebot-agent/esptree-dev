@@ -34,7 +34,10 @@ const paths = {
   usb: svg`<path d="M12 3v14"/><circle cx="12" cy="19" r="2"/><path d="M12 13l-4-3V7M12 11l4-2.5V6"/><rect x="6.6" y="5" width="2.8" height="2.4" rx=".4"/><circle cx="16" cy="5.2" r="1.2"/>`,
   wifi: svg`<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.3a9.5 9.5 0 0 1 13 0M8.6 15.5a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1"/>`,
   bridge: svg`<path d="M12 21v-8"/><path d="M8.5 9.5a5 5 0 0 1 7 0M5.8 6.8a9 9 0 0 1 12.4 0"/><circle cx="12" cy="12" r="1.6"/>`,
-  relay: svg`<circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/><path d="M10.5 9.5l2.5 2.5-2.5 2.5"/>`,
+  /* Relay: one node fanning out to two, i.e. it passes traffic on down the tree. */
+  relay: svg`<circle cx="6" cy="12" r="2.4"/><path d="M8.4 12H11l5.6-5.6M11 12l5.6 5.6"/><circle cx="18.2" cy="5" r="1.8"/><circle cx="18.2" cy="19" r="1.8"/>`,
+  /* Remote: an end node (ring with a solid core). */
+  remote: svg`<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>`,
   power: svg`<path d="M12 3v8"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/>`,
   trash: svg`<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13M9 7V4h6v3"/>`,
   eyeOff: svg`<path d="M3 3l18 18"/><path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.3 9.5 6-.5.8-1.5 2.2-2.9 3.5M6.4 7.6C4.6 8.9 3.2 10.7 2.5 12c1 1.7 4.5 6 9.5 6a9.6 9.6 0 0 0 4.4-1.1"/><path d="M9.9 10a3 3 0 0 0 4.1 4.1"/>`,

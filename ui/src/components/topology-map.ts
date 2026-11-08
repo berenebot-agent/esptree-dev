@@ -198,12 +198,13 @@ export class EspTopologyMap extends LitElement {
 
   /** Depth-first flatten so every row shares one grid and columns align. */
   private flatten(root: TopologyNode, childMap: Map<string, TopologyNode[]>): TreeRow[] {
-    const rows: TreeRow[] = [{ node: root, depth: 0, rails: [], last: true, isRoot: true }];
+    const kids = (node: TopologyNode) => childMap.get(this.childKey(node.mac)) || [];
+    const rows: TreeRow[] = [{ node: root, depth: 0, rails: [], last: true, isRoot: true, hasChildren: kids(root).length > 0 }];
     const walk = (parent: TopologyNode, depth: number, rails: boolean[]) => {
-      const children = childMap.get(this.childKey(parent.mac)) || [];
+      const children = kids(parent);
       children.forEach((child, i) => {
         const last = i === children.length - 1;
-        rows.push({ node: child, depth, rails, last, isRoot: false });
+        rows.push({ node: child, depth, rails, last, isRoot: false, hasChildren: kids(child).length > 0 });
         walk(child, depth + 1, [...rails, !last]);
       });
     };

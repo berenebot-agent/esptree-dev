@@ -5,9 +5,10 @@ import { icon } from '../styles/icons';
 /*
  * Device tree rows. The tree is flattened by the map into rows that share one
  * grid, so every column lines up regardless of depth. Each row draws its own
- * guide lines; the elbow into a node carries that node's link quality
- * (strong / fair / weak / down), which is the tree's signature: weak hops are
- * visible in the shape of the network itself.
+ * guide lines, laid out so they join up across rows into one trunk: a parent's
+ * icon drops a stem, each child hangs off that stem with an elbow that runs
+ * into the child's icon. Lines are neutral; only an offline link is dashed.
+ * Signal quality lives in the Signal column, not on the lines.
  */
 
 export interface TreeRow {
@@ -17,6 +18,8 @@ export interface TreeRow {
   rails: boolean[];
   last: boolean;
   isRoot: boolean;
+  /** Draw a stem down from this node's icon to its first child. */
+  hasChildren: boolean;
 }
 
 export interface RowContext {
@@ -115,10 +118,9 @@ function statusCell(row: TreeRow, ctx: RowContext): TemplateResult {
 
 function guides(row: TreeRow): TemplateResult {
   if (row.isRoot) return html`<span class="guides" aria-hidden="true"></span>`;
-  const q = linkQuality(row.node);
   return html`<span class="guides" aria-hidden="true">
     ${row.rails.map((through) => html`<span class="rail ${through ? 'through' : ''}"></span>`)}
-    <span class="elbow ${row.last ? 'last' : ''} ${q}"></span>
+    <span class="elbow ${row.last ? 'last' : ''} ${row.node.online ? '' : 'down'}"></span>
   </span>`;
 }
 
@@ -141,8 +143,8 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
   return html`
     <div class="row ${node.online ? '' : 'is-offline'} ${isRoot ? 'is-root' : ''}" role="row">
       ${guides(row)}
-      <div class="cell name" role="gridcell">
-        <span class="node-icon ${isRoot ? 'bridge' : ''}" aria-hidden="true">${icon(isRoot ? 'bridge' : node.relay_enabled ? 'relay' : 'chip')}</span>
+      <div class="cell name ${row.hasChildren ? 'has-children' : ''}" role="gridcell">
+        <span class="node-icon ${isRoot ? 'bridge' : node.relay_enabled ? 'relay' : 'remote'}" aria-hidden="true">${icon(isRoot ? 'bridge' : node.relay_enabled ? 'relay' : 'remote')}</span>
         <span class="identity">
           <a class="title" href=${deviceHref} title=${name}>${name}</a>
           <span class="meta">
@@ -182,7 +184,7 @@ export const treeStyles = css`
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) 124px 48px 104px 84px 200px 120px;
     align-items: center;
-    column-gap: 12px;
+    column-gap: var(--tree-gap, 12px);
     padding: 0 16px 0 8px;
   }
   .facts { display: contents; }
@@ -195,7 +197,14 @@ export const treeStyles = css`
     background: var(--surface-subtle);
   }
   .tree-head .num { text-align: left; }
+  /* Tree geometry. Icons are 32px with their centre 28px down the row; a level is
+     one --tree-step wide, so a child's elbow sits exactly under its parent's icon. */
   .row {
+    --tree-gap: 12px;
+    --tree-step: 40px;
+    --tree-x: calc(var(--tree-gap) + 16px); /* icon centre, measured from the start of its guide column */
+    --tree-y: 28px;
+    --tree-line: var(--line-strong);
     position: relative; /* containing block for the row-wide hit target below */
     min-height: 56px;
     border-bottom: 1px solid var(--line);
@@ -207,7 +216,7 @@ export const treeStyles = css`
   .row.is-root { background: var(--surface-subtle); }
   .row.is-root:hover { background: var(--surface-hover); }
   .cell { min-width: 0; }
-  .cell.name { display: flex; align-items: stretch; align-self: stretch; gap: 10px; }
+  .cell.name { position: relative; display: flex; align-items: stretch; align-self: stretch; gap: 10px; }
   .identity { display: grid; align-content: center; gap: 2px; min-width: 0; padding: 8px 0; min-height: 56px; }
   .meta > :last-child { overflow: hidden; text-overflow: ellipsis; }
   .title {
@@ -248,8 +257,20 @@ export const treeStyles = css`
     color: var(--muted);
   }
   .node-icon svg { width: 18px; height: 18px; }
-  .node-icon.bridge { background: var(--primary-soft); color: var(--primary); }
-  .is-offline .node-icon { color: var(--danger); background: var(--danger-soft); }
+  /* Role reads from weight: a solid bridge, an outlined relay, a quiet remote. */
+  .node-icon.bridge { background: var(--primary); color: var(--on-primary); }
+  .node-icon.relay { background: var(--primary-soft); color: var(--primary); box-shadow: inset 0 0 0 1.5px var(--primary); }
+  .node-icon.remote { background: var(--surface); color: var(--muted); box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+  .is-offline .node-icon { color: var(--danger); background: var(--danger-soft); box-shadow: inset 0 0 0 1.5px var(--danger-soft); }
+  /* Stem from a parent's icon down to the row edge, where its first child's elbow picks it up. */
+  .cell.name.has-children::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 44px;
+    bottom: -1px;
+    border-left: 2px solid var(--tree-line);
+  }
   .is-offline .title { color: var(--ink-2); }
   .muted { color: var(--faint); }
   .m-label { display: none; }
@@ -274,40 +295,27 @@ export const treeStyles = css`
   .signal.weak .bars i.on { background: var(--danger); }
   .dbm { color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 
-  /* Guides: rails for ancestors, an elbow into this node coloured by its link */
-  .guides { display: flex; flex: none; align-self: stretch; margin-left: 4px; }
-  .rail, .elbow { position: relative; width: 22px; flex: none; }
-  .rail.through::before {
+  /* Guides: rails carry an ancestor's trunk past this row; the elbow joins this node to its parent. */
+  .guides { display: flex; flex: none; align-self: stretch; }
+  .rail, .elbow { position: relative; width: var(--tree-step); flex: none; }
+  .rail.through::before, .elbow::before {
     content: '';
     position: absolute;
-    left: 10px;
+    left: calc(var(--tree-x) - 1px);
     top: 0;
-    bottom: 0;
-    border-left: 2px solid var(--line-strong);
+    bottom: -1px; /* bridge the row border so the trunk is unbroken */
+    border-left: 2px solid var(--tree-line);
   }
-  .elbow::before {
-    content: '';
-    position: absolute;
-    left: 10px;
-    top: 0;
-    bottom: 0;
-    border-left: 2px solid var(--line-strong);
-  }
-  .elbow.last::before { bottom: auto; height: 28px; }
+  .elbow.last::before { bottom: auto; height: var(--tree-y); }
   .elbow::after {
     content: '';
     position: absolute;
-    left: 10px;
-    right: -6px;
-    top: 27px;
-    border-top: 2px solid var(--link-colour, var(--line-strong));
+    left: calc(var(--tree-x) - 1px);
+    right: calc(-1 * var(--tree-gap));
+    top: calc(var(--tree-y) - 1px);
+    border-top: 2px solid var(--tree-line);
   }
-  .elbow.strong { --link-colour: var(--ok-dot); }
-  .elbow.strong::after { border-top-width: 3px; top: 26px; }
-  .elbow.fair { --link-colour: var(--accent-fill); }
-  .elbow.weak { --link-colour: var(--danger); }
-  .elbow.weak::after { border-top-width: 1px; top: 27.5px; }
-  .elbow.down::after { border-top-style: dashed; --link-colour: var(--danger); opacity: 0.7; }
+  .elbow.down::after { border-top-style: dashed; border-top-color: var(--faint); }
 
   @media (max-width: 1100px) {
     .row, .tree-head { grid-template-columns: auto minmax(0, 1fr) 116px 48px 100px 184px 112px; }
@@ -318,7 +326,8 @@ export const treeStyles = css`
     .row {
       grid-template-columns: auto minmax(0, 1fr) auto;
       grid-template-areas: 'guides name actions' 'guides facts facts';
-      column-gap: 8px;
+      --tree-gap: 8px;
+      --tree-step: 32px;
       padding: 0 8px 0 4px;
     }
     .guides { grid-area: guides; }
