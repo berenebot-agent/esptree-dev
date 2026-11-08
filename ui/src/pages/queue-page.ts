@@ -421,7 +421,7 @@ export class EspQueuePage extends LitElement {
         <span class="what">
           <strong>${this.deviceLink(job.mac, entry.label)}</strong>
           <small>${this.typeChip(entry.type)}${[job.parsed_version ? `v${job.parsed_version}` : job.firmware_name || '', duration ? `took ${duration}` : ''].filter(Boolean).map((t) => html` · ${t}`)}</small>
-          ${job.error_msg && FLASH_RESULT_STATUSES.has(entry.status) && entry.status !== 'success' ? html`<small class="err">${job.error_msg}</small>` : nothing}
+          ${job.error_msg && FLASH_RESULT_STATUSES.has(entry.status) && entry.status !== 'success' ? html`<small class="${entry.status === 'rejoined_unverified' ? 'note' : 'err'}">${job.error_msg}</small>` : nothing}
         </span>
         ${jobChip(entry.status)}
         <span class="when" title=${fmtTime(job.created_at)}>${fmtTimeAgo(job.created_at)}</span>
@@ -440,7 +440,7 @@ export class EspQueuePage extends LitElement {
         <span class="what">
           <strong>${this.deviceLink(compile.mac, entry.label)}</strong>
           <small>${this.typeChip('combined')}${compile.parsed_version ? ` · v${compile.parsed_version}` : ''}${durC || durF ? ` · build ${durC || '—'}, upload ${durF || '—'}` : ''}</small>
-          ${flash.error_msg && entry.status !== 'success' ? html`<small class="err">${flash.error_msg}</small>` : nothing}
+          ${flash.error_msg && entry.status !== 'success' ? html`<small class="${entry.status === 'rejoined_unverified' ? 'note' : 'err'}">${flash.error_msg}</small>` : nothing}
         </span>
         ${jobChip(entry.status)}
         <span class="when" title=${fmtTime(flash.created_at)}>${fmtTimeAgo(flash.created_at)}</span>

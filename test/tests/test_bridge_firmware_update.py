@@ -58,7 +58,20 @@ def _bridge_row(db, *, host="10.1.1.150", mac="11:22:33:44:55:66", transport="wi
     )
 
 
-def _flash_job(db, tmp_path: Path, *, mac="11:22:33:44:55:66", esphome_name="esptree-bridge"):
+def _flash_job(
+    db,
+    tmp_path: Path,
+    *,
+    mac="11:22:33:44:55:66",
+    esphome_name="esptree-bridge",
+    parsed_build_date: str | None = None,
+    ota_md5: str | None = None,
+):
+    """A flash job for an artifact with the given identity.
+
+    `parsed_build_date`/`ota_md5` are what the add-on read out of the .ota.bin it is
+    about to send - the facts a post-reboot check has to compare against.
+    """
     firmware = tmp_path / f"{mac.replace(':', '')}.ota.bin"
     firmware.write_bytes(b"image")
     job = db.create_job(
@@ -67,6 +80,8 @@ def _flash_job(db, tmp_path: Path, *, mac="11:22:33:44:55:66", esphome_name="esp
             "status": models.STARTING,
             "firmware_path": str(firmware),
             "esphome_name": esphome_name,
+            "parsed_build_date": parsed_build_date,
+            "ota_md5": ota_md5,
         }
     )
     return job, firmware
@@ -174,10 +189,12 @@ class RejoiningBridgeManager:
         *build_dates: str,
         uptimes: tuple[int, ...] = (500, 5),
         mac: str = "11:22:33:44:55:66",
+        md5: str = "",
     ) -> None:
         self._build_dates = list(build_dates)
         self._uptimes = list(uptimes)
         self._mac = mac
+        self._md5 = md5
         self.calls = 0
 
     async def topology(self):
@@ -192,6 +209,7 @@ class RejoiningBridgeManager:
                 "is_bridge": True,
                 "uptime_s": uptime,
                 "firmware_build_date": build_date,
+                "firmware_md5": self._md5,
             }
         ]
 
@@ -202,7 +220,9 @@ async def test_bridge_update_uses_stored_password_and_verifies_the_new_build(tmp
     manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", "Nov 6 2026 14:02:11")
     worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
     _bridge_row(db, ota_password="per-bridge-secret")
-    job, firmware = _flash_job(db, tmp_path)
+    # The bridge comes back reporting exactly the build the artifact declares, which
+    # is what confirms the upload landed.
+    job, firmware = _flash_job(db, tmp_path, parsed_build_date="Nov 6 2026 14:02:11")
 
     await worker._process_bridge(job, firmware)
 
@@ -228,25 +248,88 @@ async def test_bridge_update_uses_stored_password_and_verifies_the_new_build(tmp
 
 
 @pytest.mark.asyncio
-async def test_bridge_update_with_an_unchanged_build_date_is_unverified_not_failed(tmp_path: Path) -> None:
-    """An unchanged build date is "cannot tell", not "the upload did not take effect".
+async def test_a_reported_build_matching_the_artifact_confirms_the_flash(tmp_path: Path) -> None:
+    """The device running the build we sent is the only claim worth a green tick.
 
-    The date a bridge reports is `__DATE__`/`__TIME__` expanded in its own setup(),
-    i.e. the compile time of one translation unit. The add-on compiles into a
-    persistent build tree, so an image rebuilt from unchanged component sources
-    boots carrying the same string — and a real reflash of unchanged code therefore
-    looked identical to a push that never landed. This call is the post-reboot read,
-    so the manager starts on its rebooted values.
+    The previous check demanded the reported date be *different* from the one recorded
+    before the upload, which cannot distinguish a real reflash from an image rebuilt
+    from unchanged sources (the add-on compiles into a persistent build tree, and a
+    bridge reported `__DATE__`/`__TIME__` from one translation unit). Comparing against
+    the artifact's own descriptor is positive evidence instead.
+    """
+    compiler = FakeCompiler()
+    manager = RejoiningBridgeManager("Nov 6 2026 14:02:11", uptimes=(5,))
+    worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
+    _bridge_row(db)
+    job, _firmware = _flash_job(db, tmp_path, parsed_build_date="Nov 6 2026 14:02:11")
+
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=100,
+        expected_build_date="Nov 6 2026 14:02:11",
+        expect_changed_build_date="Nov 6 2026 13:00:00",
+        verify_bridge_identity=True,
+    )
+
+    completed = db.get_job(job["id"])
+    assert completed is not None
+    assert completed["status"] == models.SUCCESS
+    events = _events(completed)
+    confirmed = next(event for event in events if event.get("type") == "flash_identity_confirmed")
+    assert confirmed["method"] == "build_date"
+    assert confirmed["actual_build_date"] == "Nov 6 2026 14:02:11"
+
+
+@pytest.mark.asyncio
+async def test_a_reported_md5_matching_the_artifact_confirms_even_with_a_stale_date(tmp_path: Path) -> None:
+    """The partition digest is conclusive where a date is only strong.
+
+    A rebuild of identical sources can legitimately share a build date with the image
+    already running, so the date alone cannot always prove a reflash. The MD5 of the
+    running partition can.
+    """
+    digest = "0123456789abcdef0123456789abcdef"
+    compiler = FakeCompiler()
+    manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", uptimes=(5,), md5=digest.upper())
+    worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
+    _bridge_row(db)
+    job, _firmware = _flash_job(db, tmp_path, parsed_build_date="Nov 6 2026 13:00:00", ota_md5=digest)
+
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=100,
+        expected_build_date="Nov 6 2026 13:00:00",
+        expect_changed_build_date="Nov 6 2026 13:00:00",
+        expected_md5=digest,
+        verify_bridge_identity=True,
+    )
+
+    completed = db.get_job(job["id"])
+    assert completed is not None
+    assert completed["status"] == models.SUCCESS
+    confirmed = next(
+        event for event in _events(completed) if event.get("type") == "flash_identity_confirmed"
+    )
+    assert confirmed["method"] == "md5"
+
+
+@pytest.mark.asyncio
+async def test_a_bridge_still_reporting_its_previous_build_is_unverified(tmp_path: Path) -> None:
+    """The upload did not land: say so plainly instead of a vague "unconfirmed".
+
+    This is the one genuinely diagnostic case, and it must stay amber rather than
+    red — the transfer leg succeeded, the device simply booted the old image.
     """
     compiler = FakeCompiler()
     manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", uptimes=(5,))
     worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
     _bridge_row(db)
-    job, _firmware = _flash_job(db, tmp_path)
+    job, _firmware = _flash_job(db, tmp_path, parsed_build_date="Nov 6 2026 14:02:11")
 
     await worker._wait_for_rejoin(
         db.get_job(job["id"]) or job,
         initial_uptime_s=100,
+        expected_build_date="Nov 6 2026 14:02:11",
         expect_changed_build_date="Nov 6 2026 13:00:00",
         verify_bridge_identity=True,
     )
@@ -255,37 +338,34 @@ async def test_bridge_update_with_an_unchanged_build_date_is_unverified_not_fail
     assert completed is not None
     assert completed["status"] == models.REJOINED_UNVERIFIED
     assert models.is_terminal(completed["status"])
-    assert "could not be confirmed" in (completed["error_msg"] or "")
-    assert "did not take effect" not in (completed["error_msg"] or "")
-
     events = _events(completed)
     types = [event.get("type") for event in events]
-    # The dates either side of the upload are the whole evidence, so they must survive.
     unverified = next(event for event in events if event.get("type") == "flash_identity_unverified")
-    assert unverified["expected_build_date"] == "Nov 6 2026 13:00:00"
+    assert unverified["reason"] == "device still reports its previous build"
+    assert unverified["expected_build_date"] == "Nov 6 2026 14:02:11"
     assert unverified["actual_build_date"] == "Nov 6 2026 13:00:00"
-    assert unverified["reason"] == "build date unchanged"
     # An amber outcome must not also log a red "flash failed" line.
     assert "flash_failed" not in types
     assert "flash_version_mismatch" not in types
 
 
 @pytest.mark.asyncio
-async def test_bridge_update_without_a_baseline_build_date_is_unverified(tmp_path: Path) -> None:
-    """No pre-upload reading is no evidence either — it used to fall through to success.
+async def test_a_bridge_that_reports_no_identity_is_unverified_and_says_why(tmp_path: Path) -> None:
+    """Old bridge firmware reports nothing; that is not evidence the upload failed.
 
-    The old gate only fired when a baseline existed, so a flash whose pre-flight
-    topology read failed reported SUCCESS without anything having been verified.
+    It used to fall through to SUCCESS when no baseline existed, i.e. an unverified
+    flash was reported as a success.
     """
     compiler = FakeCompiler()
-    manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", uptimes=(5,))
+    manager = RejoiningBridgeManager("", uptimes=(5,), md5="")
     worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
     _bridge_row(db)
-    job, _firmware = _flash_job(db, tmp_path)
+    job, _firmware = _flash_job(db, tmp_path, parsed_build_date="Nov 6 2026 14:02:11")
 
     await worker._wait_for_rejoin(
         db.get_job(job["id"]) or job,
         initial_uptime_s=100,
+        expected_build_date="Nov 6 2026 14:02:11",
         expect_changed_build_date=None,
         verify_bridge_identity=True,
     )
@@ -294,9 +374,39 @@ async def test_bridge_update_without_a_baseline_build_date_is_unverified(tmp_pat
     assert completed is not None
     assert completed["status"] == models.REJOINED_UNVERIFIED
     unverified = next(event for event in _events(completed) if event.get("type") == "flash_identity_unverified")
-    assert unverified["expected_build_date"] == ""
-    assert unverified["actual_build_date"] == "Nov 6 2026 13:00:00"
-    assert unverified["reason"] == "no baseline build date"
+    assert unverified["expected_build_date"] == "Nov 6 2026 14:02:11"
+    assert unverified["actual_build_date"] == ""
+    assert unverified["reason"] == "no build date reported"
+    # The message must point at the remedy, not just shrug.
+    assert "reflash it once over USB" in (completed["error_msg"] or "")
+
+
+@pytest.mark.asyncio
+async def test_a_flash_with_no_artifact_build_date_is_unverified(tmp_path: Path) -> None:
+    """No artifact descriptor is no evidence either.
+
+    A project-less or metadata-stripped image yields no build date to compare, so
+    nothing about the upload can be confirmed.
+    """
+    compiler = FakeCompiler()
+    manager = RejoiningBridgeManager("Nov 6 2026 13:00:00", uptimes=(5,))
+    worker, db = _worker(tmp_path, compiler=compiler, bridge_manager=manager)
+    _bridge_row(db)
+    job, _firmware = _flash_job(db, tmp_path, parsed_build_date=None)
+
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=100,
+        expected_build_date=None,
+        expect_changed_build_date=None,
+        verify_bridge_identity=True,
+    )
+
+    completed = db.get_job(job["id"])
+    assert completed is not None
+    assert completed["status"] == models.REJOINED_UNVERIFIED
+    unverified = next(event for event in _events(completed) if event.get("type") == "flash_identity_unverified")
+    assert unverified["reason"] == "no artifact build date"
 
 
 @pytest.mark.asyncio
@@ -539,3 +649,68 @@ async def test_ota_upload_invokes_esphome_with_the_verified_cli_contract(tmp_pat
     status = compiler.bridge_ota_status("esptree-bridge")
     assert status["status"] == "success"
     assert status["uploaded_bytes"] == len(b"\xe9image")
+
+
+# ── the digest a flash is checked against ──────────────────────────────────
+
+
+def test_ota_md5_is_the_ota_image_digest_not_the_merged_bin(tmp_path: Path) -> None:
+    """The two digests cover different bytes and must not be conflated.
+
+    `firmware_md5` is taken over the merged full-flash image, but a device reports the
+    digest of its app partition after booting the .ota.bin. Comparing the merged
+    digest against a device reading can never match, which is why the flash job
+    records the .ota.bin digest separately.
+    """
+    import hashlib
+
+    from app.db import Database
+
+    db = Database(tmp_path / "esp_tree.db")
+    db.init()
+
+    ota_bytes = b"\xe9ota-image-bytes"
+    merged_bytes = b"\xe9merged-factory-image-with-bootloader-and-partitions"
+    ota_path = tmp_path / "firmware.ota.bin"
+    merged_path = tmp_path / "firmware.bin"
+    ota_path.write_bytes(ota_bytes)
+    merged_path.write_bytes(merged_bytes)
+
+    ota_md5 = hashlib.md5(ota_bytes).hexdigest()
+    merged_md5 = hashlib.md5(merged_bytes).hexdigest()
+    assert ota_md5 != merged_md5
+
+    job = db.create_job(
+        {
+            "mac": "11:22:33:44:55:66",
+            "status": models.STARTING,
+            "firmware_path": str(merged_path),
+            "firmware_md5": merged_md5,
+            "ota_md5": ota_md5,
+            "parsed_build_date": "Nov 6 2026 14:02:11",
+        }
+    )
+
+    stored = db.get_job(job["id"])
+    assert stored is not None
+    # Both survive, so the preflight/download paths keep the merged digest while the
+    # rejoin check has the comparable one.
+    assert stored["firmware_md5"] == merged_md5
+    assert stored["ota_md5"] == ota_md5
+
+
+def test_migration_21_adds_ota_md5_to_an_existing_jobs_table(tmp_path: Path) -> None:
+    """An upgraded install gains the column instead of failing on an unknown field."""
+    from app.db import Database
+
+    db = Database(tmp_path / "esp_tree.db")
+    db.init()
+
+    import sqlite3
+
+    conn = sqlite3.connect(tmp_path / "esp_tree.db")
+    try:
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(ota_jobs)")}
+    finally:
+        conn.close()
+    assert "ota_md5" in columns

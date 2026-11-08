@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhKAEf.js","./index-CVEpFw44.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-DEyzgznf.js","./index-Dg9LnRo3.js"])))=>i.map(i=>d[i]);
 (function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))s(r);new MutationObserver(r=>{for(const n of r)if(n.type==="childList")for(const o of n.addedNodes)o.tagName==="LINK"&&o.rel==="modulepreload"&&s(o)}).observe(document,{childList:!0,subtree:!0});function i(r){const n={};return r.integrity&&(n.integrity=r.integrity),r.referrerPolicy&&(n.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?n.credentials="include":r.crossOrigin==="anonymous"?n.credentials="omit":n.credentials="same-origin",n}function s(r){if(r.ep)return;r.ep=!0;const n=i(r);fetch(r.href,n)}})();/**
  * @license
  * Copyright 2019 Google LLC
@@ -13,7 +13,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
  * SPDX-License-Identifier: BSD-3-Clause
  */const Qs=globalThis,xh=t=>t,wn=Qs.trustedTypes,wh=wn?wn.createPolicy("lit-html",{createHTML:t=>t}):void 0,Ud="$lit$",ri=`lit$${Math.random().toFixed(9).slice(2)}$`,Hd="?"+ri,km=`<${Hd}>`,qi=document,sr=()=>qi.createComment(""),rr=t=>t===null||typeof t!="object"&&typeof t!="function",gl=Array.isArray,Sm=t=>gl(t)||typeof(t==null?void 0:t[Symbol.iterator])=="function",Co=`[ 	
 \f\r]`,Is=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,kh=/-->/g,Sh=/>/g,Oi=RegExp(`>|${Co}(?:([^\\s"'>=/]+)(${Co}*=${Co}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`,"g"),Ch=/'/g,$h=/"/g,Wd=/^(?:script|style|textarea|title)$/i,zd=t=>(e,...i)=>({_$litType$:t,strings:e,values:i}),p=zd(1),q=zd(2),xs=Symbol.for("lit-noChange"),v=Symbol.for("lit-nothing"),Oh=new WeakMap,Di=qi.createTreeWalker(qi,129);function qd(t,e){if(!gl(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return wh!==void 0?wh.createHTML(e):e}const Cm=(t,e)=>{const i=t.length-1,s=[];let r,n=e===2?"<svg>":e===3?"<math>":"",o=Is;for(let a=0;a<i;a++){const l=t[a];let h,c,d=-1,u=0;for(;u<l.length&&(o.lastIndex=u,c=o.exec(l),c!==null);)u=o.lastIndex,o===Is?c[1]==="!--"?o=kh:c[1]!==void 0?o=Sh:c[2]!==void 0?(Wd.test(c[2])&&(r=RegExp("</"+c[2],"g")),o=Oi):c[3]!==void 0&&(o=Oi):o===Oi?c[0]===">"?(o=r??Is,d=-1):c[1]===void 0?d=-2:(d=o.lastIndex-c[2].length,h=c[1],o=c[3]===void 0?Oi:c[3]==='"'?$h:Ch):o===$h||o===Ch?o=Oi:o===kh||o===Sh?o=Is:(o=Oi,r=void 0);const f=o===Oi&&t[a+1].startsWith("/>")?" ":"";n+=o===Is?l+km:d>=0?(s.push(h),l.slice(0,d)+Ud+l.slice(d)+ri+f):l+ri+(d===-2?a:f)}return[qd(t,n+(t[i]||"<?>")+(e===2?"</svg>":e===3?"</math>":"")),s]};class nr{constructor({strings:e,_$litType$:i},s){let r;this.parts=[];let n=0,o=0;const a=e.length-1,l=this.parts,[h,c]=Cm(e,i);if(this.el=nr.createElement(h,s),Di.currentNode=this.el.content,i===2||i===3){const d=this.el.content.firstChild;d.replaceWith(...d.childNodes)}for(;(r=Di.nextNode())!==null&&l.length<a;){if(r.nodeType===1){if(r.hasAttributes())for(const d of r.getAttributeNames())if(d.endsWith(Ud)){const u=c[o++],f=r.getAttribute(d).split(ri),m=/([.?@])?(.*)/.exec(u);l.push({type:1,index:n,name:m[2],strings:f,ctor:m[1]==="."?Om:m[1]==="?"?Am:m[1]==="@"?Pm:no}),r.removeAttribute(d)}else d.startsWith(ri)&&(l.push({type:6,index:n}),r.removeAttribute(d));if(Wd.test(r.tagName)){const d=r.textContent.split(ri),u=d.length-1;if(u>0){r.textContent=wn?wn.emptyScript:"";for(let f=0;f<u;f++)r.append(d[f],sr()),Di.nextNode(),l.push({type:2,index:++n});r.append(d[u],sr())}}}else if(r.nodeType===8)if(r.data===Hd)l.push({type:2,index:n});else{let d=-1;for(;(d=r.data.indexOf(ri,d+1))!==-1;)l.push({type:7,index:n}),d+=ri.length-1}n++}}static createElement(e,i){const s=qi.createElement("template");return s.innerHTML=e,s}}function ws(t,e,i=t,s){var o,a;if(e===xs)return e;let r=s!==void 0?(o=i._$Co)==null?void 0:o[s]:i._$Cl;const n=rr(e)?void 0:e._$litDirective$;return(r==null?void 0:r.constructor)!==n&&((a=r==null?void 0:r._$AO)==null||a.call(r,!1),n===void 0?r=void 0:(r=new n(t),r._$AT(t,i,s)),s!==void 0?(i._$Co??(i._$Co=[]))[s]=r:i._$Cl=r),r!==void 0&&(e=ws(t,r._$AS(t,e.values),r,s)),e}class $m{constructor(e,i){this._$AV=[],this._$AN=void 0,this._$AD=e,this._$AM=i}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(e){const{el:{content:i},parts:s}=this._$AD,r=((e==null?void 0:e.creationScope)??qi).importNode(i,!0);Di.currentNode=r;let n=Di.nextNode(),o=0,a=0,l=s[0];for(;l!==void 0;){if(o===l.index){let h;l.type===2?h=new Or(n,n.nextSibling,this,e):l.type===1?h=new l.ctor(n,l.name,l.strings,this,e):l.type===6&&(h=new Tm(n,this,e)),this._$AV.push(h),l=s[++a]}o!==(l==null?void 0:l.index)&&(n=Di.nextNode(),o++)}return Di.currentNode=qi,r}p(e){let i=0;for(const s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(e,s,i),i+=s.strings.length-2):s._$AI(e[i])),i++}}class Or{get _$AU(){var e;return((e=this._$AM)==null?void 0:e._$AU)??this._$Cv}constructor(e,i,s,r){this.type=2,this._$AH=v,this._$AN=void 0,this._$AA=e,this._$AB=i,this._$AM=s,this.options=r,this._$Cv=(r==null?void 0:r.isConnected)??!0}get parentNode(){let e=this._$AA.parentNode;const i=this._$AM;return i!==void 0&&(e==null?void 0:e.nodeType)===11&&(e=i.parentNode),e}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(e,i=this){e=ws(this,e,i),rr(e)?e===v||e==null||e===""?(this._$AH!==v&&this._$AR(),this._$AH=v):e!==this._$AH&&e!==xs&&this._(e):e._$litType$!==void 0?this.$(e):e.nodeType!==void 0?this.T(e):Sm(e)?this.k(e):this._(e)}O(e){return this._$AA.parentNode.insertBefore(e,this._$AB)}T(e){this._$AH!==e&&(this._$AR(),this._$AH=this.O(e))}_(e){this._$AH!==v&&rr(this._$AH)?this._$AA.nextSibling.data=e:this.T(qi.createTextNode(e)),this._$AH=e}$(e){var n;const{values:i,_$litType$:s}=e,r=typeof s=="number"?this._$AC(e):(s.el===void 0&&(s.el=nr.createElement(qd(s.h,s.h[0]),this.options)),s);if(((n=this._$AH)==null?void 0:n._$AD)===r)this._$AH.p(i);else{const o=new $m(r,this),a=o.u(this.options);o.p(i),this.T(a),this._$AH=o}}_$AC(e){let i=Oh.get(e.strings);return i===void 0&&Oh.set(e.strings,i=new nr(e)),i}k(e){gl(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,r=0;for(const n of e)r===i.length?i.push(s=new Or(this.O(sr()),this.O(sr()),this,this.options)):s=i[r],s._$AI(n),r++;r<i.length&&(this._$AR(s&&s._$AB.nextSibling,r),i.length=r)}_$AR(e=this._$AA.nextSibling,i){var s;for((s=this._$AP)==null?void 0:s.call(this,!1,!0,i);e!==this._$AB;){const r=xh(e).nextSibling;xh(e).remove(),e=r}}setConnected(e){var i;this._$AM===void 0&&(this._$Cv=e,(i=this._$AP)==null||i.call(this,e))}}class no{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(e,i,s,r,n){this.type=1,this._$AH=v,this._$AN=void 0,this.element=e,this.name=i,this._$AM=r,this.options=n,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=v}_$AI(e,i=this,s,r){const n=this.strings;let o=!1;if(n===void 0)e=ws(this,e,i,0),o=!rr(e)||e!==this._$AH&&e!==xs,o&&(this._$AH=e);else{const a=e;let l,h;for(e=n[0],l=0;l<n.length-1;l++)h=ws(this,a[s+l],i,l),h===xs&&(h=this._$AH[l]),o||(o=!rr(h)||h!==this._$AH[l]),h===v?e=v:e!==v&&(e+=(h??"")+n[l+1]),this._$AH[l]=h}o&&!r&&this.j(e)}j(e){e===v?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,e??"")}}class Om extends no{constructor(){super(...arguments),this.type=3}j(e){this.element[this.name]=e===v?void 0:e}}class Am extends no{constructor(){super(...arguments),this.type=4}j(e){this.element.toggleAttribute(this.name,!!e&&e!==v)}}class Pm extends no{constructor(e,i,s,r,n){super(e,i,s,r,n),this.type=5}_$AI(e,i=this){if((e=ws(this,e,i,0)??v)===xs)return;const s=this._$AH,r=e===v&&s!==v||e.capture!==s.capture||e.once!==s.once||e.passive!==s.passive,n=e!==v&&(s===v||r);r&&this.element.removeEventListener(this.name,this,s),n&&this.element.addEventListener(this.name,this,e),this._$AH=e}handleEvent(e){var i;typeof this._$AH=="function"?this._$AH.call(((i=this.options)==null?void 0:i.host)??this.element,e):this._$AH.handleEvent(e)}}class Tm{constructor(e,i,s){this.element=e,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(e){ws(this,e)}}const $o=Qs.litHtmlPolyfillSupport;$o==null||$o(nr,Or),(Qs.litHtmlVersions??(Qs.litHtmlVersions=[])).push("3.3.2");const Mm=(t,e,i)=>{const s=(i==null?void 0:i.renderBefore)??e;let r=s._$litPart$;if(r===void 0){const n=(i==null?void 0:i.renderBefore)??null;s._$litPart$=r=new Or(e.insertBefore(sr(),n),n,void 0,i??{})}return r._$AI(t),r};/**
+\f\r"'\`<>=]|("|')|))|$)`,"g"),Ch=/'/g,$h=/"/g,Wd=/^(?:script|style|textarea|title)$/i,zd=t=>(e,...i)=>({_$litType$:t,strings:e,values:i}),p=zd(1),q=zd(2),xs=Symbol.for("lit-noChange"),b=Symbol.for("lit-nothing"),Oh=new WeakMap,Di=qi.createTreeWalker(qi,129);function qd(t,e){if(!gl(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return wh!==void 0?wh.createHTML(e):e}const Cm=(t,e)=>{const i=t.length-1,s=[];let r,n=e===2?"<svg>":e===3?"<math>":"",o=Is;for(let a=0;a<i;a++){const l=t[a];let h,c,d=-1,u=0;for(;u<l.length&&(o.lastIndex=u,c=o.exec(l),c!==null);)u=o.lastIndex,o===Is?c[1]==="!--"?o=kh:c[1]!==void 0?o=Sh:c[2]!==void 0?(Wd.test(c[2])&&(r=RegExp("</"+c[2],"g")),o=Oi):c[3]!==void 0&&(o=Oi):o===Oi?c[0]===">"?(o=r??Is,d=-1):c[1]===void 0?d=-2:(d=o.lastIndex-c[2].length,h=c[1],o=c[3]===void 0?Oi:c[3]==='"'?$h:Ch):o===$h||o===Ch?o=Oi:o===kh||o===Sh?o=Is:(o=Oi,r=void 0);const f=o===Oi&&t[a+1].startsWith("/>")?" ":"";n+=o===Is?l+km:d>=0?(s.push(h),l.slice(0,d)+Ud+l.slice(d)+ri+f):l+ri+(d===-2?a:f)}return[qd(t,n+(t[i]||"<?>")+(e===2?"</svg>":e===3?"</math>":"")),s]};class nr{constructor({strings:e,_$litType$:i},s){let r;this.parts=[];let n=0,o=0;const a=e.length-1,l=this.parts,[h,c]=Cm(e,i);if(this.el=nr.createElement(h,s),Di.currentNode=this.el.content,i===2||i===3){const d=this.el.content.firstChild;d.replaceWith(...d.childNodes)}for(;(r=Di.nextNode())!==null&&l.length<a;){if(r.nodeType===1){if(r.hasAttributes())for(const d of r.getAttributeNames())if(d.endsWith(Ud)){const u=c[o++],f=r.getAttribute(d).split(ri),m=/([.?@])?(.*)/.exec(u);l.push({type:1,index:n,name:m[2],strings:f,ctor:m[1]==="."?Om:m[1]==="?"?Am:m[1]==="@"?Pm:no}),r.removeAttribute(d)}else d.startsWith(ri)&&(l.push({type:6,index:n}),r.removeAttribute(d));if(Wd.test(r.tagName)){const d=r.textContent.split(ri),u=d.length-1;if(u>0){r.textContent=wn?wn.emptyScript:"";for(let f=0;f<u;f++)r.append(d[f],sr()),Di.nextNode(),l.push({type:2,index:++n});r.append(d[u],sr())}}}else if(r.nodeType===8)if(r.data===Hd)l.push({type:2,index:n});else{let d=-1;for(;(d=r.data.indexOf(ri,d+1))!==-1;)l.push({type:7,index:n}),d+=ri.length-1}n++}}static createElement(e,i){const s=qi.createElement("template");return s.innerHTML=e,s}}function ws(t,e,i=t,s){var o,a;if(e===xs)return e;let r=s!==void 0?(o=i._$Co)==null?void 0:o[s]:i._$Cl;const n=rr(e)?void 0:e._$litDirective$;return(r==null?void 0:r.constructor)!==n&&((a=r==null?void 0:r._$AO)==null||a.call(r,!1),n===void 0?r=void 0:(r=new n(t),r._$AT(t,i,s)),s!==void 0?(i._$Co??(i._$Co=[]))[s]=r:i._$Cl=r),r!==void 0&&(e=ws(t,r._$AS(t,e.values),r,s)),e}class $m{constructor(e,i){this._$AV=[],this._$AN=void 0,this._$AD=e,this._$AM=i}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(e){const{el:{content:i},parts:s}=this._$AD,r=((e==null?void 0:e.creationScope)??qi).importNode(i,!0);Di.currentNode=r;let n=Di.nextNode(),o=0,a=0,l=s[0];for(;l!==void 0;){if(o===l.index){let h;l.type===2?h=new Or(n,n.nextSibling,this,e):l.type===1?h=new l.ctor(n,l.name,l.strings,this,e):l.type===6&&(h=new Tm(n,this,e)),this._$AV.push(h),l=s[++a]}o!==(l==null?void 0:l.index)&&(n=Di.nextNode(),o++)}return Di.currentNode=qi,r}p(e){let i=0;for(const s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(e,s,i),i+=s.strings.length-2):s._$AI(e[i])),i++}}class Or{get _$AU(){var e;return((e=this._$AM)==null?void 0:e._$AU)??this._$Cv}constructor(e,i,s,r){this.type=2,this._$AH=b,this._$AN=void 0,this._$AA=e,this._$AB=i,this._$AM=s,this.options=r,this._$Cv=(r==null?void 0:r.isConnected)??!0}get parentNode(){let e=this._$AA.parentNode;const i=this._$AM;return i!==void 0&&(e==null?void 0:e.nodeType)===11&&(e=i.parentNode),e}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(e,i=this){e=ws(this,e,i),rr(e)?e===b||e==null||e===""?(this._$AH!==b&&this._$AR(),this._$AH=b):e!==this._$AH&&e!==xs&&this._(e):e._$litType$!==void 0?this.$(e):e.nodeType!==void 0?this.T(e):Sm(e)?this.k(e):this._(e)}O(e){return this._$AA.parentNode.insertBefore(e,this._$AB)}T(e){this._$AH!==e&&(this._$AR(),this._$AH=this.O(e))}_(e){this._$AH!==b&&rr(this._$AH)?this._$AA.nextSibling.data=e:this.T(qi.createTextNode(e)),this._$AH=e}$(e){var n;const{values:i,_$litType$:s}=e,r=typeof s=="number"?this._$AC(e):(s.el===void 0&&(s.el=nr.createElement(qd(s.h,s.h[0]),this.options)),s);if(((n=this._$AH)==null?void 0:n._$AD)===r)this._$AH.p(i);else{const o=new $m(r,this),a=o.u(this.options);o.p(i),this.T(a),this._$AH=o}}_$AC(e){let i=Oh.get(e.strings);return i===void 0&&Oh.set(e.strings,i=new nr(e)),i}k(e){gl(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,r=0;for(const n of e)r===i.length?i.push(s=new Or(this.O(sr()),this.O(sr()),this,this.options)):s=i[r],s._$AI(n),r++;r<i.length&&(this._$AR(s&&s._$AB.nextSibling,r),i.length=r)}_$AR(e=this._$AA.nextSibling,i){var s;for((s=this._$AP)==null?void 0:s.call(this,!1,!0,i);e!==this._$AB;){const r=xh(e).nextSibling;xh(e).remove(),e=r}}setConnected(e){var i;this._$AM===void 0&&(this._$Cv=e,(i=this._$AP)==null||i.call(this,e))}}class no{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(e,i,s,r,n){this.type=1,this._$AH=b,this._$AN=void 0,this.element=e,this.name=i,this._$AM=r,this.options=n,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=b}_$AI(e,i=this,s,r){const n=this.strings;let o=!1;if(n===void 0)e=ws(this,e,i,0),o=!rr(e)||e!==this._$AH&&e!==xs,o&&(this._$AH=e);else{const a=e;let l,h;for(e=n[0],l=0;l<n.length-1;l++)h=ws(this,a[s+l],i,l),h===xs&&(h=this._$AH[l]),o||(o=!rr(h)||h!==this._$AH[l]),h===b?e=b:e!==b&&(e+=(h??"")+n[l+1]),this._$AH[l]=h}o&&!r&&this.j(e)}j(e){e===b?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,e??"")}}class Om extends no{constructor(){super(...arguments),this.type=3}j(e){this.element[this.name]=e===b?void 0:e}}class Am extends no{constructor(){super(...arguments),this.type=4}j(e){this.element.toggleAttribute(this.name,!!e&&e!==b)}}class Pm extends no{constructor(e,i,s,r,n){super(e,i,s,r,n),this.type=5}_$AI(e,i=this){if((e=ws(this,e,i,0)??b)===xs)return;const s=this._$AH,r=e===b&&s!==b||e.capture!==s.capture||e.once!==s.once||e.passive!==s.passive,n=e!==b&&(s===b||r);r&&this.element.removeEventListener(this.name,this,s),n&&this.element.addEventListener(this.name,this,e),this._$AH=e}handleEvent(e){var i;typeof this._$AH=="function"?this._$AH.call(((i=this.options)==null?void 0:i.host)??this.element,e):this._$AH.handleEvent(e)}}class Tm{constructor(e,i,s){this.element=e,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(e){ws(this,e)}}const $o=Qs.litHtmlPolyfillSupport;$o==null||$o(nr,Or),(Qs.litHtmlVersions??(Qs.litHtmlVersions=[])).push("3.3.2");const Mm=(t,e,i)=>{const s=(i==null?void 0:i.renderBefore)??e;let r=s._$litPart$;if(r===void 0){const n=(i==null?void 0:i.renderBefore)??null;s._$litPart$=r=new Or(e.insertBefore(sr(),n),n,void 0,i??{})}return r._$AI(t),r};/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
@@ -29,7 +29,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */function b(t){return ie({...t,state:!0,attribute:!1})}/**
+ */function v(t){return ie({...t,state:!0,attribute:!1})}/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
@@ -72,10 +72,10 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
         <span class="identity">
           <a class="title" href=${o} title=${r}>${r}</a>
           <span class="meta">
-            ${s?p`<span>Bridge${i.network_id?p` · ${i.network_id}`:v}</span><span class="sep">·</span>`:v}
-            ${!s&&i.relay_enabled?p`<span>Relay</span><span class="sep">·</span>`:v}
+            ${s?p`<span>Bridge${i.network_id?p` · ${i.network_id}`:b}</span><span class="sep">·</span>`:b}
+            ${!s&&i.relay_enabled?p`<span>Relay</span><span class="sep">·</span>`:b}
             <span class="mono">${i.mac}</span>
-            ${i.chip_name?p`<span class="sep">·</span><span>${i.chip_name}</span>`:v}
+            ${i.chip_name?p`<span class="sep">·</span><span>${i.chip_name}</span>`:b}
           </span>
         </span>
       </div>
@@ -635,6 +635,9 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
   .hist .what strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist .what small { color: var(--muted); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist .what .err { color: var(--danger); white-space: normal; }
+  /* An unverified flash delivered the image; it is not an error, so its message
+     must not be dressed in the danger red the .err class uses. */
+  .hist .what .note { color: var(--accent); white-space: normal; }
   .hist .when { color: var(--muted); font-size: var(--text-sm); text-align: right; font-variant-numeric: tabular-nums; }
   .hist .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
   .chip-spin { width: 10px !important; height: 10px !important; border-width: 1.5px !important; border-color: currentColor !important; border-top-color: transparent !important; }
@@ -654,8 +657,8 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
           <div class="body">
             <h2 id="t">${t.title}</h2>
             <p id="m">${t.message}</p>
-            ${t.detail?p`<div class="notice ${t.danger?"danger":"warn"}">${C("alert")}<span>${t.detail}</span></div>`:v}
-            ${this.failure?p`<p class="error-text" role="alert">${this.failure}</p>`:v}
+            ${t.detail?p`<div class="notice ${t.danger?"danger":"warn"}">${C("alert")}<span>${t.detail}</span></div>`:b}
+            ${this.failure?p`<p class="error-text" role="alert">${this.failure}</p>`:b}
           </div>
           <div class="actions">
             <button class="btn" @click=${()=>this.close()} ?disabled=${this.busy}>Cancel</button>
@@ -663,7 +666,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
               ${this.busy?p`<span class="spinner"></span>Working…`:t.confirmLabel}
             </button>
           </div>
-        `:v}
+        `:b}
       </dialog>
     `}};ji.styles=[Ee,de`
     .body { display: grid; gap: 12px; padding: 22px 22px 8px; }
@@ -671,7 +674,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     p { color: var(--ink-2); }
     .actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 22px 20px; }
     .btn .spinner { width: 14px; height: 14px; border-color: currentColor; border-top-color: transparent; }
-  `];Ar([ie({attribute:!1})],ji.prototype,"request",2);Ar([b()],ji.prototype,"busy",2);Ar([b()],ji.prototype,"failure",2);Ar([bl("dialog")],ji.prototype,"dialog",2);ji=Ar([Se("esp-confirm-dialog")],ji);var Zm=Object.defineProperty,eg=Object.getOwnPropertyDescriptor,ot=(t,e,i,s)=>{for(var r=s>1?void 0:s?eg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Zm(e,i,r),r};let We=class extends pe{constructor(){super(...arguments),this.addonDown=!1,this.topology=[],this.currentJob=null,this.queueData=null,this.configStatuses=new Map,this.firmwareStatus=null,this.loading=!0,this.error="",this.hiddenExpanded=!1,this.query="",this.filter="all",this.pendingConfirm=null,this.firmwareTimer=null}connectedCallback(){super.connectedCallback(),this.load(),this.stream=Um(t=>{(t.type==="topology.snapshot"||t.type==="topology.changed"||t.type==="remote.availability"||t.type==="bridge.heartbeat")&&this.load(!1,!0)})}disconnectedCallback(){var t;(t=this.stream)==null||t.close(),this.stopFirmwarePolling(),super.disconnectedCallback()}stopFirmwarePolling(){this.firmwareTimer&&(clearInterval(this.firmwareTimer),this.firmwareTimer=null)}async loadBridgeFirmware(t){var r,n;const e=t.find(o=>o.is_bridge&&o.bridge_uuid);if(!(e!=null&&e.bridge_uuid)){this.firmwareStatus=null,this.stopFirmwarePolling();return}try{this.firmwareStatus=await S.bridgeFirmware(e.bridge_uuid)}catch{this.firmwareStatus=null}const i=((n=(r=this.firmwareStatus)==null?void 0:r.job)==null?void 0:n.status)??"",s=!!i&&!["success","failed","aborted","version_mismatch","rejoin_timeout","rejoined_unverified"].includes(i);s&&!this.firmwareTimer?this.firmwareTimer=setInterval(()=>void this.load(!1,!0),3e3):s||this.stopFirmwarePolling()}firmwareForMac(t){return this.firmwareStatus&&Z(this.firmwareStatus.mac)===Z(t)?this.firmwareStatus:null}async handleUpdateFirmware(t){var o,a,l;const e=this.topology.find(h=>Z(h.mac)===Z(t)),i=((o=this.firmwareStatus)==null?void 0:o.uuid)||(e==null?void 0:e.bridge_uuid);if(!i)return;const s=(e==null?void 0:e.friendly_name)||(e==null?void 0:e.esphome_name)||(e==null?void 0:e.label)||t,r=(l=(a=this.firmwareStatus)==null?void 0:a.running)==null?void 0:l.build_date,n=async()=>{await S.updateBridgeFirmware(i),await this.load(!1,!0)};this.pendingConfirm={title:`Update firmware on ${s}?`,message:"The bridge rebuilds its stored configuration, uploads the new image over WiFi, then reboots.",detail:`The ESP-NOW mesh will be offline for about a minute.${r?` Currently running: built ${r}.`:""} If the new image cannot boot, the bridge must be reflashed over USB.`,confirmLabel:"Update and reboot",run:n}}async load(t=!0,e=!1){t&&(this.loading=!0);try{const[i,s,r]=await Promise.all([S.topology(e),S.currentOta(),S.getQueue()]);this.topology=i,this.currentJob=s.job,this.queueData=r,this.error="";const n=i.filter(l=>(l.hops??0)>0).map(l=>S.getConfigStatus(l.mac).catch(()=>null)),o=await Promise.all(n),a=new Map;o.forEach(l=>{l&&a.set(Z(l.mac),l)}),this.configStatuses=a,this.loadBridgeFirmware(i)}catch(i){this.error=i instanceof Error?i.message:String(i)}finally{this.loading=!1}}async handleHideDevice(t){try{await S.hideDevice(t),await this.load(!1,!0)}catch(e){console.error("Failed to hide device:",e)}}async handleUnhideDevice(t){try{await S.unhideDevice(t),await this.load(!1,!0)}catch(e){console.error("Failed to unhide device:",e)}}async handleRemoveDevice(t){const e=this.topology.find(s=>s.mac===t);if(!(e!=null&&e.hidden)||e.is_bridge)return;const i=e.friendly_name||e.esphome_name||e.label||t;this.pendingConfirm={title:`Delete ${i} permanently?`,message:"This removes the remote from ESP Tree and Home Assistant, including its retained history and firmware records.",detail:"This cannot be undone. If the device is still powered on, it may reappear when it rejoins.",confirmLabel:"Delete permanently",danger:!0,run:async()=>{await S.removeRemote(t),await this.load(!1,!0)}}}jobForMac(t){var s;const e=Z(t);return this.currentJob&&Z(this.currentJob.mac)===e?this.currentJob:(((s=this.queueData)==null?void 0:s.queued_jobs)??[]).find(r=>Z(r.mac)===e)??null}configForMac(t){return this.configStatuses.get(Z(t))??null}childKey(t){return Z(t||"")}buildChildren(){const t=new Map;for(const i of this.topology){const s=this.childKey(i.parent_mac);if(!s)continue;const r=t.get(s)||[];r.push(i),t.set(s,r)}for(const i of t.values())i.sort((s,r)=>(s.friendly_name||s.label||s.esphome_name||s.mac).localeCompare(r.friendly_name||r.label||r.esphome_name||r.mac));return{root:this.topology.find(i=>(i.hops??0)===0)||this.topology.find(i=>!i.parent_mac)||this.topology[0]||null,childMap:t}}flatten(t,e){const i=n=>e.get(this.childKey(n.mac))||[],s=[{node:t,depth:0,rails:[],last:!0,isRoot:!0,hasChildren:i(t).length>0}],r=(n,o,a)=>{const l=i(n);l.forEach((h,c)=>{const d=c===l.length-1;s.push({node:h,depth:o,rails:a,last:d,isRoot:!1,hasChildren:i(h).length>0}),r(h,o+1,[...a,!d])})};return r(t,1,[]),s}render(){var w;const{root:t}=this.buildChildren(),e=this.childKey((t==null?void 0:t.mac)||""),i=this.topology.filter(x=>x.hidden?!1:(x.hops??0)>0?!0:!x.is_bridge&&this.childKey(x.mac)!==e),s=this.topology.filter(x=>x.hidden),r=i.filter(x=>!x.is_bridge),n=r.filter(x=>x.online),o=r.length-n.length,a=this.query.trim().toLowerCase(),l=x=>this.filter==="all"||this.filter==="online"&&!!x.online||this.filter==="offline"&&!x.online?a?[x.friendly_name,x.label,x.esphome_name,x.mac,x.chip_name].filter(Boolean).some(D=>String(D).toLowerCase().includes(a)):!0:!1,h=i.filter(x=>!!x.is_bridge||l(x)),c=new Set(h.map(x=>this.childKey(x.mac))),d=new Map;for(const x of h){if(this.childKey(x.mac)===e)continue;let O=this.childKey(x.parent_mac);(!O||!c.has(O))&&(O=e);const D=d.get(O)||[];D.push(x),d.set(O,D)}for(const x of d.values())x.sort((O,D)=>us(O).localeCompare(us(D)));const u=this.currentJob?1:0,f=(((w=this.queueData)==null?void 0:w.queued_jobs)??[]).length,m=h.filter(x=>!x.is_bridge).length,g=this.filter!=="all"||!!a,y=t?this.flatten(t,d):[];return p`
+  `];Ar([ie({attribute:!1})],ji.prototype,"request",2);Ar([v()],ji.prototype,"busy",2);Ar([v()],ji.prototype,"failure",2);Ar([bl("dialog")],ji.prototype,"dialog",2);ji=Ar([Se("esp-confirm-dialog")],ji);var Zm=Object.defineProperty,eg=Object.getOwnPropertyDescriptor,ot=(t,e,i,s)=>{for(var r=s>1?void 0:s?eg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Zm(e,i,r),r};let We=class extends pe{constructor(){super(...arguments),this.addonDown=!1,this.topology=[],this.currentJob=null,this.queueData=null,this.configStatuses=new Map,this.firmwareStatus=null,this.loading=!0,this.error="",this.hiddenExpanded=!1,this.query="",this.filter="all",this.pendingConfirm=null,this.firmwareTimer=null}connectedCallback(){super.connectedCallback(),this.load(),this.stream=Um(t=>{(t.type==="topology.snapshot"||t.type==="topology.changed"||t.type==="remote.availability"||t.type==="bridge.heartbeat")&&this.load(!1,!0)})}disconnectedCallback(){var t;(t=this.stream)==null||t.close(),this.stopFirmwarePolling(),super.disconnectedCallback()}stopFirmwarePolling(){this.firmwareTimer&&(clearInterval(this.firmwareTimer),this.firmwareTimer=null)}async loadBridgeFirmware(t){var r,n;const e=t.find(o=>o.is_bridge&&o.bridge_uuid);if(!(e!=null&&e.bridge_uuid)){this.firmwareStatus=null,this.stopFirmwarePolling();return}try{this.firmwareStatus=await S.bridgeFirmware(e.bridge_uuid)}catch{this.firmwareStatus=null}const i=((n=(r=this.firmwareStatus)==null?void 0:r.job)==null?void 0:n.status)??"",s=!!i&&!["success","failed","aborted","version_mismatch","rejoin_timeout","rejoined_unverified"].includes(i);s&&!this.firmwareTimer?this.firmwareTimer=setInterval(()=>void this.load(!1,!0),3e3):s||this.stopFirmwarePolling()}firmwareForMac(t){return this.firmwareStatus&&Z(this.firmwareStatus.mac)===Z(t)?this.firmwareStatus:null}async handleUpdateFirmware(t){var o,a,l;const e=this.topology.find(h=>Z(h.mac)===Z(t)),i=((o=this.firmwareStatus)==null?void 0:o.uuid)||(e==null?void 0:e.bridge_uuid);if(!i)return;const s=(e==null?void 0:e.friendly_name)||(e==null?void 0:e.esphome_name)||(e==null?void 0:e.label)||t,r=(l=(a=this.firmwareStatus)==null?void 0:a.running)==null?void 0:l.build_date,n=async()=>{await S.updateBridgeFirmware(i),await this.load(!1,!0)};this.pendingConfirm={title:`Update firmware on ${s}?`,message:"The bridge rebuilds its stored configuration, uploads the new image over WiFi, then reboots.",detail:`The ESP-NOW mesh will be offline for about a minute.${r?` Currently running: built ${r}.`:""} If the new image cannot boot, the bridge must be reflashed over USB.`,confirmLabel:"Update and reboot",run:n}}async load(t=!0,e=!1){t&&(this.loading=!0);try{const[i,s,r]=await Promise.all([S.topology(e),S.currentOta(),S.getQueue()]);this.topology=i,this.currentJob=s.job,this.queueData=r,this.error="";const n=i.filter(l=>(l.hops??0)>0).map(l=>S.getConfigStatus(l.mac).catch(()=>null)),o=await Promise.all(n),a=new Map;o.forEach(l=>{l&&a.set(Z(l.mac),l)}),this.configStatuses=a,this.loadBridgeFirmware(i)}catch(i){this.error=i instanceof Error?i.message:String(i)}finally{this.loading=!1}}async handleHideDevice(t){try{await S.hideDevice(t),await this.load(!1,!0)}catch(e){console.error("Failed to hide device:",e)}}async handleUnhideDevice(t){try{await S.unhideDevice(t),await this.load(!1,!0)}catch(e){console.error("Failed to unhide device:",e)}}async handleRemoveDevice(t){const e=this.topology.find(s=>s.mac===t);if(!(e!=null&&e.hidden)||e.is_bridge)return;const i=e.friendly_name||e.esphome_name||e.label||t;this.pendingConfirm={title:`Delete ${i} permanently?`,message:"This removes the remote from ESP Tree and Home Assistant, including its retained history and firmware records.",detail:"This cannot be undone. If the device is still powered on, it may reappear when it rejoins.",confirmLabel:"Delete permanently",danger:!0,run:async()=>{await S.removeRemote(t),await this.load(!1,!0)}}}jobForMac(t){var s;const e=Z(t);return this.currentJob&&Z(this.currentJob.mac)===e?this.currentJob:(((s=this.queueData)==null?void 0:s.queued_jobs)??[]).find(r=>Z(r.mac)===e)??null}configForMac(t){return this.configStatuses.get(Z(t))??null}childKey(t){return Z(t||"")}buildChildren(){const t=new Map;for(const i of this.topology){const s=this.childKey(i.parent_mac);if(!s)continue;const r=t.get(s)||[];r.push(i),t.set(s,r)}for(const i of t.values())i.sort((s,r)=>(s.friendly_name||s.label||s.esphome_name||s.mac).localeCompare(r.friendly_name||r.label||r.esphome_name||r.mac));return{root:this.topology.find(i=>(i.hops??0)===0)||this.topology.find(i=>!i.parent_mac)||this.topology[0]||null,childMap:t}}flatten(t,e){const i=n=>e.get(this.childKey(n.mac))||[],s=[{node:t,depth:0,rails:[],last:!0,isRoot:!0,hasChildren:i(t).length>0}],r=(n,o,a)=>{const l=i(n);l.forEach((h,c)=>{const d=c===l.length-1;s.push({node:h,depth:o,rails:a,last:d,isRoot:!1,hasChildren:i(h).length>0}),r(h,o+1,[...a,!d])})};return r(t,1,[]),s}render(){var w;const{root:t}=this.buildChildren(),e=this.childKey((t==null?void 0:t.mac)||""),i=this.topology.filter(x=>x.hidden?!1:(x.hops??0)>0?!0:!x.is_bridge&&this.childKey(x.mac)!==e),s=this.topology.filter(x=>x.hidden),r=i.filter(x=>!x.is_bridge),n=r.filter(x=>x.online),o=r.length-n.length,a=this.query.trim().toLowerCase(),l=x=>this.filter==="all"||this.filter==="online"&&!!x.online||this.filter==="offline"&&!x.online?a?[x.friendly_name,x.label,x.esphome_name,x.mac,x.chip_name].filter(Boolean).some(D=>String(D).toLowerCase().includes(a)):!0:!1,h=i.filter(x=>!!x.is_bridge||l(x)),c=new Set(h.map(x=>this.childKey(x.mac))),d=new Map;for(const x of h){if(this.childKey(x.mac)===e)continue;let O=this.childKey(x.parent_mac);(!O||!c.has(O))&&(O=e);const D=d.get(O)||[];D.push(x),d.set(O,D)}for(const x of d.values())x.sort((O,D)=>us(O).localeCompare(us(D)));const u=this.currentJob?1:0,f=(((w=this.queueData)==null?void 0:w.queued_jobs)??[]).length,m=h.filter(x=>!x.is_bridge).length,g=this.filter!=="all"||!!a,y=t?this.flatten(t,d):[];return p`
       <div class="page">
         <div class="page-head">
           <div>
@@ -679,10 +682,10 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
             ${t?p`
               <p class="summary" aria-live="polite">
                 <span><strong>${n.length}</strong> of ${r.length} remotes online</span>
-                ${o>0?p`<button class="summary-link danger" @click=${()=>{this.filter="offline"}}>${o} offline</button>`:v}
-                ${u+f>0?p`<a class="summary-link" href="#/queue">${u?"1 job running":""}${u&&f?", ":""}${f?`${f} queued`:""}</a>`:v}
+                ${o>0?p`<button class="summary-link danger" @click=${()=>{this.filter="offline"}}>${o} offline</button>`:b}
+                ${u+f>0?p`<a class="summary-link" href="#/queue">${u?"1 job running":""}${u&&f?", ":""}${f?`${f} queued`:""}</a>`:b}
               </p>
-            `:v}
+            `:b}
           </div>
           <div class="page-actions">
             <button class="btn icon" aria-label="Refresh" title="Refresh" @click=${()=>void this.load(!0,!0)} ?disabled=${this.loading}>
@@ -693,7 +696,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
         </div>
 
         ${this.error&&!this.addonDown?p`<div class="notice danger" role="alert">${C("alert")}<span><strong>Couldn't read the network.</strong> ${this.error}</span>
-          <span class="notice-actions"><button class="btn sm" @click=${()=>void this.load(!0,!0)}>Try again</button></span></div>`:v}
+          <span class="notice-actions"><button class="btn sm" @click=${()=>void this.load(!0,!0)}>Try again</button></span></div>`:b}
 
         ${t?p`
           <section class="card" aria-label="Device tree">
@@ -732,7 +735,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                     <strong>No remotes match</strong>
                     <p>Nothing matches “${this.query||this.filter}”. Clear the search or show all remotes.</p>
                     <button class="btn" @click=${()=>{this.query="",this.filter="all"}}>Show all</button>
-                  </div>`:v}
+                  </div>`:b}
               `}
             ${s.length>0?p`
               <div class="hidden-block">
@@ -752,16 +755,16 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                         </span>
                         <span class="hidden-actions">
                           <button class="btn sm" @click=${()=>void this.handleUnhideDevice(x.mac)}>Restore</button>
-                          ${x.is_bridge?v:p`<button class="btn sm danger" @click=${()=>void this.handleRemoveDevice(x.mac)}>Delete…</button>`}
+                          ${x.is_bridge?b:p`<button class="btn sm danger" @click=${()=>void this.handleRemoveDevice(x.mac)}>Delete…</button>`}
                         </span>
                       </li>
                     `)}
                   </ul>
-                `:v}
+                `:b}
               </div>
-            `:v}
+            `:b}
           </section>
-        `:this.loading?p`<div class="card loading" aria-live="polite"><span class="spinner"></span>Reading the bridge topology…</div>`:this.error?v:p`
+        `:this.loading?p`<div class="card loading" aria-live="polite"><span class="spinner"></span>Reading the bridge topology…</div>`:this.error?b:p`
             <section class="card">
               <div class="empty">
                 ${C("bridge")}
@@ -853,12 +856,12 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
       .hidden-toggle .hint { display: none; }
       .hidden-list li { flex-wrap: wrap; padding-left: 16px; }
     }
-  `];ot([ie({type:Boolean})],We.prototype,"addonDown",2);ot([b()],We.prototype,"topology",2);ot([b()],We.prototype,"currentJob",2);ot([b()],We.prototype,"queueData",2);ot([b()],We.prototype,"configStatuses",2);ot([b()],We.prototype,"firmwareStatus",2);ot([b()],We.prototype,"loading",2);ot([b()],We.prototype,"error",2);ot([b()],We.prototype,"hiddenExpanded",2);ot([b()],We.prototype,"query",2);ot([b()],We.prototype,"filter",2);ot([b()],We.prototype,"pendingConfirm",2);We=ot([Se("esp-topology-map")],We);var tg=Object.defineProperty,ig=Object.getOwnPropertyDescriptor,qe=(t,e,i,s)=>{for(var r=s>1?void 0:s?ig(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&tg(e,i,r),r};const sg={rejected:"The remote rejected the command.",busy:"The remote is busy. Try again in a few seconds.",timeout:"The remote didn't answer in time. It may be asleep or out of range.",no_session:"The bridge has no session with this remote yet. Wait for it to rejoin, then retry.",not_remote:"This command only applies to remotes.",invalid_payload:"The command was malformed and was not sent.",unsupported:"This remote's firmware doesn't support that command."};let Me=class extends pe{constructor(){super(...arguments),this.mac="",this.online=!1,this.isRemote=!1,this.relayNodes=[],this.relayEnabled=!1,this.busy="",this.heartbeatSeconds=60,this.selectedParent="",this.customParentMac="",this.showRelayModal=!1,this.showHeartbeatModal=!1,this.showParentModal=!1,this.confirm=null,this.toast=null}disconnectedCallback(){this.toastTimer&&window.clearTimeout(this.toastTimer),super.disconnectedCallback()}disabled(){return!this.online||!!this.busy}notify(t,e){this.toast={message:t,tone:e},this.toastTimer&&window.clearTimeout(this.toastTimer),this.toastTimer=window.setTimeout(()=>{this.toast=null},6e3)}dispatchChanged(){this.dispatchEvent(new CustomEvent("config-changed",{bubbles:!0,composed:!0}))}async send(t,e,i,s=r=>r==="ok"){this.busy=t;try{const r=await i();(r==null?void 0:r.result)!==void 0&&s(r.result)?(this.notify(r.result==="ok"?e:String(r.result),"ok"),this.dispatchChanged()):(r==null?void 0:r.result)===void 0?(console.error("Unexpected config response:",r),this.notify("The add-on returned an unexpected response.","error")):this.notify(sg[r.result]??`Command failed: ${r.result}`,"error")}catch(r){this.notify(r instanceof Error?r.message:String(r),"error")}finally{this.busy=""}}reboot(){this.confirm={title:"Reboot this remote?",message:"The remote restarts and rejoins the mesh, usually within a few seconds.",detail:"Its entities are unavailable in Home Assistant until it rejoins.",confirmLabel:"Reboot",run:()=>this.send("reboot","Reboot sent. The remote will rejoin shortly.",()=>S.rebootDevice(this.mac))}}rediscover(){this.confirm={title:"Rediscover the route?",message:"The remote drops its current parent and searches for the best route to the bridge again.",confirmLabel:"Rediscover",run:()=>this.send("rediscover","Rediscover sent. The route may change in the tree.",()=>S.forceRediscover(this.mac))}}setRelay(t){this.showRelayModal=!1,this.send("relay",t?"Relay enabled.":"Relay disabled.",()=>S.setRelay(this.mac,t),e=>!["no_session","timeout","rejected","busy","invalid_payload","not_remote"].includes(e))}applyHeartbeat(){const t=Math.trunc(Number(this.heartbeatSeconds));if(!(t>=5&&t<=3600)){this.notify("Heartbeat must be between 5 and 3600 seconds.","error");return}this.showHeartbeatModal=!1,this.send("heartbeat",`Heartbeat set to ${t} s.`,()=>S.setHeartbeatInterval(this.mac,t))}applyParent(t){const e=Z((this.customParentMac||this.selectedParent).trim());if(!/^[0-9A-F]{2}(:[0-9A-F]{2}){5}$/.test(e)){this.notify("Enter a full MAC address, like AA:BB:CC:DD:EE:FF.","error");return}this.showParentModal=!1,this.send("parent","Preferred parent set.",()=>S.setParentMac(this.mac,e,t))}render(){if(!this.isRemote)return v;const t=this.disabled();return p`
+  `];ot([ie({type:Boolean})],We.prototype,"addonDown",2);ot([v()],We.prototype,"topology",2);ot([v()],We.prototype,"currentJob",2);ot([v()],We.prototype,"queueData",2);ot([v()],We.prototype,"configStatuses",2);ot([v()],We.prototype,"firmwareStatus",2);ot([v()],We.prototype,"loading",2);ot([v()],We.prototype,"error",2);ot([v()],We.prototype,"hiddenExpanded",2);ot([v()],We.prototype,"query",2);ot([v()],We.prototype,"filter",2);ot([v()],We.prototype,"pendingConfirm",2);We=ot([Se("esp-topology-map")],We);var tg=Object.defineProperty,ig=Object.getOwnPropertyDescriptor,qe=(t,e,i,s)=>{for(var r=s>1?void 0:s?ig(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&tg(e,i,r),r};const sg={rejected:"The remote rejected the command.",busy:"The remote is busy. Try again in a few seconds.",timeout:"The remote didn't answer in time. It may be asleep or out of range.",no_session:"The bridge has no session with this remote yet. Wait for it to rejoin, then retry.",not_remote:"This command only applies to remotes.",invalid_payload:"The command was malformed and was not sent.",unsupported:"This remote's firmware doesn't support that command."};let Me=class extends pe{constructor(){super(...arguments),this.mac="",this.online=!1,this.isRemote=!1,this.relayNodes=[],this.relayEnabled=!1,this.busy="",this.heartbeatSeconds=60,this.selectedParent="",this.customParentMac="",this.showRelayModal=!1,this.showHeartbeatModal=!1,this.showParentModal=!1,this.confirm=null,this.toast=null}disconnectedCallback(){this.toastTimer&&window.clearTimeout(this.toastTimer),super.disconnectedCallback()}disabled(){return!this.online||!!this.busy}notify(t,e){this.toast={message:t,tone:e},this.toastTimer&&window.clearTimeout(this.toastTimer),this.toastTimer=window.setTimeout(()=>{this.toast=null},6e3)}dispatchChanged(){this.dispatchEvent(new CustomEvent("config-changed",{bubbles:!0,composed:!0}))}async send(t,e,i,s=r=>r==="ok"){this.busy=t;try{const r=await i();(r==null?void 0:r.result)!==void 0&&s(r.result)?(this.notify(r.result==="ok"?e:String(r.result),"ok"),this.dispatchChanged()):(r==null?void 0:r.result)===void 0?(console.error("Unexpected config response:",r),this.notify("The add-on returned an unexpected response.","error")):this.notify(sg[r.result]??`Command failed: ${r.result}`,"error")}catch(r){this.notify(r instanceof Error?r.message:String(r),"error")}finally{this.busy=""}}reboot(){this.confirm={title:"Reboot this remote?",message:"The remote restarts and rejoins the mesh, usually within a few seconds.",detail:"Its entities are unavailable in Home Assistant until it rejoins.",confirmLabel:"Reboot",run:()=>this.send("reboot","Reboot sent. The remote will rejoin shortly.",()=>S.rebootDevice(this.mac))}}rediscover(){this.confirm={title:"Rediscover the route?",message:"The remote drops its current parent and searches for the best route to the bridge again.",confirmLabel:"Rediscover",run:()=>this.send("rediscover","Rediscover sent. The route may change in the tree.",()=>S.forceRediscover(this.mac))}}setRelay(t){this.showRelayModal=!1,this.send("relay",t?"Relay enabled.":"Relay disabled.",()=>S.setRelay(this.mac,t),e=>!["no_session","timeout","rejected","busy","invalid_payload","not_remote"].includes(e))}applyHeartbeat(){const t=Math.trunc(Number(this.heartbeatSeconds));if(!(t>=5&&t<=3600)){this.notify("Heartbeat must be between 5 and 3600 seconds.","error");return}this.showHeartbeatModal=!1,this.send("heartbeat",`Heartbeat set to ${t} s.`,()=>S.setHeartbeatInterval(this.mac,t))}applyParent(t){const e=Z((this.customParentMac||this.selectedParent).trim());if(!/^[0-9A-F]{2}(:[0-9A-F]{2}){5}$/.test(e)){this.notify("Enter a full MAC address, like AA:BB:CC:DD:EE:FF.","error");return}this.showParentModal=!1,this.send("parent","Preferred parent set.",()=>S.setParentMac(this.mac,e,t))}render(){if(!this.isRemote)return b;const t=this.disabled();return p`
       <div class="card-head">
         <h2>Controls</h2>
-        ${this.busy?p`<span class="chip info"><span class="spinner"></span>Sending…</span>`:v}
+        ${this.busy?p`<span class="chip info"><span class="spinner"></span>Sending…</span>`:b}
       </div>
-      ${this.online?v:p`<div class="offline notice">${C("info")}<span>Controls are available when the remote is online.</span></div>`}
+      ${this.online?b:p`<div class="offline notice">${C("info")}<span>Controls are available when the remote is online.</span></div>`}
       <div class="command-grid">
         <button class="btn" aria-haspopup="dialog" ?disabled=${t} @click=${()=>{this.showRelayModal=!0}}>Relay config</button>
         <button class="btn" aria-haspopup="dialog" ?disabled=${t} @click=${()=>{this.showHeartbeatModal=!0}}>Set heartbeat</button>
@@ -866,11 +869,11 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
         <button class="btn" ?disabled=${t} @click=${()=>this.rediscover()}>Rediscover route</button>
         <button class="btn danger reboot" ?disabled=${t} @click=${()=>this.reboot()}>${C("power")}Reboot</button>
       </div>
-      ${this.showRelayModal?this.renderRelayModal():v}
-      ${this.showHeartbeatModal?this.renderHeartbeatModal():v}
-      ${this.showParentModal?this.renderParentModal():v}
+      ${this.showRelayModal?this.renderRelayModal():b}
+      ${this.showHeartbeatModal?this.renderHeartbeatModal():b}
+      ${this.showParentModal?this.renderParentModal():b}
       ${this.toast?p`<div class="toast notice ${this.toast.tone==="ok"?"ok":"danger"}" role=${this.toast.tone==="ok"?"status":"alert"}>
-        ${C(this.toast.tone==="ok"?"checkCircle":"alert")}<span>${this.toast.message}</span></div>`:v}
+        ${C(this.toast.tone==="ok"?"checkCircle":"alert")}<span>${this.toast.message}</span></div>`:b}
       <esp-confirm-dialog .request=${this.confirm} @closed=${()=>{this.confirm=null}}></esp-confirm-dialog>
     `}renderRelayModal(){return p`
       <div class="scrim" @click=${t=>{t.target===t.currentTarget&&(this.showRelayModal=!1)}}
@@ -921,7 +924,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
               <label for="ppm">MAC address</label>
               <input id="ppm" type="text" autocomplete="off" placeholder="AA:BB:CC:DD:EE:FF" class="mono" .value=${this.customParentMac}
                 @input=${s=>{this.customParentMac=s.target.value}} />
-            </div>`:v}
+            </div>`:b}
           <div class="modal-actions">
             <button class="btn" @click=${()=>{this.showParentModal=!1}}>Cancel</button>
             <button class="btn" ?disabled=${!t||i&&!this.customParentMac.trim()} @click=${()=>this.applyParent(!1)}>Add to list</button>
@@ -971,7 +974,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
       .command-grid { grid-template-columns: minmax(0, 1fr); }
       .command-grid .reboot { grid-column: auto; }
     }
-  `];qe([ie({type:String})],Me.prototype,"mac",2);qe([ie({type:Boolean})],Me.prototype,"online",2);qe([ie({type:Boolean})],Me.prototype,"isRemote",2);qe([ie({type:Array})],Me.prototype,"relayNodes",2);qe([ie({type:Boolean})],Me.prototype,"relayEnabled",2);qe([b()],Me.prototype,"busy",2);qe([b()],Me.prototype,"heartbeatSeconds",2);qe([b()],Me.prototype,"selectedParent",2);qe([b()],Me.prototype,"customParentMac",2);qe([b()],Me.prototype,"showRelayModal",2);qe([b()],Me.prototype,"showHeartbeatModal",2);qe([b()],Me.prototype,"showParentModal",2);qe([b()],Me.prototype,"confirm",2);qe([b()],Me.prototype,"toast",2);Me=qe([Se("esp-device-config")],Me);const rg={success:["Succeeded","ok"],compile_success:["Built","ok"],failed:["Failed","danger"],aborted:["Aborted","warn"],rejoin_timeout:["Rejoin timeout","danger"],version_mismatch:["Version mismatch","warn"],rejoined_unverified:["Build unconfirmed","warn"],queued:["Queued","warn"],compile_queued:["Build queued","warn"],compiling:["Building","info"],pending_confirm:["Awaiting confirmation","warn"],starting:["Starting","info"],announcing:["Connecting","info"],transferring:["Uploading","info"],verifying:["Verifying","info"],transfer_success_waiting_rejoin:["Waiting for rejoin","info"]},Xd=["success","compile_success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"];function Jd(t){const e=rg[t];if(e)return{label:e[0],tone:e[1]};const i=t.replace(/_/g," ");return{label:i.charAt(0).toUpperCase()+i.slice(1),tone:"neutral"}}function ni(t,e=""){const{label:i,tone:s}=Jd(t);return p`<span class="chip ${s==="neutral"?"":s}">${s==="info"?p`<span class="spinner chip-spin"></span>`:s==="ok"||s==="danger"?p`<span class="dot ${s}"></span>`:""}${i}${e}</span>`}var ng=Object.defineProperty,og=Object.getOwnPropertyDescriptor,xl=(t,e,i,s)=>{for(var r=s>1?void 0:s?og(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&ng(e,i,r),r};let or=class extends pe{constructor(){super(...arguments),this.showAbort=!1}abort(){this.dispatchEvent(new CustomEvent("abort",{bubbles:!0,composed:!0}))}render(){const t=Math.max(0,Math.min(100,Number(this.job.percent||0))),e=Xd.includes(this.job.status),i=this.job.parsed_esphome_name||this.job.esphome_name||this.job.firmware_name||"firmware.ota.bin",s=this.job.current_increment!=null&&this.job.total_increments!=null?`${this.job.current_increment} of ${this.job.total_increments}`:"";return p`
+  `];qe([ie({type:String})],Me.prototype,"mac",2);qe([ie({type:Boolean})],Me.prototype,"online",2);qe([ie({type:Boolean})],Me.prototype,"isRemote",2);qe([ie({type:Array})],Me.prototype,"relayNodes",2);qe([ie({type:Boolean})],Me.prototype,"relayEnabled",2);qe([v()],Me.prototype,"busy",2);qe([v()],Me.prototype,"heartbeatSeconds",2);qe([v()],Me.prototype,"selectedParent",2);qe([v()],Me.prototype,"customParentMac",2);qe([v()],Me.prototype,"showRelayModal",2);qe([v()],Me.prototype,"showHeartbeatModal",2);qe([v()],Me.prototype,"showParentModal",2);qe([v()],Me.prototype,"confirm",2);qe([v()],Me.prototype,"toast",2);Me=qe([Se("esp-device-config")],Me);const rg={success:["Succeeded","ok"],compile_success:["Built","ok"],failed:["Failed","danger"],aborted:["Aborted","warn"],rejoin_timeout:["Rejoin timeout","danger"],version_mismatch:["Version mismatch","warn"],rejoined_unverified:["Build unconfirmed","warn"],queued:["Queued","warn"],compile_queued:["Build queued","warn"],compiling:["Building","info"],pending_confirm:["Awaiting confirmation","warn"],starting:["Starting","info"],announcing:["Connecting","info"],transferring:["Uploading","info"],verifying:["Verifying","info"],transfer_success_waiting_rejoin:["Waiting for rejoin","info"]},Xd=["success","compile_success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"];function Jd(t){const e=rg[t];if(e)return{label:e[0],tone:e[1]};const i=t.replace(/_/g," ");return{label:i.charAt(0).toUpperCase()+i.slice(1),tone:"neutral"}}function ni(t,e=""){const{label:i,tone:s}=Jd(t);return p`<span class="chip ${s==="neutral"?"":s}">${s==="info"?p`<span class="spinner chip-spin"></span>`:s==="ok"||s==="danger"?p`<span class="dot ${s}"></span>`:""}${i}${e}</span>`}var ng=Object.defineProperty,og=Object.getOwnPropertyDescriptor,xl=(t,e,i,s)=>{for(var r=s>1?void 0:s?og(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&ng(e,i,r),r};let or=class extends pe{constructor(){super(...arguments),this.showAbort=!1}abort(){this.dispatchEvent(new CustomEvent("abort",{bubbles:!0,composed:!0}))}render(){const t=Math.max(0,Math.min(100,Number(this.job.percent||0))),e=Xd.includes(this.job.status),i=this.job.parsed_esphome_name||this.job.esphome_name||this.job.firmware_name||"firmware.ota.bin",s=this.job.current_increment!=null&&this.job.total_increments!=null?`${this.job.current_increment} of ${this.job.total_increments}`:"";return p`
       <section class="panel ${e?this.job.status==="success"?"success":"failure":""}">
         <div class="head">
           <div>
@@ -987,12 +990,12 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
           <div><dt>Chunks</dt><dd>${this.job.chunks_sent??0} of ${this.job.total_chunks??"—"}</dd></div>
           <div><dt>Size</dt><dd>${Ni(this.job.firmware_size)}</dd></div>
           <div><dt>Started</dt><dd>${Vi(this.job.started_at)}</dd></div>
-          ${this.job.bridge_state?p`<div><dt>Bridge state</dt><dd>${this.job.bridge_state}</dd></div>`:v}
-          ${s?p`<div><dt>Increment</dt><dd>${s}</dd></div>`:v}
-          ${this.job.retransmit_round?p`<div><dt>Retransmit round</dt><dd>${this.job.retransmit_round}</dd></div>`:v}
+          ${this.job.bridge_state?p`<div><dt>Bridge state</dt><dd>${this.job.bridge_state}</dd></div>`:b}
+          ${s?p`<div><dt>Increment</dt><dd>${s}</dd></div>`:b}
+          ${this.job.retransmit_round?p`<div><dt>Retransmit round</dt><dd>${this.job.retransmit_round}</dd></div>`:b}
         </dl>
-        ${this.job.error_msg?p`<p class="error-text">${this.job.error_msg}</p>`:v}
-        ${this.showAbort?p`<div><button class="btn sm danger" @click=${this.abort}>Abort upload</button></div>`:v}
+        ${this.job.error_msg?p`<p class="error-text">${this.job.error_msg}</p>`:b}
+        ${this.showAbort?p`<div><button class="btn sm danger" @click=${this.abort}>Abort upload</button></div>`:b}
       </section>
     `}};or.styles=[Ee,de`
     :host { display: block; }
@@ -1006,35 +1009,35 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
       <section class="ota">
         <div class="card-head">
           <h2>Firmware</h2>
-          ${t&&this.currentJob&&!e&&!l&&!r&&!i&&!s&&!o&&!n?p`<button class="btn sm danger" ?disabled=${this.busy} @click=${this.abort}>Abort</button>`:v}
+          ${t&&this.currentJob&&!e&&!l&&!r&&!i&&!s&&!o&&!n?p`<button class="btn sm danger" ?disabled=${this.busy} @click=${this.abort}>Abort</button>`:b}
         </div>
 
         ${l&&e?this.renderFlashResult(e):p`
-              ${i&&this.currentJob?this.renderCompileQueued(this.currentJob):v}
-              ${s&&this.currentJob?this.renderCompiling(this.currentJob):v}
-              ${r&&this.currentJob?this.renderQueued(this.currentJob):n&&this.currentJob?p`<esp-ota-progress .job=${this.currentJob} .showAbort=${!0} @abort=${this.abort}></esp-ota-progress>`:v}
+              ${i&&this.currentJob?this.renderCompileQueued(this.currentJob):b}
+              ${s&&this.currentJob?this.renderCompiling(this.currentJob):b}
+              ${r&&this.currentJob?this.renderQueued(this.currentJob):n&&this.currentJob?p`<esp-ota-progress .job=${this.currentJob} .showAbort=${!0} @abort=${this.abort}></esp-ota-progress>`:b}
 
               ${!o&&!r&&!n&&!i&&!s?p`
                     ${this.renderRunning()}
                     <div class="idle-controls">
-                      ${this.showEditYaml?p`<button class="btn" @click=${this.goToConfig}>${C("code")}Edit YAML &amp; compile</button>`:v}
+                      ${this.showEditYaml?p`<button class="btn" @click=${this.goToConfig}>${C("code")}Edit YAML &amp; compile</button>`:b}
                       <label class="btn upload ${this.busy?"busy":""}">
                         <input type="file" accept=".ota.bin" ?disabled=${this.busy} @change=${this.upload} />
                         ${this.busy?p`<span class="spinner"></span>Reading firmware…`:p`${C("upload")}Upload .ota.bin`}
                       </label>
                     </div>
-                  `:v}
+                  `:b}
 
-              ${o?this.renderPending(o,a):v}
+              ${o?this.renderPending(o,a):b}
             `}
-        ${this.showAbortModal?this.renderAbortModal():v}
-        ${this.error?p`<div class="notice danger error" role="alert">${C("alert")}<span>${this.error}</span></div>`:v}
+        ${this.showAbortModal?this.renderAbortModal():b}
+        ${this.error?p`<div class="notice danger error" role="alert">${C("alert")}<span>${this.error}</span></div>`:b}
       </section>
-    `}renderRunning(){const t=this.node;if(!t)return v;const e=t.project_version||t.firmware_version;return p`
+    `}renderRunning(){const t=this.node;if(!t)return b;const e=t.project_version||t.firmware_version;return p`
       <dl class="facts running">
-        <div><dt>Running</dt><dd>${e||"Unknown"}${t.project_name?p` <span class="sub">${t.project_name}</span>`:v}</dd></div>
+        <div><dt>Running</dt><dd>${e||"Unknown"}${t.project_name?p` <span class="sub">${t.project_name}</span>`:b}</dd></div>
         <div><dt>Built</dt><dd>${t.firmware_build_date||"—"}</dd></div>
-        ${t.firmware_version&&t.project_version?p`<div><dt>ESPHome</dt><dd>${t.firmware_version}</dd></div>`:v}
+        ${t.firmware_version&&t.project_version?p`<div><dt>ESPHome</dt><dd>${t.firmware_version}</dd></div>`:b}
       </dl>
     `}renderQueued(t){const e=t.queue_position??1;return p`
       <div class="queued-wrapper">
@@ -1126,62 +1129,62 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                   Flash anyway, I understand the warnings
                 </label>
               </div>
-            `:v}
+            `:b}
         <div class="actions">
           <button class="btn primary" ?disabled=${!e} @click=${this.start}>Flash</button>
           <button class="btn" ?disabled=${this.busy} @click=${this.abort}>Cancel</button>
         </div>
       </div>
-    `}renderFlashResult(t){const e=t.status==="success",i=e?"success":"failure",s=e?"Update complete":(()=>{const w=t.status.replaceAll("_"," ");return w.charAt(0).toUpperCase()+w.slice(1)})(),r=e?"The device accepted the new firmware and rejoined the network.":t.error_msg||"The firmware update did not complete successfully.",n=t.parsed_esphome_name||t.esphome_name||t.firmware_name||"-",o=this.node.esphome_name||"-",a=n===o||n==="-"&&o==="-",l=t.parsed_build_date||"-",h=this.node.firmware_build_date||"-",c=l===h||l==="-"&&h==="-",d=t.parsed_chip_name||"-",u=this.node.chip_name||"-",f=d===u||d==="-"&&u==="-",m=t.firmware_md5||"-",g=this.node.firmware_md5||"-",y=m===g||m==="-"&&g==="-";return e?p`
-        <div class="flash-result ${i}">
+    `}renderFlashResult(t){const e=t.status==="success",i=t.status==="rejoined_unverified",s=e?"success":i?"unverified":"failure",r=e?"Update complete":i?"Delivered — build unconfirmed":(()=>{const x=t.status.replaceAll("_"," ");return x.charAt(0).toUpperCase()+x.slice(1)})(),n=e?"The device accepted the new firmware and rejoined the network.":i?t.error_msg||"The device accepted the firmware and rejoined, but its reported build could not confirm which image it booted.":t.error_msg||"The firmware update did not complete successfully.",o=t.parsed_esphome_name||t.esphome_name||t.firmware_name||"-",a=this.node.esphome_name||"-",l=o===a||o==="-"&&a==="-",h=t.parsed_build_date||"-",c=this.node.firmware_build_date||"-",d=h===c||h==="-"&&c==="-",u=t.parsed_chip_name||"-",f=this.node.chip_name||"-",m=u===f||u==="-"&&f==="-",g=t.firmware_md5||"-",y=this.node.firmware_md5||"-",w=g===y||g==="-"&&y==="-";return e?p`
+        <div class="flash-result ${s}">
           <div class="result-banner">
             <span class="result-icon">${C("checkCircle")}</span>
-            <span class="result-label">${s}</span>
+            <span class="result-label">${r}</span>
           </div>
-          <h3>${n}</h3>
-          <p class="result-message">${r}</p>
+          <h3>${o}</h3>
+          <p class="result-message">${n}</p>
           <div class="actions">
             <button class="btn primary" @click=${this.dismissAndClear}>Done</button>
           </div>
         </div>
       `:p`
-      <div class="flash-result ${i}">
+      <div class="flash-result ${s}">
         <div class="result-banner">
-          <span class="result-icon">${C("alert")}</span>
-          <span class="result-label">${s}</span>
+          <span class="result-icon">${C(i?"checkCircle":"alert")}</span>
+          <span class="result-label">${r}</span>
         </div>
-        <h3>${n}</h3>
-        <p class="result-message">${r}</p>
+        <h3>${o}</h3>
+        <p class="result-message">${n}</p>
         <table class="compare-table">
           <thead>
-            <tr><th></th><th>Flashed</th><th>Remote now</th></tr>
+            <tr><th></th><th>Flashed</th><th>${i?"Device reports":"Remote now"}</th></tr>
           </thead>
           <tbody>
             <tr>
               <td>Name</td>
-              <td>${n}</td>
-              <td>${o} ${a?v:p`<span class="chip warn">Changed</span>`}</td>
+              <td>${o}</td>
+              <td>${a} ${l?b:p`<span class="chip warn">Changed</span>`}</td>
             </tr>
             <tr>
               <td>Build date</td>
-              <td>${l}</td>
-              <td>${h} ${c?v:p`<span class="chip warn">Changed</span>`}</td>
+              <td>${h}</td>
+              <td>${c} ${d?b:p`<span class="chip warn">Changed</span>`}</td>
             </tr>
             <tr>
               <td>Chip</td>
-              <td>${d}</td>
-              <td>${u} ${f?v:p`<span class="chip warn">Changed</span>`}</td>
+              <td>${u}</td>
+              <td>${f} ${m?b:p`<span class="chip warn">Changed</span>`}</td>
             </tr>
             <tr>
               <td>MD5</td>
-              <td>${m}</td>
-              <td>${g} ${y?v:p`<span class="chip warn">Changed</span>`}</td>
+              <td>${g}</td>
+              <td>${y} ${w?b:p`<span class="chip warn">Changed</span>`}</td>
             </tr>
           </tbody>
         </table>
         <div class="meta-info">
           <span>Size: ${Ni(t.firmware_size)}</span>
-          ${t.completed_at?p`<span>Completed: ${Vi(t.completed_at)}</span>`:v}
+          ${t.completed_at?p`<span>Completed: ${Vi(t.completed_at)}</span>`:b}
         </div>
         <div class="actions">
           <button class="btn primary" @click=${this.dismissAndClear}>Done</button>
@@ -1238,6 +1241,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     .result-icon { display: inline-flex; }
     .result-icon svg { width: 22px; height: 22px; }
     .flash-result.success .result-banner { color: var(--ok); }
+    .flash-result.unverified .result-banner { color: var(--accent); }
     .flash-result.failure .result-banner { color: var(--danger); }
     .result-message { color: var(--ink-2); }
 
@@ -1246,16 +1250,16 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     .modal h3 { font-size: var(--text-xl); font-weight: 500; }
     .modal p { color: var(--ink-2); }
     .modal .actions { justify-content: flex-end; margin-top: 4px; }
-  `];wt([ie({type:String})],rt.prototype,"mac",2);wt([ie({type:Object})],rt.prototype,"node",2);wt([ie({type:Boolean})],rt.prototype,"showEditYaml",2);wt([ie({type:Object})],rt.prototype,"currentJob",2);wt([b()],rt.prototype,"pendingJob",2);wt([b()],rt.prototype,"preflight",2);wt([b()],rt.prototype,"acceptedWarnings",2);wt([b()],rt.prototype,"busy",2);wt([b()],rt.prototype,"error",2);wt([b()],rt.prototype,"showAbortModal",2);rt=wt([Se("esp-ota-box")],rt);var hg=Object.defineProperty,cg=Object.getOwnPropertyDescriptor,Pr=(t,e,i,s)=>{for(var r=s>1?void 0:s?cg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&hg(e,i,r),r};let Qi=class extends pe{constructor(){super(...arguments),this.jobs=[],this.mac="",this.busyJob=null,this.error=""}retained(t){return!!t.firmware_path&&!!t.retained_until&&t.retained_until>Math.floor(Date.now()/1e3)}viewLog(t){const e=`/device/${encodeURIComponent(this.mac||t.mac)}`;window.location.hash=`/job/${t.id}?from=${encodeURIComponent(e)}`}async reflash(t){this.busyJob=t.id,this.error="";try{const e=await S.reflash(t.id);this.dispatchEvent(new CustomEvent("ota-reflash-result",{bubbles:!0,composed:!0,detail:{job:e.job,preflight:e.preflight}})),this.dispatchChanged()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async deleteRetained(t){this.busyJob=t.id,this.error="";try{await S.deleteRetained(t.id),this.dispatchChanged()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}dispatchChanged(){this.dispatchEvent(new CustomEvent("ota-changed",{bubbles:!0,composed:!0}))}render(){const t=this.jobs.filter(e=>e.status!=="compile_success");return p`
+  `];wt([ie({type:String})],rt.prototype,"mac",2);wt([ie({type:Object})],rt.prototype,"node",2);wt([ie({type:Boolean})],rt.prototype,"showEditYaml",2);wt([ie({type:Object})],rt.prototype,"currentJob",2);wt([v()],rt.prototype,"pendingJob",2);wt([v()],rt.prototype,"preflight",2);wt([v()],rt.prototype,"acceptedWarnings",2);wt([v()],rt.prototype,"busy",2);wt([v()],rt.prototype,"error",2);wt([v()],rt.prototype,"showAbortModal",2);rt=wt([Se("esp-ota-box")],rt);var hg=Object.defineProperty,cg=Object.getOwnPropertyDescriptor,Pr=(t,e,i,s)=>{for(var r=s>1?void 0:s?cg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&hg(e,i,r),r};let Qi=class extends pe{constructor(){super(...arguments),this.jobs=[],this.mac="",this.busyJob=null,this.error=""}retained(t){return!!t.firmware_path&&!!t.retained_until&&t.retained_until>Math.floor(Date.now()/1e3)}viewLog(t){const e=`/device/${encodeURIComponent(this.mac||t.mac)}`;window.location.hash=`/job/${t.id}?from=${encodeURIComponent(e)}`}async reflash(t){this.busyJob=t.id,this.error="";try{const e=await S.reflash(t.id);this.dispatchEvent(new CustomEvent("ota-reflash-result",{bubbles:!0,composed:!0,detail:{job:e.job,preflight:e.preflight}})),this.dispatchChanged()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async deleteRetained(t){this.busyJob=t.id,this.error="";try{await S.deleteRetained(t.id),this.dispatchChanged()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}dispatchChanged(){this.dispatchEvent(new CustomEvent("ota-changed",{bubbles:!0,composed:!0}))}render(){const t=this.jobs.filter(e=>e.status!=="compile_success");return p`
       <div class="card-head"><h2>Upload history</h2></div>
-      ${this.error?p`<div class="notice danger pad" role="alert">${C("alert")}<span>${this.error}</span></div>`:v}
+      ${this.error?p`<div class="notice danger pad" role="alert">${C("alert")}<span>${this.error}</span></div>`:b}
       ${t.length?p`<ul class="hist">
             ${t.map(e=>{const i=e.completed_at&&e.started_at?yt(e.completed_at-e.started_at):"";return p`
                 <li>
                   <span class="what">
                     <strong>${e.parsed_esphome_name||e.esphome_name||e.firmware_name||"firmware.ota.bin"}</strong>
                     <small>${[e.parsed_version?`v${e.parsed_version}`:"",e.parsed_build_date||e.firmware_name||"",e.firmware_size?Ni(e.firmware_size):"",i?`took ${i}`:""].filter(Boolean).join(" · ")}</small>
-                    ${e.error_msg?p`<small class="err">${e.error_msg}</small>`:v}
+                    ${e.error_msg?p`<small class="err">${e.error_msg}</small>`:b}
                   </span>
                   ${ni(e.status)}
                   <span class="when" title=${Vi(e.created_at)}>${kn(e.created_at)}</span>
@@ -1263,7 +1267,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                     <button class="btn sm text" @click=${()=>this.viewLog(e)}>View log</button>
                     ${this.retained(e)?p`
                           <button class="btn sm" ?disabled=${this.busyJob===e.id} @click=${()=>this.reflash(e)}>Flash again</button>
-                          <button class="btn sm text" ?disabled=${this.busyJob===e.id} @click=${()=>this.deleteRetained(e)}>Delete binary</button>`:v}
+                          <button class="btn sm text" ?disabled=${this.busyJob===e.id} @click=${()=>this.deleteRetained(e)}>Delete binary</button>`:b}
                   </span>
                 </li>`})}
           </ul>`:p`<p class="none">No uploads to this remote yet.</p>`}
@@ -1271,7 +1275,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     :host { display: block; }
     .none { padding: 12px 16px 16px; color: var(--muted); }
     .pad { margin: 12px 16px; }
-  `];Pr([ie({type:Array})],Qi.prototype,"jobs",2);Pr([ie({type:String})],Qi.prototype,"mac",2);Pr([b()],Qi.prototype,"busyJob",2);Pr([b()],Qi.prototype,"error",2);Qi=Pr([Se("esp-flash-history")],Qi);var dg=Object.defineProperty,ug=Object.getOwnPropertyDescriptor,wl=(t,e,i,s)=>{for(var r=s>1?void 0:s?ug(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&dg(e,i,r),r};let ar=class extends pe{constructor(){super(...arguments),this.jobs=[],this.mac=""}viewJobLog(t){const e=`/device/${encodeURIComponent(this.mac)}`;window.location.hash=`/job/${t.id}?from=${encodeURIComponent(e)}`}render(){const t=this.jobs.filter(e=>e.status==="compile_success"||e.status==="failed");return p`
+  `];Pr([ie({type:Array})],Qi.prototype,"jobs",2);Pr([ie({type:String})],Qi.prototype,"mac",2);Pr([v()],Qi.prototype,"busyJob",2);Pr([v()],Qi.prototype,"error",2);Qi=Pr([Se("esp-flash-history")],Qi);var dg=Object.defineProperty,ug=Object.getOwnPropertyDescriptor,wl=(t,e,i,s)=>{for(var r=s>1?void 0:s?ug(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&dg(e,i,r),r};let ar=class extends pe{constructor(){super(...arguments),this.jobs=[],this.mac=""}viewJobLog(t){const e=`/device/${encodeURIComponent(this.mac)}`;window.location.hash=`/job/${t.id}?from=${encodeURIComponent(e)}`}render(){const t=this.jobs.filter(e=>e.status==="compile_success"||e.status==="failed");return p`
       <div class="card-head"><h2>Build history</h2></div>
       ${t.length?p`<ul class="hist">
             ${t.map(e=>{const i=e.completed_at&&e.started_at?yt(e.completed_at-e.started_at):"";return p`
@@ -1279,13 +1283,13 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                   <span class="what">
                     <strong>${e.parsed_esphome_name||e.firmware_name||"Build"}</strong>
                     <small>${[e.parsed_version?`v${e.parsed_version}`:"",e.parsed_build_date||"",i?`took ${i}`:""].filter(Boolean).join(" · ")}</small>
-                    ${e.error_msg?p`<small class="err">${e.error_msg}</small>`:v}
+                    ${e.error_msg?p`<small class="err">${e.error_msg}</small>`:b}
                   </span>
                   ${ni(e.status)}
                   <span class="when">${kn(e.created_at)}</span>
                   <span class="row-actions">
                     <button class="btn sm text" @click=${()=>this.viewJobLog(e)}>View log</button>
-                    ${e.status==="compile_success"?p`<a class="btn sm text" href=${S.downloadJobBinary(e.id)} target="_blank" rel="noopener">${C("download")}.bin</a>`:v}
+                    ${e.status==="compile_success"?p`<a class="btn sm text" href=${S.downloadJobBinary(e.id)} target="_blank" rel="noopener">${C("download")}.bin</a>`:b}
                   </span>
                 </li>`})}
           </ul>`:p`<p class="none">No builds for this remote yet. Edit its YAML and compile to create one.</p>`}
@@ -1305,7 +1309,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */const Ks=(t,e)=>{var s;const i=t._$AN;if(i===void 0)return!1;for(const r of i)(s=r._$AO)==null||s.call(r,e,!1),Ks(r,e);return!0},Cn=t=>{let e,i;do{if((e=t._$AM)===void 0)break;i=e._$AN,i.delete(t),t=e}while((i==null?void 0:i.size)===0)},Yd=t=>{for(let e;e=t._$AM;t=e){let i=e._$AN;if(i===void 0)e._$AN=i=new Set;else if(i.has(t))break;i.add(t),xg(e)}};function vg(t){this._$AN!==void 0?(Cn(this),this._$AM=t,Yd(this)):this._$AM=t}function yg(t,e=!1,i=0){const s=this._$AH,r=this._$AN;if(r!==void 0&&r.size!==0)if(e)if(Array.isArray(s))for(let n=i;n<s.length;n++)Ks(s[n],!1),Cn(s[n]);else s!=null&&(Ks(s,!1),Cn(s));else Ks(this,t)}const xg=t=>{t.type==mg.CHILD&&(t._$AP??(t._$AP=yg),t._$AQ??(t._$AQ=vg))};class wg extends bg{constructor(){super(...arguments),this._$AN=void 0}_$AT(e,i,s){super._$AT(e,i,s),Yd(this),this.isConnected=e._$AU}_$AO(e,i=!0){var s,r;e!==this.isConnected&&(this.isConnected=e,e?(s=this.reconnected)==null||s.call(this):(r=this.disconnected)==null||r.call(this)),i&&(Ks(this,e),Cn(this))}setValue(e){if(fg(this._$Ct))this._$Ct._$AI(e,this);else{const i=[...this._$Ct._$AH];i[this._$Ci]=e,this._$Ct._$AI(i,this,0)}}disconnected(){}reconnected(){}}const Po=new WeakMap,kg=gg(class extends wg{render(t){return v}update(t,[e]){var s;const i=e!==this.G;return i&&this.G!==void 0&&this.rt(void 0),(i||this.lt!==this.ct)&&(this.G=e,this.ht=(s=t.options)==null?void 0:s.host,this.rt(this.ct=t.element)),v}rt(t){if(this.isConnected||(t=void 0),typeof this.G=="function"){const e=this.ht??globalThis;let i=Po.get(e);i===void 0&&(i=new WeakMap,Po.set(e,i)),i.get(this.G)!==void 0&&this.G.call(this.ht,void 0),i.set(this.G,t),t!==void 0&&this.G.call(this.ht,t)}else this.G.value=t}get lt(){var t,e;return typeof this.G=="function"?(t=Po.get(this.ht??globalThis))==null?void 0:t.get(this.G):(e=this.G)==null?void 0:e.value}disconnected(){this.lt===this.ct&&this.rt(void 0)}reconnected(){this.rt(this.ct)}});var Sg=Object.defineProperty,Cg=Object.getOwnPropertyDescriptor,Es=(t,e,i,s)=>{for(var r=s>1?void 0:s?Cg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Sg(e,i,r),r};const $g=100;let ui=class extends pe{constructor(){super(...arguments),this.mac="",this.visible=!0,this.stopped=!1,this.logs=[],this.autoScroll=!0,this.eventSource=null,this._macObserved="",this.reconnectAttempts=0,this.reconnectDelay=1e3,this.pendingLogs=[],this.flushTimer=null,this.scrollTarget=null}connectedCallback(){super.connectedCallback(),this.visible&&this.connect()}disconnectedCallback(){this.disconnect(),super.disconnectedCallback()}updated(t){this.hidden=!this.visible,t.has("visible")&&(this.visible?this.connect():(this.flushLogs(),this.disconnect())),t.has("stopped")&&this.stopped&&(this.flushLogs(),this.disconnect()),t.has("mac")&&this.mac!==this._macObserved&&(this.logs=[],this.pendingLogs=[],this.reconnectAttempts=0,this.visible&&this.connect())}connect(){this.stopped||!this.visible||(this.disconnect(),this.mac&&(this._macObserved=this.mac,this.eventSource=S.streamCompileLogs(this.mac,t=>{if(this.pendingLogs.push(t),t==="[build exited with code 0]"||t==="[build exited with code 1]"||t==="[status: idle]"){this.flushLogs(),this.stopped=!0,this.disconnect();return}this.scheduleFlush()},t=>{this.handleStreamError(t)})))}handleStreamError(t){if(this.stopped||!this.visible)return;this.eventSource&&(this.eventSource.close(),this.eventSource=null),this.reconnectAttempts++;const e=this.reconnectDelay*Math.pow(2,Math.min(this.reconnectAttempts-1,10));setTimeout(()=>this.connect(),e)}disconnect(){this.eventSource&&(this.eventSource.close(),this.eventSource=null),this.reconnectAttempts=0}scrollToBottom(){this.scrollTarget&&(this.scrollTarget.scrollTop=this.scrollTarget.scrollHeight)}toggleAutoScroll(){this.autoScroll=!this.autoScroll}clearLogs(){this.logs=[],this.pendingLogs=[]}scheduleFlush(){this.flushTimer||(this.flushTimer=setTimeout(()=>this.flushLogs(),$g))}flushLogs(){if(this.flushTimer&&(clearTimeout(this.flushTimer),this.flushTimer=null),this.pendingLogs.length===0)return;const t=[...this.logs,...this.pendingLogs].slice(-800);this.pendingLogs=[],this.logs=t,this.autoScroll&&this.visible&&this.updateComplete.then(()=>this.scrollToBottom())}render(){return p`
+ */const Ks=(t,e)=>{var s;const i=t._$AN;if(i===void 0)return!1;for(const r of i)(s=r._$AO)==null||s.call(r,e,!1),Ks(r,e);return!0},Cn=t=>{let e,i;do{if((e=t._$AM)===void 0)break;i=e._$AN,i.delete(t),t=e}while((i==null?void 0:i.size)===0)},Yd=t=>{for(let e;e=t._$AM;t=e){let i=e._$AN;if(i===void 0)e._$AN=i=new Set;else if(i.has(t))break;i.add(t),xg(e)}};function vg(t){this._$AN!==void 0?(Cn(this),this._$AM=t,Yd(this)):this._$AM=t}function yg(t,e=!1,i=0){const s=this._$AH,r=this._$AN;if(r!==void 0&&r.size!==0)if(e)if(Array.isArray(s))for(let n=i;n<s.length;n++)Ks(s[n],!1),Cn(s[n]);else s!=null&&(Ks(s,!1),Cn(s));else Ks(this,t)}const xg=t=>{t.type==mg.CHILD&&(t._$AP??(t._$AP=yg),t._$AQ??(t._$AQ=vg))};class wg extends bg{constructor(){super(...arguments),this._$AN=void 0}_$AT(e,i,s){super._$AT(e,i,s),Yd(this),this.isConnected=e._$AU}_$AO(e,i=!0){var s,r;e!==this.isConnected&&(this.isConnected=e,e?(s=this.reconnected)==null||s.call(this):(r=this.disconnected)==null||r.call(this)),i&&(Ks(this,e),Cn(this))}setValue(e){if(fg(this._$Ct))this._$Ct._$AI(e,this);else{const i=[...this._$Ct._$AH];i[this._$Ci]=e,this._$Ct._$AI(i,this,0)}}disconnected(){}reconnected(){}}const Po=new WeakMap,kg=gg(class extends wg{render(t){return b}update(t,[e]){var s;const i=e!==this.G;return i&&this.G!==void 0&&this.rt(void 0),(i||this.lt!==this.ct)&&(this.G=e,this.ht=(s=t.options)==null?void 0:s.host,this.rt(this.ct=t.element)),b}rt(t){if(this.isConnected||(t=void 0),typeof this.G=="function"){const e=this.ht??globalThis;let i=Po.get(e);i===void 0&&(i=new WeakMap,Po.set(e,i)),i.get(this.G)!==void 0&&this.G.call(this.ht,void 0),i.set(this.G,t),t!==void 0&&this.G.call(this.ht,t)}else this.G.value=t}get lt(){var t,e;return typeof this.G=="function"?(t=Po.get(this.ht??globalThis))==null?void 0:t.get(this.G):(e=this.G)==null?void 0:e.value}disconnected(){this.lt===this.ct&&this.rt(void 0)}reconnected(){this.rt(this.ct)}});var Sg=Object.defineProperty,Cg=Object.getOwnPropertyDescriptor,Es=(t,e,i,s)=>{for(var r=s>1?void 0:s?Cg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Sg(e,i,r),r};const $g=100;let ui=class extends pe{constructor(){super(...arguments),this.mac="",this.visible=!0,this.stopped=!1,this.logs=[],this.autoScroll=!0,this.eventSource=null,this._macObserved="",this.reconnectAttempts=0,this.reconnectDelay=1e3,this.pendingLogs=[],this.flushTimer=null,this.scrollTarget=null}connectedCallback(){super.connectedCallback(),this.visible&&this.connect()}disconnectedCallback(){this.disconnect(),super.disconnectedCallback()}updated(t){this.hidden=!this.visible,t.has("visible")&&(this.visible?this.connect():(this.flushLogs(),this.disconnect())),t.has("stopped")&&this.stopped&&(this.flushLogs(),this.disconnect()),t.has("mac")&&this.mac!==this._macObserved&&(this.logs=[],this.pendingLogs=[],this.reconnectAttempts=0,this.visible&&this.connect())}connect(){this.stopped||!this.visible||(this.disconnect(),this.mac&&(this._macObserved=this.mac,this.eventSource=S.streamCompileLogs(this.mac,t=>{if(this.pendingLogs.push(t),t==="[build exited with code 0]"||t==="[build exited with code 1]"||t==="[status: idle]"){this.flushLogs(),this.stopped=!0,this.disconnect();return}this.scheduleFlush()},t=>{this.handleStreamError(t)})))}handleStreamError(t){if(this.stopped||!this.visible)return;this.eventSource&&(this.eventSource.close(),this.eventSource=null),this.reconnectAttempts++;const e=this.reconnectDelay*Math.pow(2,Math.min(this.reconnectAttempts-1,10));setTimeout(()=>this.connect(),e)}disconnect(){this.eventSource&&(this.eventSource.close(),this.eventSource=null),this.reconnectAttempts=0}scrollToBottom(){this.scrollTarget&&(this.scrollTarget.scrollTop=this.scrollTarget.scrollHeight)}toggleAutoScroll(){this.autoScroll=!this.autoScroll}clearLogs(){this.logs=[],this.pendingLogs=[]}scheduleFlush(){this.flushTimer||(this.flushTimer=setTimeout(()=>this.flushLogs(),$g))}flushLogs(){if(this.flushTimer&&(clearTimeout(this.flushTimer),this.flushTimer=null),this.pendingLogs.length===0)return;const t=[...this.logs,...this.pendingLogs].slice(-800);this.pendingLogs=[],this.logs=t,this.autoScroll&&this.visible&&this.updateComplete.then(()=>this.scrollToBottom())}render(){return p`
       <div class="log-header">
         <span class="label">Build log</span>
         <div class="controls">
@@ -1366,7 +1370,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     }
     pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
     .empty { color: var(--log-muted); }
-  `];Es([ie({type:String})],ui.prototype,"mac",2);Es([ie({type:Boolean})],ui.prototype,"visible",2);Es([ie({type:Boolean})],ui.prototype,"stopped",2);Es([b()],ui.prototype,"logs",2);Es([b()],ui.prototype,"autoScroll",2);ui=Es([Se("esp-compile-log-viewer")],ui);var Og=Object.defineProperty,Ag=Object.getOwnPropertyDescriptor,at=(t,e,i,s)=>{for(var r=s>1?void 0:s?Ag(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Og(e,i,r),r};const Pg=["queued","starting","transferring","verifying","transfer_success_waiting_rejoin"],To=["compile_queued","compiling"];let ze=class extends pe{constructor(){super(...arguments),this.mac="",this.node=null,this.topology=[],this.currentJob=null,this.history=[],this.compileHistoryList=[],this.compileStatus="idle",this.loading=!0,this.error="",this.haBusy=!1,this.haNotice="",this.compileTimer=null}connectedCallback(){super.connectedCallback(),this.load(),this.schedulePoll()}disconnectedCallback(){this.timer&&window.clearInterval(this.timer),this.compileTimer&&window.clearInterval(this.compileTimer),super.disconnectedCallback()}schedulePoll(){this.timer&&window.clearInterval(this.timer);const e=this.currentJob&&Pg.includes(this.currentJob.status)?2e3:5e3;this.timer=window.setInterval(()=>void this.load(!1),e)}pollCompileStatus(){S.getCompileStatus(this.mac).then(t=>{this.compileStatus=t.status,To.includes(t.status)?this.compileTimer||(this.compileTimer=setInterval(()=>this.pollCompileStatus(),3e3)):this.compileTimer&&(clearInterval(this.compileTimer),this.compileTimer=null)}).catch(()=>{})}handleReflashResult(t){this.otaBox.preflight=t.detail.preflight,this.load(!1)}updated(){this.schedulePoll()}async load(t=!0,e=!1){t&&(this.loading=!0);try{const[i,s,r,n,o]=await Promise.all([S.topology(e),S.currentOtaForDevice(this.mac),S.getQueue(),S.history(this.mac),S.getCompileHistory(this.mac)]);this.topology=i,this.node=i.find(c=>Z(c.mac)===Z(this.mac))||null;const a=Z(this.mac),l=(r.queued_jobs??[]).find(c=>Z(c.mac)===a)??null;s&&s.job&&Z(s.job.mac)===a?this.currentJob=s.job:l?this.currentJob=l:this.currentJob=null,this.history=n.jobs,this.compileHistoryList=o.jobs,this.error="";const h=await S.getCompileStatus(this.mac).catch(()=>null);h&&(this.compileStatus=h.status),To.includes(this.compileStatus)&&this.pollCompileStatus()}catch(i){this.error=i instanceof Error?i.message:String(i)}finally{this.loading=!1}}async addToHomeAssistant(){this.haBusy=!0,this.haNotice="";try{const t=await S.integrationSetup();this.haNotice=t.success?"Home Assistant is adding this remote. It can take a few seconds to appear.":t.error||"Home Assistant didn't accept the request.",await this.load(!1)}catch(t){this.haNotice=t instanceof Error?t.message:String(t)}finally{this.haBusy=!1}}render(){if(this.loading)return p`<div class="card loading" aria-live="polite"><span class="spinner"></span>Loading device…</div>`;if(this.error)return p`<div class="notice danger" role="alert">${C("alert")}<span><strong>Couldn't load this device.</strong> ${this.error}</span>
+  `];Es([ie({type:String})],ui.prototype,"mac",2);Es([ie({type:Boolean})],ui.prototype,"visible",2);Es([ie({type:Boolean})],ui.prototype,"stopped",2);Es([v()],ui.prototype,"logs",2);Es([v()],ui.prototype,"autoScroll",2);ui=Es([Se("esp-compile-log-viewer")],ui);var Og=Object.defineProperty,Ag=Object.getOwnPropertyDescriptor,at=(t,e,i,s)=>{for(var r=s>1?void 0:s?Ag(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Og(e,i,r),r};const Pg=["queued","starting","transferring","verifying","transfer_success_waiting_rejoin"],To=["compile_queued","compiling"];let ze=class extends pe{constructor(){super(...arguments),this.mac="",this.node=null,this.topology=[],this.currentJob=null,this.history=[],this.compileHistoryList=[],this.compileStatus="idle",this.loading=!0,this.error="",this.haBusy=!1,this.haNotice="",this.compileTimer=null}connectedCallback(){super.connectedCallback(),this.load(),this.schedulePoll()}disconnectedCallback(){this.timer&&window.clearInterval(this.timer),this.compileTimer&&window.clearInterval(this.compileTimer),super.disconnectedCallback()}schedulePoll(){this.timer&&window.clearInterval(this.timer);const e=this.currentJob&&Pg.includes(this.currentJob.status)?2e3:5e3;this.timer=window.setInterval(()=>void this.load(!1),e)}pollCompileStatus(){S.getCompileStatus(this.mac).then(t=>{this.compileStatus=t.status,To.includes(t.status)?this.compileTimer||(this.compileTimer=setInterval(()=>this.pollCompileStatus(),3e3)):this.compileTimer&&(clearInterval(this.compileTimer),this.compileTimer=null)}).catch(()=>{})}handleReflashResult(t){this.otaBox.preflight=t.detail.preflight,this.load(!1)}updated(){this.schedulePoll()}async load(t=!0,e=!1){t&&(this.loading=!0);try{const[i,s,r,n,o]=await Promise.all([S.topology(e),S.currentOtaForDevice(this.mac),S.getQueue(),S.history(this.mac),S.getCompileHistory(this.mac)]);this.topology=i,this.node=i.find(c=>Z(c.mac)===Z(this.mac))||null;const a=Z(this.mac),l=(r.queued_jobs??[]).find(c=>Z(c.mac)===a)??null;s&&s.job&&Z(s.job.mac)===a?this.currentJob=s.job:l?this.currentJob=l:this.currentJob=null,this.history=n.jobs,this.compileHistoryList=o.jobs,this.error="";const h=await S.getCompileStatus(this.mac).catch(()=>null);h&&(this.compileStatus=h.status),To.includes(this.compileStatus)&&this.pollCompileStatus()}catch(i){this.error=i instanceof Error?i.message:String(i)}finally{this.loading=!1}}async addToHomeAssistant(){this.haBusy=!0,this.haNotice="";try{const t=await S.integrationSetup();this.haNotice=t.success?"Home Assistant is adding this remote. It can take a few seconds to appear.":t.error||"Home Assistant didn't accept the request.",await this.load(!1)}catch(t){this.haNotice=t instanceof Error?t.message:String(t)}finally{this.haBusy=!1}}render(){if(this.loading)return p`<div class="card loading" aria-live="polite"><span class="spinner"></span>Loading device…</div>`;if(this.error)return p`<div class="notice danger" role="alert">${C("alert")}<span><strong>Couldn't load this device.</strong> ${this.error}</span>
         <span class="notice-actions"><button class="btn sm" @click=${()=>void this.load()}>Try again</button></span></div>`;if(!this.node)return p`
         <nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Network</a>${C("chevronRight")}<span class="mono">${this.mac}</span></nav>
         <section class="card">
@@ -1390,7 +1394,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                   ${t.online?p`<span class="chip ok"><span class="dot ok"></span>Online</span>`:p`<span class="chip danger"><span class="dot danger"></span>${Sn(t)}</span>`}
                   <span>${t.is_bridge?"Bridge":t.relay_enabled?"Remote · relay":"Remote"}</span>
                   <span class="mono">${t.mac}</span>
-                  ${t.chip_name?p`<span>${t.chip_name}</span>`:v}
+                  ${t.chip_name?p`<span>${t.chip_name}</span>`:b}
                 </p>
               </div>
             </div>
@@ -1400,14 +1404,14 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
           </div>
         </div>
 
-        ${this.haNotice?p`<div class="notice info" role="status">${C("info")}<span>${this.haNotice}</span></div>`:v}
+        ${this.haNotice?p`<div class="notice info" role="status">${C("info")}<span>${this.haNotice}</span></div>`:b}
 
         <section class="card">
           <dl class="facts summary">
             <div><dt>Last seen</dt><dd>${t.is_bridge?"Now":t.last_seen_ago!=null?`${yt(t.last_seen_ago)||"0s"} ago`:"—"}</dd></div>
             <div><dt>Uptime</dt><dd>${yt(t.uptime_s)||"—"}</dd></div>
-            <div><dt>Signal</dt><dd>${o==null?"—":p`${o} dBm${a?p` <span class="q ${n}">${a}</span>`:v}`}</dd></div>
-            <div><dt>Route</dt><dd>${t.is_bridge?"Root of the mesh":s?p`via <a href=${`#/device/${encodeURIComponent(s.mac)}`}>${us(s)}</a>${(t.hops??0)>0?p` · ${t.hops} hop${t.hops===1?"":"s"}`:v}`:"Unknown (retained)"}</dd></div>
+            <div><dt>Signal</dt><dd>${o==null?"—":p`${o} dBm${a?p` <span class="q ${n}">${a}</span>`:b}`}</dd></div>
+            <div><dt>Route</dt><dd>${t.is_bridge?"Root of the mesh":s?p`via <a href=${`#/device/${encodeURIComponent(s.mac)}`}>${us(s)}</a>${(t.hops??0)>0?p` · ${t.hops} hop${t.hops===1?"":"s"}`:b}`:"Unknown (retained)"}</dd></div>
             <div><dt>Firmware</dt><dd>${t.project_version||t.firmware_version||"—"}</dd></div>
             <div><dt>Relay</dt><dd>${t.relay_enabled?"On":t.can_relay?"Available, off":"Not supported"}</dd></div>
           </dl>
@@ -1427,13 +1431,13 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                 .relayEnabled=${!!t.relay_enabled}
                 @config-changed=${()=>void this.load(!1,!0)}
               ></esp-device-config>
-            </section>`:v}
+            </section>`:b}
         </div>
 
         ${To.includes(this.compileStatus)||this.compileStatus==="failed"?p`<section class="card log-card">
               <div class="card-head"><h2>${this.compileStatus==="failed"?"Last build failed":"Building firmware"}</h2></div>
               <div class="card-body"><esp-compile-log-viewer .mac=${this.mac} .visible=${!0}></esp-compile-log-viewer></div>
-            </section>`:v}
+            </section>`:b}
 
         <div class="history-layout">
           <section class="card">
@@ -1470,44 +1474,44 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     @media (max-width: 960px) {
       .layout { grid-template-columns: minmax(0, 1fr); }
     }
-  `];at([ie({type:String})],ze.prototype,"mac",2);at([b()],ze.prototype,"node",2);at([b()],ze.prototype,"topology",2);at([b()],ze.prototype,"currentJob",2);at([b()],ze.prototype,"history",2);at([b()],ze.prototype,"compileHistoryList",2);at([b()],ze.prototype,"compileStatus",2);at([b()],ze.prototype,"loading",2);at([b()],ze.prototype,"error",2);at([b()],ze.prototype,"haBusy",2);at([b()],ze.prototype,"haNotice",2);at([bl("esp-ota-box")],ze.prototype,"otaBox",2);ze=at([Se("esp-device-detail")],ze);var Tg=Object.defineProperty,Mg=Object.getOwnPropertyDescriptor,le=(t,e,i,s)=>{for(var r=s>1?void 0:s?Mg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Tg(e,i,r),r};let te=class extends pe{constructor(){super(...arguments),this.autoInit=!1,this.config=null,this.configuredBridges=[],this.discoveredBridges=[],this.loading=!0,this.discovering=!1,this.saving=!1,this.error="",this.saved="",this.containerStatus=null,this.cleaningArtifacts=!1,this.artifactsMessage="",this.editingBridgeId=null,this.editApiKey="",this.editOtaPassword="",this.newBridgeApiKey="",this.showManualEntry=!1,this.manualHost="",this.manualPort=80,this.manualApiKey="",this.showScanLog=!1,this.scanLogContent="",this.scanLogLoading=!1,this.restarting=!1,this.restartFeedback="",this.confirm=null,this.integrationPollTimer=null}connectedCallback(){super.connectedCallback(),this.load(),this.loadContainerStatus(),this.integrationPollTimer=setInterval(()=>void this.pollIntegrationStatus(),5e3),this.autoInit&&this.discover()}disconnectedCallback(){super.disconnectedCallback(),this.integrationPollTimer&&(clearInterval(this.integrationPollTimer),this.integrationPollTimer=null)}async pollIntegrationStatus(){try{this.config=await S.config()}catch{}}async restartHa(){this.restarting=!0,this.restartFeedback="";try{const t=await S.requestRestart();t.success?this.restartFeedback="Restart requested":this.restartFeedback=t.error||"Restart failed"}catch{this.restartFeedback="Restart failed"}finally{this.restarting=!1,setTimeout(()=>{this.restartFeedback=""},4e3)}}async load(){this.loading=!0,this.error="";try{this.config=await S.config(),this.configuredBridges=await S.getBridges()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loading=!1}}async loadContainerStatus(){try{this.containerStatus=await S.getContainerStatus()}catch{this.containerStatus=null}}isBridgeConnected(t){var i;if(typeof t.client_connected=="boolean")return t.client_connected;if(!((i=this.config)!=null&&i.active_bridge)||this.config.active_bridge.error)return!1;const e=this.config.active_bridge;return e.uuid===t.uuid||e.host===t.host&&e.port===t.port}bridgeSkippedReason(t){return(t.client_skipped_reason||"").trim()}isBridgeActive(t){return!!t.is_active}isSerial(t){return t.transport==="serial"}bridgeHostname(t){return this.isSerial(t)?"serial":t.hostname||"-"}bridgeAddress(t){return this.isSerial(t)?t.serial_port||"-":t.host||"-"}async discover(){this.discovering=!0,this.error="",this.newBridgeApiKey="";try{const t=await S.discoverBridges();this.discoveredBridges=t.bridges,this.discoveredBridges.length===0&&(this.error="No bridges found. Make sure your bridge is powered on and connected to the same network, then try again. You can also use Manual IP to connect directly.")}catch(t){const e=t instanceof Error?t.message:String(t);e==="timeout"?this.error="Scan timed out. Try again or use View Scan Log to see scanned IPs, or use Manual IP to connect directly.":e==="cancelled"?this.error="":this.error=e}finally{this.discovering=!1}}async triggerScan(){this.discovering=!0,this.error="",this.newBridgeApiKey="";try{const t=await S.triggerScan();!t.success&&t.error&&(this.error=t.error),await this.discover()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.discovering=!1}}async viewScanLog(){if(this.showScanLog){this.showScanLog=!1;return}this.scanLogLoading=!0,this.showScanLog=!0;try{this.scanLogContent=await S.getScanLog()||"(empty)"}catch(t){this.scanLogContent=t instanceof Error?t.message:String(t)}finally{this.scanLogLoading=!1}}async selectBridge(t){if(!this.newBridgeApiKey.trim()){this.error="API key is required";return}this.saving=!0,this.error="",this.saved="";try{await S.selectBridge(t.host,t.port,t.name,t.version,this.newBridgeApiKey,t.network_id,t.hostname),this.saved=`Connected to ${t.name||t.host}`,this.discoveredBridges=[],this.newBridgeApiKey="",await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}async addManualBridge(){if(!this.manualHost.trim()){this.error="Host is required";return}if(!this.manualPort||this.manualPort<1||this.manualPort>65535){this.error="Valid port is required";return}this.saving=!0,this.error="",this.saved="";try{await S.addBridge(this.manualHost.trim(),this.manualPort,void 0,this.manualApiKey||"",""),this.saved=`Connected to ${this.manualHost}:${this.manualPort}`,this.showManualEntry=!1,this.manualHost="",this.manualPort=80,this.manualApiKey="",await this.load()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.saving=!1}}async deleteBridge(t){this.saving=!0,this.error="";try{await S.deleteBridge(t.uuid),this.saved="Bridge removed",await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}async saveBridgeCredentials(t){if(!this.editApiKey.trim()){this.error="API key is required";return}this.saving=!0,this.error="";try{await S.updateBridge(t.uuid,void 0,void 0,void 0,this.editApiKey,this.editOtaPassword),this.saved=`Credentials updated for ${t.name||t.host}`,this.editingBridgeId=null,this.editApiKey="",this.editOtaPassword="",await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}startEditingBridge(t){this.editingBridgeId=t.uuid,this.editApiKey=t.api_key||"",this.editOtaPassword=t.ota_password||""}cancelEditing(){this.editingBridgeId=null,this.editApiKey="",this.editOtaPassword=""}async cleanArtifacts(){this.cleaningArtifacts=!0,this.artifactsMessage="";try{const e=((await S.cleanArtifacts()).total_bytes/(1024*1024)).toFixed(1);this.artifactsMessage=`Cleared ${e} MB of build cache. Next compile will be slower.`,this.loadContainerStatus()}catch(t){this.artifactsMessage=`Error: ${t instanceof Error?t.message:String(t)}`}finally{this.cleaningArtifacts=!1}}async activateBridge(t){this.saving=!0,this.error="",this.saved="";try{await S.activateBridge(t.uuid),this.saved=`Activated ${t.name||t.host}`,await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}async deactivateBridge(t){this.saving=!0,this.error="",this.saved="";try{await S.deactivateBridge(t.uuid),this.saved=`Deactivated ${t.name||t.host}`,await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}renderIntegrationStatus(){var c;const t=(c=this.config)==null?void 0:c.integration;if(!t)return p`<div class="setting"><span class="what"><span class="spinner"></span></span></div>`;const{installed:e,loaded:i,configured:s,connected:r,bridge_count:n,remote_count:o}=t,a=typeof t.remotes_online=="number",l=a?t.remotes_online:0,h=a?o-l:0;return e?i?s?r?p`
+  `];at([ie({type:String})],ze.prototype,"mac",2);at([v()],ze.prototype,"node",2);at([v()],ze.prototype,"topology",2);at([v()],ze.prototype,"currentJob",2);at([v()],ze.prototype,"history",2);at([v()],ze.prototype,"compileHistoryList",2);at([v()],ze.prototype,"compileStatus",2);at([v()],ze.prototype,"loading",2);at([v()],ze.prototype,"error",2);at([v()],ze.prototype,"haBusy",2);at([v()],ze.prototype,"haNotice",2);at([bl("esp-ota-box")],ze.prototype,"otaBox",2);ze=at([Se("esp-device-detail")],ze);var Tg=Object.defineProperty,Mg=Object.getOwnPropertyDescriptor,le=(t,e,i,s)=>{for(var r=s>1?void 0:s?Mg(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Tg(e,i,r),r};let te=class extends pe{constructor(){super(...arguments),this.autoInit=!1,this.config=null,this.configuredBridges=[],this.discoveredBridges=[],this.loading=!0,this.discovering=!1,this.saving=!1,this.error="",this.saved="",this.containerStatus=null,this.cleaningArtifacts=!1,this.artifactsMessage="",this.editingBridgeId=null,this.editApiKey="",this.editOtaPassword="",this.newBridgeApiKey="",this.showManualEntry=!1,this.manualHost="",this.manualPort=80,this.manualApiKey="",this.showScanLog=!1,this.scanLogContent="",this.scanLogLoading=!1,this.restarting=!1,this.restartFeedback="",this.confirm=null,this.integrationPollTimer=null}connectedCallback(){super.connectedCallback(),this.load(),this.loadContainerStatus(),this.integrationPollTimer=setInterval(()=>void this.pollIntegrationStatus(),5e3),this.autoInit&&this.discover()}disconnectedCallback(){super.disconnectedCallback(),this.integrationPollTimer&&(clearInterval(this.integrationPollTimer),this.integrationPollTimer=null)}async pollIntegrationStatus(){try{this.config=await S.config()}catch{}}async restartHa(){this.restarting=!0,this.restartFeedback="";try{const t=await S.requestRestart();t.success?this.restartFeedback="Restart requested":this.restartFeedback=t.error||"Restart failed"}catch{this.restartFeedback="Restart failed"}finally{this.restarting=!1,setTimeout(()=>{this.restartFeedback=""},4e3)}}async load(){this.loading=!0,this.error="";try{this.config=await S.config(),this.configuredBridges=await S.getBridges()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loading=!1}}async loadContainerStatus(){try{this.containerStatus=await S.getContainerStatus()}catch{this.containerStatus=null}}isBridgeConnected(t){var i;if(typeof t.client_connected=="boolean")return t.client_connected;if(!((i=this.config)!=null&&i.active_bridge)||this.config.active_bridge.error)return!1;const e=this.config.active_bridge;return e.uuid===t.uuid||e.host===t.host&&e.port===t.port}bridgeSkippedReason(t){return(t.client_skipped_reason||"").trim()}isBridgeActive(t){return!!t.is_active}isSerial(t){return t.transport==="serial"}bridgeHostname(t){return this.isSerial(t)?"serial":t.hostname||"-"}bridgeAddress(t){return this.isSerial(t)?t.serial_port||"-":t.host||"-"}async discover(){this.discovering=!0,this.error="",this.newBridgeApiKey="";try{const t=await S.discoverBridges();this.discoveredBridges=t.bridges,this.discoveredBridges.length===0&&(this.error="No bridges found. Make sure your bridge is powered on and connected to the same network, then try again. You can also use Manual IP to connect directly.")}catch(t){const e=t instanceof Error?t.message:String(t);e==="timeout"?this.error="Scan timed out. Try again or use View Scan Log to see scanned IPs, or use Manual IP to connect directly.":e==="cancelled"?this.error="":this.error=e}finally{this.discovering=!1}}async triggerScan(){this.discovering=!0,this.error="",this.newBridgeApiKey="";try{const t=await S.triggerScan();!t.success&&t.error&&(this.error=t.error),await this.discover()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.discovering=!1}}async viewScanLog(){if(this.showScanLog){this.showScanLog=!1;return}this.scanLogLoading=!0,this.showScanLog=!0;try{this.scanLogContent=await S.getScanLog()||"(empty)"}catch(t){this.scanLogContent=t instanceof Error?t.message:String(t)}finally{this.scanLogLoading=!1}}async selectBridge(t){if(!this.newBridgeApiKey.trim()){this.error="API key is required";return}this.saving=!0,this.error="",this.saved="";try{await S.selectBridge(t.host,t.port,t.name,t.version,this.newBridgeApiKey,t.network_id,t.hostname),this.saved=`Connected to ${t.name||t.host}`,this.discoveredBridges=[],this.newBridgeApiKey="",await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}async addManualBridge(){if(!this.manualHost.trim()){this.error="Host is required";return}if(!this.manualPort||this.manualPort<1||this.manualPort>65535){this.error="Valid port is required";return}this.saving=!0,this.error="",this.saved="";try{await S.addBridge(this.manualHost.trim(),this.manualPort,void 0,this.manualApiKey||"",""),this.saved=`Connected to ${this.manualHost}:${this.manualPort}`,this.showManualEntry=!1,this.manualHost="",this.manualPort=80,this.manualApiKey="",await this.load()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.saving=!1}}async deleteBridge(t){this.saving=!0,this.error="";try{await S.deleteBridge(t.uuid),this.saved="Bridge removed",await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}async saveBridgeCredentials(t){if(!this.editApiKey.trim()){this.error="API key is required";return}this.saving=!0,this.error="";try{await S.updateBridge(t.uuid,void 0,void 0,void 0,this.editApiKey,this.editOtaPassword),this.saved=`Credentials updated for ${t.name||t.host}`,this.editingBridgeId=null,this.editApiKey="",this.editOtaPassword="",await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}startEditingBridge(t){this.editingBridgeId=t.uuid,this.editApiKey=t.api_key||"",this.editOtaPassword=t.ota_password||""}cancelEditing(){this.editingBridgeId=null,this.editApiKey="",this.editOtaPassword=""}async cleanArtifacts(){this.cleaningArtifacts=!0,this.artifactsMessage="";try{const e=((await S.cleanArtifacts()).total_bytes/(1024*1024)).toFixed(1);this.artifactsMessage=`Cleared ${e} MB of build cache. Next compile will be slower.`,this.loadContainerStatus()}catch(t){this.artifactsMessage=`Error: ${t instanceof Error?t.message:String(t)}`}finally{this.cleaningArtifacts=!1}}async activateBridge(t){this.saving=!0,this.error="",this.saved="";try{await S.activateBridge(t.uuid),this.saved=`Activated ${t.name||t.host}`,await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}async deactivateBridge(t){this.saving=!0,this.error="",this.saved="";try{await S.deactivateBridge(t.uuid),this.saved=`Deactivated ${t.name||t.host}`,await this.load()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.saving=!1}}renderIntegrationStatus(){var c;const t=(c=this.config)==null?void 0:c.integration;if(!t)return p`<div class="setting"><span class="what"><span class="spinner"></span></span></div>`;const{installed:e,loaded:i,configured:s,connected:r,bridge_count:n,remote_count:o}=t,a=typeof t.remotes_online=="number",l=a?t.remotes_online:0,h=a?o-l:0;return e?i?s?r?p`
       <div class="status-line">
         <span class="chip ok"><span class="dot ok"></span>Connected</span>
         <span>Version ${t.version||"unknown"}</span>
-        ${n>0?p`<span>${n} ${n===1?"bridge":"bridges"}</span>`:v}
-        ${a?p`<span>${l} of ${o} remotes online${h>0?p` · <span class="warn-text">${h} offline</span>`:v}</span>`:p`<span>${o} ${o===1?"remote":"remotes"} known</span>`}
+        ${n>0?p`<span>${n} ${n===1?"bridge":"bridges"}</span>`:b}
+        ${a?p`<span>${l} of ${o} remotes online${h>0?p` · <span class="warn-text">${h} offline</span>`:b}</span>`:p`<span>${o} ${o===1?"remote":"remotes"} known</span>`}
       </div>
     `:p`<div class="notice danger">${C("alert")}<span><strong>The integration lost its connection to the add-on.</strong> It reconnects automatically; if it doesn't, reload the integration in Home Assistant.</span></div>`:p`<div class="notice warn">${C("info")}<span><strong>Not set up yet.</strong> In Home Assistant, go to Settings → Devices &amp; services → Add integration, and search for ESP Tree.</span></div>`:p`
         <div class="notice warn">${C("info")}<span><strong>Installed but not loaded yet.</strong> Home Assistant loads the integration on its next restart.</span>
           <span class="notice-actions"><button class="btn sm primary" ?disabled=${this.restarting} @click=${this.restartHa}>${this.restarting?"Restarting…":"Restart Home Assistant"}</button></span>
         </div>
-        ${this.restartFeedback?p`<p class="hint">${this.restartFeedback}</p>`:v}
+        ${this.restartFeedback?p`<p class="hint">${this.restartFeedback}</p>`:b}
       `:p`<div class="notice danger">${C("alert")}<span><strong>Integration files not found.</strong> Restart Home Assistant to finish installing ESP Tree.</span></div>`}confirmDeleteBridge(t){this.confirm={title:`Remove ${t.name||"this bridge"}?`,message:"ESP Tree forgets this bridge and its credentials. The bridge itself keeps running and can be added again later.",detail:this.isBridgeActive(t)?"This is the active bridge: the network goes offline in ESP Tree until another bridge is activated.":void 0,confirmLabel:"Remove bridge",danger:!0,run:()=>this.deleteBridge(t)}}confirmCleanArtifacts(){this.confirm={title:"Clear the build cache?",message:"Deletes the PlatformIO cache and ESPHome build output. Use it to free disk space or recover from a stale build.",detail:"The next build of every device downloads toolchains again and is much slower.",confirmLabel:"Clear cache",run:()=>this.cleanArtifacts()}}renderBridge(t){const e=this.isBridgeActive(t),i=this.isBridgeConnected(t),s=this.bridgeSkippedReason(t),r=this.editingBridgeId===t.uuid;return p`
       <li class=${e?"active":""}>
         <div class="bridge-row">
           <span class="node-icon ${e?"on":""}" aria-hidden="true">${C(this.isSerial(t)?"usb":"wifi")}</span>
           <span class="what">
             <strong>${t.name||this.bridgeHostname(t)}
-              ${e?p`<span class="chip primary">Active</span>`:v}
+              ${e?p`<span class="chip primary">Active</span>`:b}
             </strong>
             <small>
               ${this.isSerial(t)?"Serial":"WiFi"} ·
               <span class="mono">${this.bridgeAddress(t)}${!this.isSerial(t)&&t.port?`:${t.port}`:""}</span>
-              ${t.network_id?p` · network ${t.network_id}`:v}
+              ${t.network_id?p` · network ${t.network_id}`:b}
             </small>
           </span>
           <span class="conn">
-            ${i?p`<span class="chip ok"><span class="dot ok"></span>Connected</span>`:p`<span class="chip ${e?"danger":""}" title=${s||""}>${e?p`<span class="dot danger"></span>`:v}${e?"Not connected":"Standby"}</span>`}
+            ${i?p`<span class="chip ok"><span class="dot ok"></span>Connected</span>`:p`<span class="chip ${e?"danger":""}" title=${s||""}>${e?p`<span class="dot danger"></span>`:b}${e?"Not connected":"Standby"}</span>`}
           </span>
           <span class="row-actions">
-            ${r?v:p`
+            ${r?b:p`
               ${e?p`<button class="btn sm" ?disabled=${this.saving} @click=${()=>this.deactivateBridge(t)}>Deactivate</button>`:p`<button class="btn sm primary" ?disabled=${this.saving} @click=${()=>this.activateBridge(t)}>Activate</button>`}
               <button class="btn sm text" ?disabled=${this.saving} @click=${()=>this.startEditingBridge(t)}>Credentials</button>
               <button class="btn sm text danger-text" ?disabled=${this.saving} aria-label=${`Remove ${t.name||"bridge"}`} @click=${()=>this.confirmDeleteBridge(t)}>${C("trash")}</button>
             `}
           </span>
         </div>
-        ${s&&!i&&e?p`<p class="skip">${s}</p>`:v}
+        ${s&&!i&&e?p`<p class="skip">${s}</p>`:b}
         ${r?p`
           <form class="inline-form" @submit=${n=>{n.preventDefault(),this.saveBridgeCredentials(t)}}>
             <div class="field">
@@ -1525,7 +1529,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
               <button type="submit" class="btn primary" ?disabled=${this.saving}>Save</button>
             </div>
           </form>
-        `:v}
+        `:b}
       </li>
     `}render(){var t,e,i,s;return this.loading?p`<div class="card loading"><span class="spinner"></span>Loading settings…</div>`:p`
       <div class="page">
@@ -1536,8 +1540,8 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
           </div>
         </div>
 
-        ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:v}
-        ${this.saved?p`<div class="notice ok" role="status">${C("checkCircle")}<span>${this.saved}</span></div>`:v}
+        ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:b}
+        ${this.saved?p`<div class="notice ok" role="status">${C("checkCircle")}<span>${this.saved}</span></div>`:b}
 
         <section class="card" id="settings-connection">
           <div class="card-head">
@@ -1556,7 +1560,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
 
           ${this.configuredBridges.length>0?p`<ul class="bridges">${this.configuredBridges.map(r=>this.renderBridge(r))}</ul>`:p`<div class="empty">${C("bridge")}<strong>No bridges yet</strong><p>Find a bridge on your network, or add one by address.</p></div>`}
 
-          ${this.discovering?p`<p class="pad hint">Searching your network for ESP Tree bridges. This takes about 8 seconds.</p>`:v}
+          ${this.discovering?p`<p class="pad hint">Searching your network for ESP Tree bridges. This takes about 8 seconds.</p>`:b}
 
           ${this.discoveredBridges.length>0?p`
             <div class="sub-section">
@@ -1578,7 +1582,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                 `)}
               </ul>
             </div>
-          `:v}
+          `:b}
 
           ${this.showManualEntry?p`
             <form class="sub-section manual" @submit=${r=>{r.preventDefault(),this.addManualBridge()}}>
@@ -1599,14 +1603,14 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
               </div>
               <div class="form-actions"><button type="submit" class="btn primary" ?disabled=${this.saving}>Connect</button></div>
             </form>
-          `:v}
+          `:b}
 
           ${this.showScanLog?p`
             <div class="sub-section">
               <h3>Scan log</h3>
               ${this.scanLogLoading?p`<p class="hint"><span class="spinner"></span></p>`:p`<pre class="log">${this.scanLogContent||"No scans yet."}</pre>`}
             </div>
-          `:v}
+          `:b}
         </section>
 
         <section class="card" id="settings-integration">
@@ -1698,7 +1702,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
       .key { flex: 1 1 100%; width: auto; }
       .skip { margin-left: 16px; }
     }
-  `];le([ie({type:Boolean})],te.prototype,"autoInit",2);le([b()],te.prototype,"config",2);le([b()],te.prototype,"configuredBridges",2);le([b()],te.prototype,"discoveredBridges",2);le([b()],te.prototype,"loading",2);le([b()],te.prototype,"discovering",2);le([b()],te.prototype,"saving",2);le([b()],te.prototype,"error",2);le([b()],te.prototype,"saved",2);le([b()],te.prototype,"containerStatus",2);le([b()],te.prototype,"cleaningArtifacts",2);le([b()],te.prototype,"artifactsMessage",2);le([b()],te.prototype,"editingBridgeId",2);le([b()],te.prototype,"editApiKey",2);le([b()],te.prototype,"editOtaPassword",2);le([b()],te.prototype,"newBridgeApiKey",2);le([b()],te.prototype,"showManualEntry",2);le([b()],te.prototype,"manualHost",2);le([b()],te.prototype,"manualPort",2);le([b()],te.prototype,"manualApiKey",2);le([b()],te.prototype,"showScanLog",2);le([b()],te.prototype,"scanLogContent",2);le([b()],te.prototype,"scanLogLoading",2);le([b()],te.prototype,"restarting",2);le([b()],te.prototype,"restartFeedback",2);le([b()],te.prototype,"confirm",2);te=le([Se("esp-settings")],te);var Eg=Object.defineProperty,_g=Object.getOwnPropertyDescriptor,Wt=(t,e,i,s)=>{for(var r=s>1?void 0:s?_g(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Eg(e,i,r),r};const Dg=300,Ph=new Set(["success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"]);let pt=class extends pe{constructor(){super(...arguments),this.queueData=null,this.compileData=null,this.historyJobs=[],this.error="",this.busyJob=null,this.busyAction="",this.showAbortModal=!1,this.historyFilter="all",this.historyLimit=10,this.pollTimer=null,this.historyTimer=null}connectedCallback(){super.connectedCallback(),this.fetchQueue(),this.pollTimer=setInterval(()=>this.fetchQueue(),2e3),this.fetchHistory(),this.historyTimer=setInterval(()=>this.fetchHistory(),5e3)}disconnectedCallback(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null),this.historyTimer&&(clearInterval(this.historyTimer),this.historyTimer=null),super.disconnectedCallback()}async fetchQueue(){try{const[t,e]=await Promise.all([S.getQueue(),S.getCompileQueue()]);this.queueData=t,this.compileData=e}catch{}}async fetchHistory(){try{const t=await S.getAllHistory(100);this.historyJobs=t.jobs}catch{}}async pauseQueue(){this.busyAction="pause",this.error="";try{await S.pauseQueue(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.busyAction=""}}async resumeQueue(){this.busyAction="resume",this.error="";try{await S.resumeQueue(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.busyAction=""}}async abortQueuedJob(t){this.busyJob=t,this.error="";try{await S.abortQueuedJob(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async abortCompileJob(t){this.busyJob=t,this.error="";try{await S.abortCompileJob(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async moveUp(t){this.busyJob=t,this.error="";try{await S.reorderJobUp(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async moveDown(t){this.busyJob=t,this.error="";try{await S.reorderJobDown(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async abortActiveJob(){this.busyAction="abort-active",this.error="";try{if((await S.getQueue()).count>0){this.showAbortModal=!0;return}await S.abortOta(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.busyAction=""}}async abortActiveAndContinue(){this.showAbortModal=!1;try{await S.abortOta(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}}async abortActiveAndPause(){this.showAbortModal=!1;try{await S.abortOta(),await S.pauseQueue(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}}navigateToJob(t){window.location.hash=`/job/${t.id}?from=${encodeURIComponent("/queue")}`}labelFor(t){return t.device_label||t.parsed_esphome_name||t.esphome_name||t.mac}typeOf(t){return Vd(t.status)||t.job_type==="compile"?"compile":"flash"}buildDisplayEntries(){const i=[...this.historyJobs.filter(r=>Xd.includes(r.status)).filter(r=>this.historyFilter==="all"||this.typeOf(r)===this.historyFilter)].sort((r,n)=>(r.created_at??0)-(n.created_at??0)),s=[];for(let r=0;r<i.length;r++){const n=i[r],o=i[r+1],a=this.typeOf(n),l=n.completed_at??n.created_at;if(o&&a==="compile"&&this.typeOf(o)==="flash"&&n.mac===o.mac&&o.created_at-l<=Dg){const h=o.status==="success"&&n.status==="compile_success"?"success":"failed";s.push({type:"combined",compileJob:n,flashJob:o,label:this.labelFor(n),status:h,statusLabel:h==="success"?"Success":"Failed",created_at:o.created_at}),r++}else s.push({type:a,job:n,label:this.labelFor(n),status:n.status,statusLabel:n.status==="success"&&a==="flash"?"OTA Upload Success":n.status.replaceAll("_"," "),created_at:n.created_at})}return s.sort((r,n)=>n.created_at-r.created_at),s}render(){var d,u;const t=this.queueData,e=!!(t!=null&&t.active_job)&&!Ph.has(t.active_job.status),i=(t==null?void 0:t.queued_jobs)??[],s=(t==null?void 0:t.paused)??!1,r=i.length+(e?1:0),n=((d=this.compileData)==null?void 0:d.active_job)??null,o=((u=this.compileData)==null?void 0:u.queued_jobs)??[],a=o.length+(n?1:0),l=this.buildDisplayEntries(),h=l.slice(0,this.historyLimit),c=l.length;return p`
+  `];le([ie({type:Boolean})],te.prototype,"autoInit",2);le([v()],te.prototype,"config",2);le([v()],te.prototype,"configuredBridges",2);le([v()],te.prototype,"discoveredBridges",2);le([v()],te.prototype,"loading",2);le([v()],te.prototype,"discovering",2);le([v()],te.prototype,"saving",2);le([v()],te.prototype,"error",2);le([v()],te.prototype,"saved",2);le([v()],te.prototype,"containerStatus",2);le([v()],te.prototype,"cleaningArtifacts",2);le([v()],te.prototype,"artifactsMessage",2);le([v()],te.prototype,"editingBridgeId",2);le([v()],te.prototype,"editApiKey",2);le([v()],te.prototype,"editOtaPassword",2);le([v()],te.prototype,"newBridgeApiKey",2);le([v()],te.prototype,"showManualEntry",2);le([v()],te.prototype,"manualHost",2);le([v()],te.prototype,"manualPort",2);le([v()],te.prototype,"manualApiKey",2);le([v()],te.prototype,"showScanLog",2);le([v()],te.prototype,"scanLogContent",2);le([v()],te.prototype,"scanLogLoading",2);le([v()],te.prototype,"restarting",2);le([v()],te.prototype,"restartFeedback",2);le([v()],te.prototype,"confirm",2);te=le([Se("esp-settings")],te);var Eg=Object.defineProperty,_g=Object.getOwnPropertyDescriptor,Wt=(t,e,i,s)=>{for(var r=s>1?void 0:s?_g(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Eg(e,i,r),r};const Dg=300,Ph=new Set(["success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"]);let pt=class extends pe{constructor(){super(...arguments),this.queueData=null,this.compileData=null,this.historyJobs=[],this.error="",this.busyJob=null,this.busyAction="",this.showAbortModal=!1,this.historyFilter="all",this.historyLimit=10,this.pollTimer=null,this.historyTimer=null}connectedCallback(){super.connectedCallback(),this.fetchQueue(),this.pollTimer=setInterval(()=>this.fetchQueue(),2e3),this.fetchHistory(),this.historyTimer=setInterval(()=>this.fetchHistory(),5e3)}disconnectedCallback(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null),this.historyTimer&&(clearInterval(this.historyTimer),this.historyTimer=null),super.disconnectedCallback()}async fetchQueue(){try{const[t,e]=await Promise.all([S.getQueue(),S.getCompileQueue()]);this.queueData=t,this.compileData=e}catch{}}async fetchHistory(){try{const t=await S.getAllHistory(100);this.historyJobs=t.jobs}catch{}}async pauseQueue(){this.busyAction="pause",this.error="";try{await S.pauseQueue(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.busyAction=""}}async resumeQueue(){this.busyAction="resume",this.error="";try{await S.resumeQueue(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.busyAction=""}}async abortQueuedJob(t){this.busyJob=t,this.error="";try{await S.abortQueuedJob(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async abortCompileJob(t){this.busyJob=t,this.error="";try{await S.abortCompileJob(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async moveUp(t){this.busyJob=t,this.error="";try{await S.reorderJobUp(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async moveDown(t){this.busyJob=t,this.error="";try{await S.reorderJobDown(t),await this.fetchQueue()}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.busyJob=null}}async abortActiveJob(){this.busyAction="abort-active",this.error="";try{if((await S.getQueue()).count>0){this.showAbortModal=!0;return}await S.abortOta(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.busyAction=""}}async abortActiveAndContinue(){this.showAbortModal=!1;try{await S.abortOta(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}}async abortActiveAndPause(){this.showAbortModal=!1;try{await S.abortOta(),await S.pauseQueue(),await this.fetchQueue()}catch(t){this.error=t instanceof Error?t.message:String(t)}}navigateToJob(t){window.location.hash=`/job/${t.id}?from=${encodeURIComponent("/queue")}`}labelFor(t){return t.device_label||t.parsed_esphome_name||t.esphome_name||t.mac}typeOf(t){return Vd(t.status)||t.job_type==="compile"?"compile":"flash"}buildDisplayEntries(){const i=[...this.historyJobs.filter(r=>Xd.includes(r.status)).filter(r=>this.historyFilter==="all"||this.typeOf(r)===this.historyFilter)].sort((r,n)=>(r.created_at??0)-(n.created_at??0)),s=[];for(let r=0;r<i.length;r++){const n=i[r],o=i[r+1],a=this.typeOf(n),l=n.completed_at??n.created_at;if(o&&a==="compile"&&this.typeOf(o)==="flash"&&n.mac===o.mac&&o.created_at-l<=Dg){const h=o.status==="success"&&n.status==="compile_success"?"success":"failed";s.push({type:"combined",compileJob:n,flashJob:o,label:this.labelFor(n),status:h,statusLabel:h==="success"?"Success":"Failed",created_at:o.created_at}),r++}else s.push({type:a,job:n,label:this.labelFor(n),status:n.status,statusLabel:n.status==="success"&&a==="flash"?"OTA Upload Success":n.status.replaceAll("_"," "),created_at:n.created_at})}return s.sort((r,n)=>n.created_at-r.created_at),s}render(){var d,u;const t=this.queueData,e=!!(t!=null&&t.active_job)&&!Ph.has(t.active_job.status),i=(t==null?void 0:t.queued_jobs)??[],s=(t==null?void 0:t.paused)??!1,r=i.length+(e?1:0),n=((d=this.compileData)==null?void 0:d.active_job)??null,o=((u=this.compileData)==null?void 0:u.queued_jobs)??[],a=o.length+(n?1:0),l=this.buildDisplayEntries(),h=l.slice(0,this.historyLimit),c=l.length;return p`
       <div class="page">
         <div class="page-head">
           <div>
@@ -1710,8 +1714,8 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
           </div>
         </div>
 
-        ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span><strong>That didn't work.</strong> ${this.error}</span></div>`:v}
-        ${s?p`<div class="notice warn" role="status">${C("pause")}<span><strong>Uploads are paused.</strong> Queued uploads wait until you resume. Builds keep running.</span></div>`:v}
+        ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span><strong>That didn't work.</strong> ${this.error}</span></div>`:b}
+        ${s?p`<div class="notice warn" role="status">${C("pause")}<span><strong>Uploads are paused.</strong> Queued uploads wait until you resume. Builds keep running.</span></div>`:b}
 
         <div class="queues">
           <section class="card">
@@ -1720,7 +1724,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
               <span class="chip ${n?"info":""}">${this.countLabel(n?1:0,o.length)}</span>
             </div>
             ${a===0?p`<p class="none">No builds running. Compile from a remote's YAML page.</p>`:p`<ul class="hist">
-                  ${n?this.renderCompileRow(n,!0):v}
+                  ${n?this.renderCompileRow(n,!0):b}
                   ${o.map(f=>this.renderCompileRow(f,!1))}
                 </ul>`}
           </section>
@@ -1731,7 +1735,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
               <span class="chip ${e?"info":s&&r?"warn":""}">${this.countLabel(e?1:0,i.length)}</span>
             </div>
             ${r===0?p`<p class="none">Nothing to upload. Start one from a remote's page or its YAML.</p>`:p`<ul class="hist">
-                  ${e&&t.active_job?this.renderOtaRow(t.active_job,1,r,!0):v}
+                  ${e&&t.active_job?this.renderOtaRow(t.active_job,1,r,!0):b}
                   ${i.map((f,m)=>this.renderOtaRow(f,m+(e?2:1),r,!1))}
                 </ul>`}
           </section>
@@ -1750,11 +1754,11 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
                 <ul class="hist">
                   ${h.map(f=>f.type==="combined"?this.renderCombinedRow(f):this.renderHistoryRow(f))}
                 </ul>
-                ${c>this.historyLimit?p`<div class="more"><button class="btn sm text" @click=${()=>{this.historyLimit+=10}}>Show ${Math.min(10,c-this.historyLimit)} older</button></div>`:v}
+                ${c>this.historyLimit?p`<div class="more"><button class="btn sm text" @click=${()=>{this.historyLimit+=10}}>Show ${Math.min(10,c-this.historyLimit)} older</button></div>`:b}
               `}
         </section>
 
-        ${this.showAbortModal?this.renderAbortModal():v}
+        ${this.showAbortModal?this.renderAbortModal():b}
       </div>
     `}countLabel(t,e){return!t&&!e?"Idle":[t?`${t} running`:"",e?`${e} queued`:""].filter(Boolean).join(" · ")}deviceLink(t,e){return p`<a class="dev" href=${`#/device/${encodeURIComponent(t)}`}>${e}</a>`}renderCompileRow(t,e){const i=this.busyJob===t.id;return p`
       <li>
@@ -1804,7 +1808,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
         <span class="what">
           <strong>${this.deviceLink(e.mac,t.label)}</strong>
           <small>${this.typeChip(t.type)}${[e.parsed_version?`v${e.parsed_version}`:e.firmware_name||"",i?`took ${i}`:""].filter(Boolean).map(s=>p` · ${s}`)}</small>
-          ${e.error_msg&&Ph.has(t.status)&&t.status!=="success"?p`<small class="err">${e.error_msg}</small>`:v}
+          ${e.error_msg&&Ph.has(t.status)&&t.status!=="success"?p`<small class="${t.status==="rejoined_unverified"?"note":"err"}">${e.error_msg}</small>`:b}
         </span>
         ${ni(t.status)}
         <span class="when" title=${Vi(e.created_at)}>${kn(e.created_at)}</span>
@@ -1815,7 +1819,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
         <span class="what">
           <strong>${this.deviceLink(e.mac,t.label)}</strong>
           <small>${this.typeChip("combined")}${e.parsed_version?` · v${e.parsed_version}`:""}${s||r?` · build ${s||"—"}, upload ${r||"—"}`:""}</small>
-          ${i.error_msg&&t.status!=="success"?p`<small class="err">${i.error_msg}</small>`:v}
+          ${i.error_msg&&t.status!=="success"?p`<small class="${t.status==="rejoined_unverified"?"note":"err"}">${i.error_msg}</small>`:b}
         </span>
         ${ni(t.status)}
         <span class="when" title=${Vi(i.created_at)}>${kn(i.created_at)}</span>
@@ -1866,7 +1870,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
     @media (max-width: 640px) {
       .hist li { grid-template-columns: minmax(0, 1fr) auto; }
     }
-  `];Wt([b()],pt.prototype,"queueData",2);Wt([b()],pt.prototype,"compileData",2);Wt([b()],pt.prototype,"historyJobs",2);Wt([b()],pt.prototype,"error",2);Wt([b()],pt.prototype,"busyJob",2);Wt([b()],pt.prototype,"busyAction",2);Wt([b()],pt.prototype,"showAbortModal",2);Wt([b()],pt.prototype,"historyFilter",2);Wt([b()],pt.prototype,"historyLimit",2);pt=Wt([Se("esp-queue-page")],pt);let ua=[],Gd=[];(()=>{let t="lc,34,7n,7,7b,19,,,,2,,2,,,20,b,1c,l,g,,2t,7,2,6,2,2,,4,z,,u,r,2j,b,1m,9,9,,o,4,,9,,3,,5,17,3,3b,f,,w,1j,,,,4,8,4,,3,7,a,2,t,,1m,,,,2,4,8,,9,,a,2,q,,2,2,1l,,4,2,4,2,2,3,3,,u,2,3,,b,2,1l,,4,5,,2,4,,k,2,m,6,,,1m,,,2,,4,8,,7,3,a,2,u,,1n,,,,c,,9,,14,,3,,1l,3,5,3,,4,7,2,b,2,t,,1m,,2,,2,,3,,5,2,7,2,b,2,s,2,1l,2,,,2,4,8,,9,,a,2,t,,20,,4,,2,3,,,8,,29,,2,7,c,8,2q,,2,9,b,6,22,2,r,,,,,,1j,e,,5,,2,5,b,,10,9,,2u,4,,6,,2,2,2,p,2,4,3,g,4,d,,2,2,6,,f,,jj,3,qa,3,t,3,t,2,u,2,1s,2,,7,8,,2,b,9,,19,3,3b,2,y,,3a,3,4,2,9,,6,3,63,2,2,,1m,,,7,,,,,2,8,6,a,2,,1c,h,1r,4,1c,7,,,5,,14,9,c,2,w,4,2,2,,3,1k,,,2,3,,,3,1m,8,2,2,48,3,,d,,7,4,,6,,3,2,5i,1m,,5,ek,,5f,x,2da,3,3x,,2o,w,fe,6,2x,2,n9w,4,,a,w,2,28,2,7k,,3,,4,,p,2,5,,47,2,q,i,d,,12,8,p,b,1a,3,1c,,2,4,2,2,13,,1v,6,2,2,2,2,c,,8,,1b,,1f,,,3,2,2,5,2,,,16,2,8,,6m,,2,,4,,fn4,,kh,g,g,g,a6,2,gt,,6a,,45,5,1ae,3,,2,5,4,14,3,4,,4l,2,fx,4,ar,2,49,b,4w,,1i,f,1k,3,1d,4,2,2,1x,3,10,5,,8,1q,,c,2,1g,9,a,4,2,,2n,3,2,,,2,6,,4g,,3,8,l,2,1l,2,,,,,m,,e,7,3,5,5f,8,2,3,,,n,,29,,2,6,,,2,,,2,,2,6j,,2,4,6,2,,2,r,2,2d,8,2,,,2,2y,,,,2,6,,,2t,3,2,4,,5,77,9,,2,6t,,a,2,,,4,,40,4,2,2,4,,w,a,14,6,2,4,8,,9,6,2,3,1a,d,,2,ba,7,,6,,,2a,m,2,7,,2,,2,3e,6,3,,,2,,7,,,20,2,3,,,,9n,2,f0b,5,1n,7,t4,,1r,4,29,,f5k,2,43q,,,3,4,5,8,8,2,7,u,4,44,3,1iz,1j,4,1e,8,,e,,m,5,,f,11s,7,,h,2,7,,2,,5,79,7,c5,4,15s,7,31,7,240,5,gx7k,2o,3k,6o".split(",").map(e=>e?parseInt(e,36):1);for(let e=0,i=0;e<t.length;e++)(e%2?Gd:ua).push(i=i+t[e])})();function Bg(t){if(t<768)return!1;for(let e=0,i=ua.length;;){let s=e+i>>1;if(t<ua[s])i=s;else if(t>=Gd[s])e=s+1;else return!0;if(e==i)return!1}}function Th(t){return t>=127462&&t<=127487}const Mh=8205;function Rg(t,e,i=!0,s=!0){return(i?Zd:Lg)(t,e,s)}function Zd(t,e,i){if(e==t.length)return e;e&&eu(t.charCodeAt(e))&&tu(t.charCodeAt(e-1))&&e--;let s=Mo(t,e);for(e+=Eh(s);e<t.length;){let r=Mo(t,e);if(s==Mh||r==Mh||i&&Bg(r))e+=Eh(r),s=r;else if(Th(r)){let n=0,o=e-2;for(;o>=0&&Th(Mo(t,o));)n++,o-=2;if(n%2==0)break;e+=2}else break}return e}function Lg(t,e,i){for(;e>0;){let s=Zd(t,e-2,i);if(s<e)return s;e--}return 0}function Mo(t,e){let i=t.charCodeAt(e);if(!tu(i)||e+1==t.length)return i;let s=t.charCodeAt(e+1);return eu(s)?(i-55296<<10)+(s-56320)+65536:i}function eu(t){return t>=56320&&t<57344}function tu(t){return t>=55296&&t<56320}function Eh(t){return t<65536?1:2}class Y{lineAt(e){if(e<0||e>this.length)throw new RangeError(`Invalid position ${e} in document of length ${this.length}`);return this.lineInner(e,!1,1,0)}line(e){if(e<1||e>this.lines)throw new RangeError(`Invalid line number ${e} in ${this.lines}-line document`);return this.lineInner(e,!0,1,0)}replace(e,i,s){[e,i]=ks(this,e,i);let r=[];return this.decompose(0,e,r,2),s.length&&s.decompose(0,s.length,r,3),this.decompose(i,this.length,r,1),_t.from(r,this.length-(i-e)+s.length)}append(e){return this.replace(this.length,this.length,e)}slice(e,i=this.length){[e,i]=ks(this,e,i);let s=[];return this.decompose(e,i,s,0),_t.from(s,i-e)}eq(e){if(e==this)return!0;if(e.length!=this.length||e.lines!=this.lines)return!1;let i=this.scanIdentical(e,1),s=this.length-this.scanIdentical(e,-1),r=new Xs(this),n=new Xs(e);for(let o=i,a=i;;){if(r.next(o),n.next(o),o=0,r.lineBreak!=n.lineBreak||r.done!=n.done||r.value!=n.value)return!1;if(a+=r.value.length,r.done||a>=s)return!0}}iter(e=1){return new Xs(this,e)}iterRange(e,i=this.length){return new iu(this,e,i)}iterLines(e,i){let s;if(e==null)s=this.iter();else{i==null&&(i=this.lines+1);let r=this.line(e).from;s=this.iterRange(r,Math.max(r,i==this.lines+1?this.length:i<=1?0:this.line(i-1).to))}return new su(s)}toString(){return this.sliceString(0)}toJSON(){let e=[];return this.flatten(e),e}constructor(){}static of(e){if(e.length==0)throw new RangeError("A document must have at least one line");return e.length==1&&!e[0]?Y.empty:e.length<=32?new be(e):_t.from(be.split(e,[]))}}class be extends Y{constructor(e,i=Ig(e)){super(),this.text=e,this.length=i}get lines(){return this.text.length}get children(){return null}lineInner(e,i,s,r){for(let n=0;;n++){let o=this.text[n],a=r+o.length;if((i?s:a)>=e)return new Fg(r,a,s,o);r=a+1,s++}}decompose(e,i,s,r){let n=e<=0&&i>=this.length?this:new be(_h(this.text,e,i),Math.min(i,this.length)-Math.max(0,e));if(r&1){let o=s.pop(),a=cn(n.text,o.text.slice(),0,n.length);if(a.length<=32)s.push(new be(a,o.length+n.length));else{let l=a.length>>1;s.push(new be(a.slice(0,l)),new be(a.slice(l)))}}else s.push(n)}replace(e,i,s){if(!(s instanceof be))return super.replace(e,i,s);[e,i]=ks(this,e,i);let r=cn(this.text,cn(s.text,_h(this.text,0,e)),i),n=this.length+s.length-(i-e);return r.length<=32?new be(r,n):_t.from(be.split(r,[]),n)}sliceString(e,i=this.length,s=`
+  `];Wt([v()],pt.prototype,"queueData",2);Wt([v()],pt.prototype,"compileData",2);Wt([v()],pt.prototype,"historyJobs",2);Wt([v()],pt.prototype,"error",2);Wt([v()],pt.prototype,"busyJob",2);Wt([v()],pt.prototype,"busyAction",2);Wt([v()],pt.prototype,"showAbortModal",2);Wt([v()],pt.prototype,"historyFilter",2);Wt([v()],pt.prototype,"historyLimit",2);pt=Wt([Se("esp-queue-page")],pt);let ua=[],Gd=[];(()=>{let t="lc,34,7n,7,7b,19,,,,2,,2,,,20,b,1c,l,g,,2t,7,2,6,2,2,,4,z,,u,r,2j,b,1m,9,9,,o,4,,9,,3,,5,17,3,3b,f,,w,1j,,,,4,8,4,,3,7,a,2,t,,1m,,,,2,4,8,,9,,a,2,q,,2,2,1l,,4,2,4,2,2,3,3,,u,2,3,,b,2,1l,,4,5,,2,4,,k,2,m,6,,,1m,,,2,,4,8,,7,3,a,2,u,,1n,,,,c,,9,,14,,3,,1l,3,5,3,,4,7,2,b,2,t,,1m,,2,,2,,3,,5,2,7,2,b,2,s,2,1l,2,,,2,4,8,,9,,a,2,t,,20,,4,,2,3,,,8,,29,,2,7,c,8,2q,,2,9,b,6,22,2,r,,,,,,1j,e,,5,,2,5,b,,10,9,,2u,4,,6,,2,2,2,p,2,4,3,g,4,d,,2,2,6,,f,,jj,3,qa,3,t,3,t,2,u,2,1s,2,,7,8,,2,b,9,,19,3,3b,2,y,,3a,3,4,2,9,,6,3,63,2,2,,1m,,,7,,,,,2,8,6,a,2,,1c,h,1r,4,1c,7,,,5,,14,9,c,2,w,4,2,2,,3,1k,,,2,3,,,3,1m,8,2,2,48,3,,d,,7,4,,6,,3,2,5i,1m,,5,ek,,5f,x,2da,3,3x,,2o,w,fe,6,2x,2,n9w,4,,a,w,2,28,2,7k,,3,,4,,p,2,5,,47,2,q,i,d,,12,8,p,b,1a,3,1c,,2,4,2,2,13,,1v,6,2,2,2,2,c,,8,,1b,,1f,,,3,2,2,5,2,,,16,2,8,,6m,,2,,4,,fn4,,kh,g,g,g,a6,2,gt,,6a,,45,5,1ae,3,,2,5,4,14,3,4,,4l,2,fx,4,ar,2,49,b,4w,,1i,f,1k,3,1d,4,2,2,1x,3,10,5,,8,1q,,c,2,1g,9,a,4,2,,2n,3,2,,,2,6,,4g,,3,8,l,2,1l,2,,,,,m,,e,7,3,5,5f,8,2,3,,,n,,29,,2,6,,,2,,,2,,2,6j,,2,4,6,2,,2,r,2,2d,8,2,,,2,2y,,,,2,6,,,2t,3,2,4,,5,77,9,,2,6t,,a,2,,,4,,40,4,2,2,4,,w,a,14,6,2,4,8,,9,6,2,3,1a,d,,2,ba,7,,6,,,2a,m,2,7,,2,,2,3e,6,3,,,2,,7,,,20,2,3,,,,9n,2,f0b,5,1n,7,t4,,1r,4,29,,f5k,2,43q,,,3,4,5,8,8,2,7,u,4,44,3,1iz,1j,4,1e,8,,e,,m,5,,f,11s,7,,h,2,7,,2,,5,79,7,c5,4,15s,7,31,7,240,5,gx7k,2o,3k,6o".split(",").map(e=>e?parseInt(e,36):1);for(let e=0,i=0;e<t.length;e++)(e%2?Gd:ua).push(i=i+t[e])})();function Bg(t){if(t<768)return!1;for(let e=0,i=ua.length;;){let s=e+i>>1;if(t<ua[s])i=s;else if(t>=Gd[s])e=s+1;else return!0;if(e==i)return!1}}function Th(t){return t>=127462&&t<=127487}const Mh=8205;function Rg(t,e,i=!0,s=!0){return(i?Zd:Lg)(t,e,s)}function Zd(t,e,i){if(e==t.length)return e;e&&eu(t.charCodeAt(e))&&tu(t.charCodeAt(e-1))&&e--;let s=Mo(t,e);for(e+=Eh(s);e<t.length;){let r=Mo(t,e);if(s==Mh||r==Mh||i&&Bg(r))e+=Eh(r),s=r;else if(Th(r)){let n=0,o=e-2;for(;o>=0&&Th(Mo(t,o));)n++,o-=2;if(n%2==0)break;e+=2}else break}return e}function Lg(t,e,i){for(;e>0;){let s=Zd(t,e-2,i);if(s<e)return s;e--}return 0}function Mo(t,e){let i=t.charCodeAt(e);if(!tu(i)||e+1==t.length)return i;let s=t.charCodeAt(e+1);return eu(s)?(i-55296<<10)+(s-56320)+65536:i}function eu(t){return t>=56320&&t<57344}function tu(t){return t>=55296&&t<56320}function Eh(t){return t<65536?1:2}class Y{lineAt(e){if(e<0||e>this.length)throw new RangeError(`Invalid position ${e} in document of length ${this.length}`);return this.lineInner(e,!1,1,0)}line(e){if(e<1||e>this.lines)throw new RangeError(`Invalid line number ${e} in ${this.lines}-line document`);return this.lineInner(e,!0,1,0)}replace(e,i,s){[e,i]=ks(this,e,i);let r=[];return this.decompose(0,e,r,2),s.length&&s.decompose(0,s.length,r,3),this.decompose(i,this.length,r,1),_t.from(r,this.length-(i-e)+s.length)}append(e){return this.replace(this.length,this.length,e)}slice(e,i=this.length){[e,i]=ks(this,e,i);let s=[];return this.decompose(e,i,s,0),_t.from(s,i-e)}eq(e){if(e==this)return!0;if(e.length!=this.length||e.lines!=this.lines)return!1;let i=this.scanIdentical(e,1),s=this.length-this.scanIdentical(e,-1),r=new Xs(this),n=new Xs(e);for(let o=i,a=i;;){if(r.next(o),n.next(o),o=0,r.lineBreak!=n.lineBreak||r.done!=n.done||r.value!=n.value)return!1;if(a+=r.value.length,r.done||a>=s)return!0}}iter(e=1){return new Xs(this,e)}iterRange(e,i=this.length){return new iu(this,e,i)}iterLines(e,i){let s;if(e==null)s=this.iter();else{i==null&&(i=this.lines+1);let r=this.line(e).from;s=this.iterRange(r,Math.max(r,i==this.lines+1?this.length:i<=1?0:this.line(i-1).to))}return new su(s)}toString(){return this.sliceString(0)}toJSON(){let e=[];return this.flatten(e),e}constructor(){}static of(e){if(e.length==0)throw new RangeError("A document must have at least one line");return e.length==1&&!e[0]?Y.empty:e.length<=32?new be(e):_t.from(be.split(e,[]))}}class be extends Y{constructor(e,i=Ig(e)){super(),this.text=e,this.length=i}get lines(){return this.text.length}get children(){return null}lineInner(e,i,s,r){for(let n=0;;n++){let o=this.text[n],a=r+o.length;if((i?s:a)>=e)return new Fg(r,a,s,o);r=a+1,s++}}decompose(e,i,s,r){let n=e<=0&&i>=this.length?this:new be(_h(this.text,e,i),Math.min(i,this.length)-Math.max(0,e));if(r&1){let o=s.pop(),a=cn(n.text,o.text.slice(),0,n.length);if(a.length<=32)s.push(new be(a,o.length+n.length));else{let l=a.length>>1;s.push(new be(a.slice(0,l)),new be(a.slice(l)))}}else s.push(n)}replace(e,i,s){if(!(s instanceof be))return super.replace(e,i,s);[e,i]=ks(this,e,i);let r=cn(this.text,cn(s.text,_h(this.text,0,e)),i),n=this.length+s.length-(i-e);return r.length<=32?new be(r,n):_t.from(be.split(r,[]),n)}sliceString(e,i=this.length,s=`
 `){[e,i]=ks(this,e,i);let r="";for(let n=0,o=0;n<=i&&o<this.text.length;o++){let a=this.text[o],l=n+a.length;n>e&&o&&(r+=s),e<l&&i>n&&(r+=a.slice(Math.max(0,e-n),i-n)),n=l+1}return r}flatten(e){for(let i of this.text)e.push(i)}scanIdentical(){return 0}static split(e,i){let s=[],r=-1;for(let n of e)s.push(n),r+=n.length+1,s.length==32&&(i.push(new be(s,r)),s=[],r=-1);return r>-1&&i.push(new be(s,r)),i}}class _t extends Y{constructor(e,i){super(),this.children=e,this.length=i,this.lines=0;for(let s of e)this.lines+=s.lines}lineInner(e,i,s,r){for(let n=0;;n++){let o=this.children[n],a=r+o.length,l=s+o.lines-1;if((i?l:a)>=e)return o.lineInner(e,i,s,r);r=a+1,s=l+1}}decompose(e,i,s,r){for(let n=0,o=0;o<=i&&n<this.children.length;n++){let a=this.children[n],l=o+a.length;if(e<=l&&i>=o){let h=r&((o<=e?1:0)|(l>=i?2:0));o>=e&&l<=i&&!h?s.push(a):a.decompose(e-o,i-o,s,h)}o=l+1}}replace(e,i,s){if([e,i]=ks(this,e,i),s.lines<this.lines)for(let r=0,n=0;r<this.children.length;r++){let o=this.children[r],a=n+o.length;if(e>=n&&i<=a){let l=o.replace(e-n,i-n,s),h=this.lines-o.lines+l.lines;if(l.lines<h>>4&&l.lines>h>>6){let c=this.children.slice();return c[r]=l,new _t(c,this.length-(i-e)+s.length)}return super.replace(n,a,l)}n=a+1}return super.replace(e,i,s)}sliceString(e,i=this.length,s=`
 `){[e,i]=ks(this,e,i);let r="";for(let n=0,o=0;n<this.children.length&&o<=i;n++){let a=this.children[n],l=o+a.length;o>e&&n&&(r+=s),e<l&&i>o&&(r+=a.sliceString(e-o,i-o,s)),o=l+1}return r}flatten(e){for(let i of this.children)i.flatten(e)}scanIdentical(e,i){if(!(e instanceof _t))return 0;let s=0,[r,n,o,a]=i>0?[0,0,this.children.length,e.children.length]:[this.children.length-1,e.children.length-1,-1,-1];for(;;r+=i,n+=i){if(r==o||n==a)return s;let l=this.children[r],h=e.children[n];if(l!=h)return s+l.scanIdentical(h,i);s+=l.length+1}}static from(e,i=e.reduce((s,r)=>s+r.length+1,-1)){let s=0;for(let f of e)s+=f.lines;if(s<32){let f=[];for(let m of e)m.flatten(f);return new be(f,i)}let r=Math.max(32,s>>5),n=r<<1,o=r>>1,a=[],l=0,h=-1,c=[];function d(f){let m;if(f.lines>n&&f instanceof _t)for(let g of f.children)d(g);else f.lines>o&&(l>o||!l)?(u(),a.push(f)):f instanceof be&&l&&(m=c[c.length-1])instanceof be&&f.lines+m.lines<=32?(l+=f.lines,h+=f.length+1,c[c.length-1]=new be(m.text.concat(f.text),m.length+1+f.length)):(l+f.lines>r&&u(),l+=f.lines,h+=f.length+1,c.push(f))}function u(){l!=0&&(a.push(c.length==1?c[0]:_t.from(c,h)),h=-1,l=c.length=0)}for(let f of e)d(f);return u(),a.length==1?a[0]:new _t(a,i)}}Y.empty=new be([""],0);function Ig(t){let e=-1;for(let i of t)e+=i.length+1;return e}function cn(t,e,i=0,s=1e9){for(let r=0,n=0,o=!0;n<t.length&&r<=s;n++){let a=t[n],l=r+a.length;l>=i&&(l>s&&(a=a.slice(0,s-r)),r<i&&(a=a.slice(i-r)),o?(e[e.length-1]+=a,o=!1):e.push(a)),r=l+1}return e}function _h(t,e,i){return cn(t,[""],e,i)}class Xs{constructor(e,i=1){this.dir=i,this.done=!1,this.lineBreak=!1,this.value="",this.nodes=[e],this.offsets=[i>0?1:(e instanceof be?e.text.length:e.children.length)<<1]}nextInner(e,i){for(this.done=this.lineBreak=!1;;){let s=this.nodes.length-1,r=this.nodes[s],n=this.offsets[s],o=n>>1,a=r instanceof be?r.text.length:r.children.length;if(o==(i>0?a:0)){if(s==0)return this.done=!0,this.value="",this;i>0&&this.offsets[s-1]++,this.nodes.pop(),this.offsets.pop()}else if((n&1)==(i>0?0:1)){if(this.offsets[s]+=i,e==0)return this.lineBreak=!0,this.value=`
 `,this;e--}else if(r instanceof be){let l=r.text[o+(i<0?-1:0)];if(this.offsets[s]+=i,l.length>Math.max(0,e))return this.value=e==0?l:i>0?l.slice(e):l.slice(0,l.length-e),this;e-=l.length}else{let l=r.children[o+(i<0?-1:0)];e>l.length?(e-=l.length,this.offsets[s]+=i):(i<0&&this.offsets[s]--,this.nodes.push(l),this.offsets.push(i>0?1:(l instanceof be?l.text.length:l.children.length)<<1))}}}next(e=0){return e<0&&(this.nextInner(-e,-this.dir),e=this.value.length),this.nextInner(e,this.dir)}}class iu{constructor(e,i,s){this.value="",this.done=!1,this.cursor=new Xs(e,i>s?-1:1),this.pos=i>s?e.length:0,this.from=Math.min(i,s),this.to=Math.max(i,s)}nextInner(e,i){if(i<0?this.pos<=this.from:this.pos>=this.to)return this.value="",this.done=!0,this;e+=Math.max(0,i<0?this.pos-this.to:this.from-this.pos);let s=i<0?this.pos-this.from:this.to-this.pos;e>s&&(e=s),s-=e;let{value:r}=this.cursor.next(e);return this.pos+=(r.length+e)*i,this.value=r.length<=s?r:i<0?r.slice(r.length-s):r.slice(0,s),this.done=!this.value,this}next(e=0){return e<0?e=Math.max(e,this.from-this.pos):e>0&&(e=Math.min(e,this.to-this.pos)),this.nextInner(e,this.cursor.dir)}get lineBreak(){return this.cursor.lineBreak&&this.value!=""}}class su{constructor(e){this.inner=e,this.afterBreak=!0,this.value="",this.done=!1}next(e=0){let{done:i,lineBreak:s,value:r}=this.inner.next(e);return i&&this.afterBreak?(this.value="",this.afterBreak=!1):i?(this.done=!0,this.value=""):s?this.afterBreak?this.value="":(this.afterBreak=!0,this.next()):(this.value=r,this.afterBreak=!1),this}get lineBreak(){return!1}}typeof Symbol<"u"&&(Y.prototype[Symbol.iterator]=function(){return this.iter()},Xs.prototype[Symbol.iterator]=iu.prototype[Symbol.iterator]=su.prototype[Symbol.iterator]=function(){return this});class Fg{constructor(e,i,s,r){this.from=e,this.to=i,this.number=s,this.text=r}get length(){return this.to-this.from}}function ks(t,e,i){return e=Math.max(0,Math.min(t.length,e)),[e,Math.max(e,Math.min(t.length,i))]}function $e(t,e,i=!0,s=!0){return Rg(t,e,i,s)}function Ng(t){return t>=56320&&t<57344}function Ug(t){return t>=55296&&t<56320}function Ve(t,e){let i=t.charCodeAt(e);if(!Ug(i)||e+1==t.length)return i;let s=t.charCodeAt(e+1);return Ng(s)?(i-55296<<10)+(s-56320)+65536:i}function kl(t){return t<=65535?String.fromCharCode(t):(t-=65536,String.fromCharCode((t>>10)+55296,(t&1023)+56320))}function Dt(t){return t<65536?1:2}const fa=/\r\n?|\n/;var Ne=(function(t){return t[t.Simple=0]="Simple",t[t.TrackDel=1]="TrackDel",t[t.TrackBefore=2]="TrackBefore",t[t.TrackAfter=3]="TrackAfter",t})(Ne||(Ne={}));class Ft{constructor(e){this.sections=e}get length(){let e=0;for(let i=0;i<this.sections.length;i+=2)e+=this.sections[i];return e}get newLength(){let e=0;for(let i=0;i<this.sections.length;i+=2){let s=this.sections[i+1];e+=s<0?this.sections[i]:s}return e}get empty(){return this.sections.length==0||this.sections.length==2&&this.sections[1]<0}iterGaps(e){for(let i=0,s=0,r=0;i<this.sections.length;){let n=this.sections[i++],o=this.sections[i++];o<0?(e(s,r,n),r+=n):r+=o,s+=n}}iterChangedRanges(e,i=!1){pa(this,e,i)}get invertedDesc(){let e=[];for(let i=0;i<this.sections.length;){let s=this.sections[i++],r=this.sections[i++];r<0?e.push(s,r):e.push(r,s)}return new Ft(e)}composeDesc(e){return this.empty?e:e.empty?this:ru(this,e)}mapDesc(e,i=!1){return e.empty?this:ma(this,e,i)}mapPos(e,i=-1,s=Ne.Simple){let r=0,n=0;for(let o=0;o<this.sections.length;){let a=this.sections[o++],l=this.sections[o++],h=r+a;if(l<0){if(h>e)return n+(e-r);n+=a}else{if(s!=Ne.Simple&&h>=e&&(s==Ne.TrackDel&&r<e&&h>e||s==Ne.TrackBefore&&r<e||s==Ne.TrackAfter&&h>e))return null;if(h>e||h==e&&i<0&&!a)return e==r||i<0?n:n+l;n+=l}r=h}if(e>r)throw new RangeError(`Position ${e} is out of range for changeset of length ${r}`);return n}touchesRange(e,i=e){for(let s=0,r=0;s<this.sections.length&&r<=i;){let n=this.sections[s++],o=this.sections[s++],a=r+n;if(o>=0&&r<=i&&a>=e)return r<e&&a>i?"cover":!0;r=a}return!1}toString(){let e="";for(let i=0;i<this.sections.length;){let s=this.sections[i++],r=this.sections[i++];e+=(e?" ":"")+s+(r>=0?":"+r:"")}return e}toJSON(){return this.sections}static fromJSON(e){if(!Array.isArray(e)||e.length%2||e.some(i=>typeof i!="number"))throw new RangeError("Invalid JSON representation of ChangeDesc");return new Ft(e)}static create(e){return new Ft(e)}}class we extends Ft{constructor(e,i){super(e),this.inserted=i}apply(e){if(this.length!=e.length)throw new RangeError("Applying change set to a document with the wrong length");return pa(this,(i,s,r,n,o)=>e=e.replace(r,r+(s-i),o),!1),e}mapDesc(e,i=!1){return ma(this,e,i,!0)}invert(e){let i=this.sections.slice(),s=[];for(let r=0,n=0;r<i.length;r+=2){let o=i[r],a=i[r+1];if(a>=0){i[r]=a,i[r+1]=o;let l=r>>1;for(;s.length<l;)s.push(Y.empty);s.push(o?e.slice(n,n+o):Y.empty)}n+=o}return new we(i,s)}compose(e){return this.empty?e:e.empty?this:ru(this,e,!0)}map(e,i=!1){return e.empty?this:ma(this,e,i,!0)}iterChanges(e,i=!1){pa(this,e,i)}get desc(){return Ft.create(this.sections)}filter(e){let i=[],s=[],r=[],n=new lr(this);e:for(let o=0,a=0;;){let l=o==e.length?1e9:e[o++];for(;a<l||a==l&&n.len==0;){if(n.done)break e;let c=Math.min(n.len,l-a);_e(r,c,-1);let d=n.ins==-1?-1:n.off==0?n.ins:0;_e(i,c,d),d>0&&ai(s,i,n.text),n.forward(c),a+=c}let h=e[o++];for(;a<h;){if(n.done)break e;let c=Math.min(n.len,h-a);_e(i,c,-1),_e(r,c,n.ins==-1?-1:n.off==0?n.ins:0),n.forward(c),a+=c}}return{changes:new we(i,s),filtered:Ft.create(r)}}toJSON(){let e=[];for(let i=0;i<this.sections.length;i+=2){let s=this.sections[i],r=this.sections[i+1];r<0?e.push(s):r==0?e.push([s]):e.push([s].concat(this.inserted[i>>1].toJSON()))}return e}static of(e,i,s){let r=[],n=[],o=0,a=null;function l(c=!1){if(!c&&!r.length)return;o<i&&_e(r,i-o,-1);let d=new we(r,n);a=a?a.compose(d.map(a)):d,r=[],n=[],o=0}function h(c){if(Array.isArray(c))for(let d of c)h(d);else if(c instanceof we){if(c.length!=i)throw new RangeError(`Mismatched change set length (got ${c.length}, expected ${i})`);l(),a=a?a.compose(c.map(a)):c}else{let{from:d,to:u=d,insert:f}=c;if(d>u||d<0||u>i)throw new RangeError(`Invalid change range ${d} to ${u} (in doc of length ${i})`);let m=f?typeof f=="string"?Y.of(f.split(s||fa)):f:Y.empty,g=m.length;if(d==u&&g==0)return;d<o&&l(),d>o&&_e(r,d-o,-1),_e(r,u-d,g),ai(n,r,m),o=u}}return h(e),l(!a),a}static empty(e){return new we(e?[e,-1]:[],[])}static fromJSON(e){if(!Array.isArray(e))throw new RangeError("Invalid JSON representation of ChangeSet");let i=[],s=[];for(let r=0;r<e.length;r++){let n=e[r];if(typeof n=="number")i.push(n,-1);else{if(!Array.isArray(n)||typeof n[0]!="number"||n.some((o,a)=>a&&typeof o!="string"))throw new RangeError("Invalid JSON representation of ChangeSet");if(n.length==1)i.push(n[0],0);else{for(;s.length<r;)s.push(Y.empty);s[r]=Y.of(n.slice(1)),i.push(n[0],s[r].length)}}}return new we(i,s)}static createSet(e,i){return new we(e,i)}}function _e(t,e,i,s=!1){if(e==0&&i<=0)return;let r=t.length-2;r>=0&&i<=0&&i==t[r+1]?t[r]+=e:r>=0&&e==0&&t[r]==0?t[r+1]+=i:s?(t[r]+=e,t[r+1]+=i):t.push(e,i)}function ai(t,e,i){if(i.length==0)return;let s=e.length-2>>1;if(s<t.length)t[t.length-1]=t[t.length-1].append(i);else{for(;t.length<s;)t.push(Y.empty);t.push(i)}}function pa(t,e,i){let s=t.inserted;for(let r=0,n=0,o=0;o<t.sections.length;){let a=t.sections[o++],l=t.sections[o++];if(l<0)r+=a,n+=a;else{let h=r,c=n,d=Y.empty;for(;h+=a,c+=l,l&&s&&(d=d.append(s[o-2>>1])),!(i||o==t.sections.length||t.sections[o+1]<0);)a=t.sections[o++],l=t.sections[o++];e(r,h,n,c,d),r=h,n=c}}}function ma(t,e,i,s=!1){let r=[],n=s?[]:null,o=new lr(t),a=new lr(e);for(let l=-1;;){if(o.done&&a.len||a.done&&o.len)throw new Error("Mismatched change set lengths");if(o.ins==-1&&a.ins==-1){let h=Math.min(o.len,a.len);_e(r,h,-1),o.forward(h),a.forward(h)}else if(a.ins>=0&&(o.ins<0||l==o.i||o.off==0&&(a.len<o.len||a.len==o.len&&!i))){let h=a.len;for(_e(r,a.ins,-1);h;){let c=Math.min(o.len,h);o.ins>=0&&l<o.i&&o.len<=c&&(_e(r,0,o.ins),n&&ai(n,r,o.text),l=o.i),o.forward(c),h-=c}a.next()}else if(o.ins>=0){let h=0,c=o.len;for(;c;)if(a.ins==-1){let d=Math.min(c,a.len);h+=d,c-=d,a.forward(d)}else if(a.ins==0&&a.len<c)c-=a.len,a.next();else break;_e(r,h,l<o.i?o.ins:0),n&&l<o.i&&ai(n,r,o.text),l=o.i,o.forward(o.len-c)}else{if(o.done&&a.done)return n?we.createSet(r,n):Ft.create(r);throw new Error("Mismatched change set lengths")}}}function ru(t,e,i=!1){let s=[],r=i?[]:null,n=new lr(t),o=new lr(e);for(let a=!1;;){if(n.done&&o.done)return r?we.createSet(s,r):Ft.create(s);if(n.ins==0)_e(s,n.len,0,a),n.next();else if(o.len==0&&!o.done)_e(s,0,o.ins,a),r&&ai(r,s,o.text),o.next();else{if(n.done||o.done)throw new Error("Mismatched change set lengths");{let l=Math.min(n.len2,o.len),h=s.length;if(n.ins==-1){let c=o.ins==-1?-1:o.off?0:o.ins;_e(s,l,c,a),r&&c&&ai(r,s,o.text)}else o.ins==-1?(_e(s,n.off?0:n.len,l,a),r&&ai(r,s,n.textBit(l))):(_e(s,n.off?0:n.len,o.off?0:o.ins,a),r&&!o.off&&ai(r,s,o.text));a=(n.ins>l||o.ins>=0&&o.len>l)&&(a||s.length>h),n.forward2(l),o.forward(l)}}}}class lr{constructor(e){this.set=e,this.i=0,this.next()}next(){let{sections:e}=this.set;this.i<e.length?(this.len=e[this.i++],this.ins=e[this.i++]):(this.len=0,this.ins=-2),this.off=0}get done(){return this.ins==-2}get len2(){return this.ins<0?this.len:this.ins}get text(){let{inserted:e}=this.set,i=this.i-2>>1;return i>=e.length?Y.empty:e[i]}textBit(e){let{inserted:i}=this.set,s=this.i-2>>1;return s>=i.length&&!e?Y.empty:i[s].slice(this.off,e==null?void 0:this.off+e)}forward(e){e==this.len?this.next():(this.len-=e,this.off+=e)}forward2(e){this.ins==-1?this.forward(e):e==this.ins?this.next():(this.ins-=e,this.off+=e)}}class Bi{constructor(e,i,s){this.from=e,this.to=i,this.flags=s}get anchor(){return this.flags&32?this.to:this.from}get head(){return this.flags&32?this.from:this.to}get empty(){return this.from==this.to}get assoc(){return this.flags&8?-1:this.flags&16?1:0}get bidiLevel(){let e=this.flags&7;return e==7?null:e}get goalColumn(){let e=this.flags>>6;return e==16777215?void 0:e}map(e,i=-1){let s,r;return this.empty?s=r=e.mapPos(this.from,i):(s=e.mapPos(this.from,1),r=e.mapPos(this.to,-1)),s==this.from&&r==this.to?this:new Bi(s,r,this.flags)}extend(e,i=e,s=0){if(e<=this.anchor&&i>=this.anchor)return $.range(e,i,void 0,void 0,s);let r=Math.abs(e-this.anchor)>Math.abs(i-this.anchor)?e:i;return $.range(this.anchor,r,void 0,void 0,s)}eq(e,i=!1){return this.anchor==e.anchor&&this.head==e.head&&this.goalColumn==e.goalColumn&&(!i||!this.empty||this.assoc==e.assoc)}toJSON(){return{anchor:this.anchor,head:this.head}}static fromJSON(e){if(!e||typeof e.anchor!="number"||typeof e.head!="number")throw new RangeError("Invalid JSON representation for SelectionRange");return $.range(e.anchor,e.head)}static create(e,i,s){return new Bi(e,i,s)}}class ${constructor(e,i){this.ranges=e,this.mainIndex=i}map(e,i=-1){return e.empty?this:$.create(this.ranges.map(s=>s.map(e,i)),this.mainIndex)}eq(e,i=!1){if(this.ranges.length!=e.ranges.length||this.mainIndex!=e.mainIndex)return!1;for(let s=0;s<this.ranges.length;s++)if(!this.ranges[s].eq(e.ranges[s],i))return!1;return!0}get main(){return this.ranges[this.mainIndex]}asSingle(){return this.ranges.length==1?this:new $([this.main],0)}addRange(e,i=!0){return $.create([e].concat(this.ranges),i?0:this.mainIndex+1)}replaceRange(e,i=this.mainIndex){let s=this.ranges.slice();return s[i]=e,$.create(s,this.mainIndex)}toJSON(){return{ranges:this.ranges.map(e=>e.toJSON()),main:this.mainIndex}}static fromJSON(e){if(!e||!Array.isArray(e.ranges)||typeof e.main!="number"||e.main>=e.ranges.length)throw new RangeError("Invalid JSON representation for EditorSelection");return new $(e.ranges.map(i=>Bi.fromJSON(i)),e.main)}static single(e,i=e){return new $([$.range(e,i)],0)}static create(e,i=0){if(e.length==0)throw new RangeError("A selection needs at least one range");for(let s=0,r=0;r<e.length;r++){let n=e[r];if(n.empty?n.from<=s:n.from<s)return $.normalized(e.slice(),i);s=n.to}return new $(e,i)}static cursor(e,i=0,s,r){return Bi.create(e,e,(i==0?0:i<0?8:16)|(s==null?7:Math.min(6,s))|(r??16777215)<<6)}static range(e,i,s,r,n){let o=(s??16777215)<<6|(r==null?7:Math.min(6,r));return!n&&e!=i&&(n=i<e?1:-1),i<e?Bi.create(i,e,48|o):Bi.create(e,i,(n?n<0?8:16:0)|o)}static normalized(e,i=0){let s=e[i];e.sort((r,n)=>r.from-n.from),i=e.indexOf(s);for(let r=1;r<e.length;r++){let n=e[r],o=e[r-1];if(n.empty?n.from<=o.to:n.from<o.to){let a=o.from,l=Math.max(n.to,o.to);r<=i&&i--,e.splice(--r,2,n.anchor>n.head?$.range(l,a):$.range(a,l))}}return new $(e,i)}}function nu(t,e){for(let i of t.ranges)if(i.to>e)throw new RangeError("Selection points outside of document")}let Sl=0;class R{constructor(e,i,s,r,n){this.combine=e,this.compareInput=i,this.compare=s,this.isStatic=r,this.id=Sl++,this.default=e([]),this.extensions=typeof n=="function"?n(this):n}get reader(){return this}static define(e={}){return new R(e.combine||(i=>i),e.compareInput||((i,s)=>i===s),e.compare||(e.combine?(i,s)=>i===s:Cl),!!e.static,e.enables)}of(e){return new dn([],this,0,e)}compute(e,i){if(this.isStatic)throw new Error("Can't compute a static facet");return new dn(e,this,1,i)}computeN(e,i){if(this.isStatic)throw new Error("Can't compute a static facet");return new dn(e,this,2,i)}from(e,i){return i||(i=s=>s),this.compute([e],s=>i(s.field(e)))}}function Cl(t,e){return t==e||t.length==e.length&&t.every((i,s)=>i===e[s])}class dn{constructor(e,i,s,r){this.dependencies=e,this.facet=i,this.type=s,this.value=r,this.id=Sl++}dynamicSlot(e){var i;let s=this.value,r=this.facet.compareInput,n=this.id,o=e[n]>>1,a=this.type==2,l=!1,h=!1,c=[];for(let d of this.dependencies)d=="doc"?l=!0:d=="selection"?h=!0:(((i=e[d.id])!==null&&i!==void 0?i:1)&1)==0&&c.push(e[d.id]);return{create(d){return d.values[o]=s(d),1},update(d,u){if(l&&u.docChanged||h&&(u.docChanged||u.selection)||ga(d,c)){let f=s(d);if(a?!Dh(f,d.values[o],r):!r(f,d.values[o]))return d.values[o]=f,1}return 0},reconfigure:(d,u)=>{let f,m=u.config.address[n];if(m!=null){let g=On(u,m);if(this.dependencies.every(y=>y instanceof R?u.facet(y)===d.facet(y):y instanceof Re?u.field(y,!1)==d.field(y,!1):!0)||(a?Dh(f=s(d),g,r):r(f=s(d),g)))return d.values[o]=g,0}else f=s(d);return d.values[o]=f,1}}}}function Dh(t,e,i){if(t.length!=e.length)return!1;for(let s=0;s<t.length;s++)if(!i(t[s],e[s]))return!1;return!0}function ga(t,e){let i=!1;for(let s of e)Js(t,s)&1&&(i=!0);return i}function Hg(t,e,i){let s=i.map(l=>t[l.id]),r=i.map(l=>l.type),n=s.filter(l=>!(l&1)),o=t[e.id]>>1;function a(l){let h=[];for(let c=0;c<s.length;c++){let d=On(l,s[c]);if(r[c]==2)for(let u of d)h.push(u);else h.push(d)}return e.combine(h)}return{create(l){for(let h of s)Js(l,h);return l.values[o]=a(l),1},update(l,h){if(!ga(l,n))return 0;let c=a(l);return e.compare(c,l.values[o])?0:(l.values[o]=c,1)},reconfigure(l,h){let c=ga(l,s),d=h.config.facets[e.id],u=h.facet(e);if(d&&!c&&Cl(i,d))return l.values[o]=u,0;let f=a(l);return e.compare(f,u)?(l.values[o]=u,0):(l.values[o]=f,1)}}}const Fr=R.define({static:!0});class Re{constructor(e,i,s,r,n){this.id=e,this.createF=i,this.updateF=s,this.compareF=r,this.spec=n,this.provides=void 0}static define(e){let i=new Re(Sl++,e.create,e.update,e.compare||((s,r)=>s===r),e);return e.provide&&(i.provides=e.provide(i)),i}create(e){let i=e.facet(Fr).find(s=>s.field==this);return((i==null?void 0:i.create)||this.createF)(e)}slot(e){let i=e[this.id]>>1;return{create:s=>(s.values[i]=this.create(s),1),update:(s,r)=>{let n=s.values[i],o=this.updateF(n,r);return this.compareF(n,o)?0:(s.values[i]=o,1)},reconfigure:(s,r)=>{let n=s.facet(Fr),o=r.facet(Fr),a;return(a=n.find(l=>l.field==this))&&a!=o.find(l=>l.field==this)?(s.values[i]=a.create(s),1):r.config.address[this.id]!=null?(s.values[i]=r.field(this),0):(s.values[i]=this.create(s),1)}}}init(e){return[this,Fr.of({field:this,create:e})]}get extension(){return this}}const Mi={lowest:4,low:3,default:2,high:1,highest:0};function Fs(t){return e=>new ou(e,t)}const Gi={highest:Fs(Mi.highest),high:Fs(Mi.high),default:Fs(Mi.default),low:Fs(Mi.low),lowest:Fs(Mi.lowest)};class ou{constructor(e,i){this.inner=e,this.prec=i}}class oo{of(e){return new ba(this,e)}reconfigure(e){return oo.reconfigure.of({compartment:this,extension:e})}get(e){return e.config.compartments.get(this)}}class ba{constructor(e,i){this.compartment=e,this.inner=i}}class $n{constructor(e,i,s,r,n,o){for(this.base=e,this.compartments=i,this.dynamicSlots=s,this.address=r,this.staticValues=n,this.facets=o,this.statusTemplate=[];this.statusTemplate.length<s.length;)this.statusTemplate.push(0)}staticFacet(e){let i=this.address[e.id];return i==null?e.default:this.staticValues[i>>1]}static resolve(e,i,s){let r=[],n=Object.create(null),o=new Map;for(let u of Wg(e,i,o))u instanceof Re?r.push(u):(n[u.facet.id]||(n[u.facet.id]=[])).push(u);let a=Object.create(null),l=[],h=[];for(let u of r)a[u.id]=h.length<<1,h.push(f=>u.slot(f));let c=s==null?void 0:s.config.facets;for(let u in n){let f=n[u],m=f[0].facet,g=c&&c[u]||[];if(f.every(y=>y.type==0))if(a[m.id]=l.length<<1|1,Cl(g,f))l.push(s.facet(m));else{let y=m.combine(f.map(w=>w.value));l.push(s&&m.compare(y,s.facet(m))?s.facet(m):y)}else{for(let y of f)y.type==0?(a[y.id]=l.length<<1|1,l.push(y.value)):(a[y.id]=h.length<<1,h.push(w=>y.dynamicSlot(w)));a[m.id]=h.length<<1,h.push(y=>Hg(y,m,f))}}let d=h.map(u=>u(a));return new $n(e,o,d,a,l,n)}}function Wg(t,e,i){let s=[[],[],[],[],[]],r=new Map;function n(o,a){let l=r.get(o);if(l!=null){if(l<=a)return;let h=s[l].indexOf(o);h>-1&&s[l].splice(h,1),o instanceof ba&&i.delete(o.compartment)}if(r.set(o,a),Array.isArray(o))for(let h of o)n(h,a);else if(o instanceof ba){if(i.has(o.compartment))throw new RangeError("Duplicate use of compartment in extensions");let h=e.get(o.compartment)||o.inner;i.set(o.compartment,h),n(h,a)}else if(o instanceof ou)n(o.inner,o.prec);else if(o instanceof Re)s[a].push(o),o.provides&&n(o.provides,a);else if(o instanceof dn)s[a].push(o),o.facet.extensions&&n(o.facet.extensions,Mi.default);else{let h=o.extension;if(!h)throw new Error(`Unrecognized extension value in extension set (${o}). This sometimes happens because multiple instances of @codemirror/state are loaded, breaking instanceof checks.`);n(h,a)}}return n(t,Mi.default),s.reduce((o,a)=>o.concat(a))}function Js(t,e){if(e&1)return 2;let i=e>>1,s=t.status[i];if(s==4)throw new Error("Cyclic dependency between fields and/or facets");if(s&2)return s;t.status[i]=4;let r=t.computeSlot(t,t.config.dynamicSlots[i]);return t.status[i]=2|r}function On(t,e){return e&1?t.config.staticValues[e>>1]:t.values[e>>1]}const au=R.define(),va=R.define({combine:t=>t.some(e=>e),static:!0}),lu=R.define({combine:t=>t.length?t[0]:void 0,static:!0}),hu=R.define(),cu=R.define(),du=R.define(),uu=R.define({combine:t=>t.length?t[0]:!1});class ei{constructor(e,i){this.type=e,this.value=i}static define(){return new zg}}class zg{of(e){return new ei(this,e)}}class qg{constructor(e){this.map=e}of(e){return new W(this,e)}}class W{constructor(e,i){this.type=e,this.value=i}map(e){let i=this.type.map(this.value,e);return i===void 0?void 0:i==this.value?this:new W(this.type,i)}is(e){return this.type==e}static define(e={}){return new qg(e.map||(i=>i))}static mapEffects(e,i){if(!e.length)return e;let s=[];for(let r of e){let n=r.map(i);n&&s.push(n)}return s}}W.reconfigure=W.define();W.appendConfig=W.define();class ke{constructor(e,i,s,r,n,o){this.startState=e,this.changes=i,this.selection=s,this.effects=r,this.annotations=n,this.scrollIntoView=o,this._doc=null,this._state=null,s&&nu(s,i.newLength),n.some(a=>a.type==ke.time)||(this.annotations=n.concat(ke.time.of(Date.now())))}static create(e,i,s,r,n,o){return new ke(e,i,s,r,n,o)}get newDoc(){return this._doc||(this._doc=this.changes.apply(this.startState.doc))}get newSelection(){return this.selection||this.startState.selection.map(this.changes)}get state(){return this._state||this.startState.applyTransaction(this),this._state}annotation(e){for(let i of this.annotations)if(i.type==e)return i.value}get docChanged(){return!this.changes.empty}get reconfigured(){return this.startState.config!=this.state.config}isUserEvent(e){let i=this.annotation(ke.userEvent);return!!(i&&(i==e||i.length>e.length&&i.slice(0,e.length)==e&&i[e.length]=="."))}}ke.time=ei.define();ke.userEvent=ei.define();ke.addToHistory=ei.define();ke.remote=ei.define();function Vg(t,e){let i=[];for(let s=0,r=0;;){let n,o;if(s<t.length&&(r==e.length||e[r]>=t[s]))n=t[s++],o=t[s++];else if(r<e.length)n=e[r++],o=e[r++];else return i;!i.length||i[i.length-1]<n?i.push(n,o):i[i.length-1]<o&&(i[i.length-1]=o)}}function fu(t,e,i){var s;let r,n,o;return i?(r=e.changes,n=we.empty(e.changes.length),o=t.changes.compose(e.changes)):(r=e.changes.map(t.changes),n=t.changes.mapDesc(e.changes,!0),o=t.changes.compose(r)),{changes:o,selection:e.selection?e.selection.map(n):(s=t.selection)===null||s===void 0?void 0:s.map(r),effects:W.mapEffects(t.effects,r).concat(W.mapEffects(e.effects,n)),annotations:t.annotations.length?t.annotations.concat(e.annotations):e.annotations,scrollIntoView:t.scrollIntoView||e.scrollIntoView}}function ya(t,e,i){let s=e.selection,r=fs(e.annotations);return e.userEvent&&(r=r.concat(ke.userEvent.of(e.userEvent))),{changes:e.changes instanceof we?e.changes:we.of(e.changes||[],i,t.facet(lu)),selection:s&&(s instanceof $?s:$.single(s.anchor,s.head)),effects:fs(e.effects),annotations:r,scrollIntoView:!!e.scrollIntoView}}function pu(t,e,i){let s=ya(t,e.length?e[0]:{},t.doc.length);e.length&&e[0].filter===!1&&(i=!1);for(let n=1;n<e.length;n++){e[n].filter===!1&&(i=!1);let o=!!e[n].sequential;s=fu(s,ya(t,e[n],o?s.changes.newLength:t.doc.length),o)}let r=ke.create(t,s.changes,s.selection,s.effects,s.annotations,s.scrollIntoView);return Qg(i?jg(r):r)}function jg(t){let e=t.startState,i=!0;for(let r of e.facet(hu)){let n=r(t);if(n===!1){i=!1;break}Array.isArray(n)&&(i=i===!0?n:Vg(i,n))}if(i!==!0){let r,n;if(i===!1)n=t.changes.invertedDesc,r=we.empty(e.doc.length);else{let o=t.changes.filter(i);r=o.changes,n=o.filtered.mapDesc(o.changes).invertedDesc}t=ke.create(e,r,t.selection&&t.selection.map(n),W.mapEffects(t.effects,n),t.annotations,t.scrollIntoView)}let s=e.facet(cu);for(let r=s.length-1;r>=0;r--){let n=s[r](t);n instanceof ke?t=n:Array.isArray(n)&&n.length==1&&n[0]instanceof ke?t=n[0]:t=pu(e,fs(n),!1)}return t}function Qg(t){let e=t.startState,i=e.facet(du),s=t;for(let r=i.length-1;r>=0;r--){let n=i[r](t);n&&Object.keys(n).length&&(s=fu(s,ya(e,n,t.changes.newLength),!0))}return s==t?t:ke.create(e,t.changes,t.selection,s.effects,s.annotations,s.scrollIntoView)}const Kg=[];function fs(t){return t==null?Kg:Array.isArray(t)?t:[t]}var fe=(function(t){return t[t.Word=0]="Word",t[t.Space=1]="Space",t[t.Other=2]="Other",t})(fe||(fe={}));const Xg=/[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;let xa;try{xa=new RegExp("[\\p{Alphabetic}\\p{Number}_]","u")}catch{}function Jg(t){if(xa)return xa.test(t);for(let e=0;e<t.length;e++){let i=t[e];if(/\w/.test(i)||i>""&&(i.toUpperCase()!=i.toLowerCase()||Xg.test(i)))return!0}return!1}function Yg(t){return e=>{if(!/\S/.test(e))return fe.Space;if(Jg(e))return fe.Word;for(let i=0;i<t.length;i++)if(e.indexOf(t[i])>-1)return fe.Word;return fe.Other}}class J{constructor(e,i,s,r,n,o){this.config=e,this.doc=i,this.selection=s,this.values=r,this.status=e.statusTemplate.slice(),this.computeSlot=n,o&&(o._state=this);for(let a=0;a<this.config.dynamicSlots.length;a++)Js(this,a<<1);this.computeSlot=null}field(e,i=!0){let s=this.config.address[e.id];if(s==null){if(i)throw new RangeError("Field is not present in this state");return}return Js(this,s),On(this,s)}update(...e){return pu(this,e,!0)}applyTransaction(e){let i=this.config,{base:s,compartments:r}=i;for(let a of e.effects)a.is(oo.reconfigure)?(i&&(r=new Map,i.compartments.forEach((l,h)=>r.set(h,l)),i=null),r.set(a.value.compartment,a.value.extension)):a.is(W.reconfigure)?(i=null,s=a.value):a.is(W.appendConfig)&&(i=null,s=fs(s).concat(a.value));let n;i?n=e.startState.values.slice():(i=$n.resolve(s,r,this),n=new J(i,this.doc,this.selection,i.dynamicSlots.map(()=>null),(l,h)=>h.reconfigure(l,this),null).values);let o=e.startState.facet(va)?e.newSelection:e.newSelection.asSingle();new J(i,e.newDoc,o,n,(a,l)=>l.update(a,e),e)}replaceSelection(e){return typeof e=="string"&&(e=this.toText(e)),this.changeByRange(i=>({changes:{from:i.from,to:i.to,insert:e},range:$.cursor(i.from+e.length)}))}changeByRange(e){let i=this.selection,s=e(i.ranges[0]),r=this.changes(s.changes),n=[s.range],o=fs(s.effects);for(let a=1;a<i.ranges.length;a++){let l=e(i.ranges[a]),h=this.changes(l.changes),c=h.map(r);for(let u=0;u<a;u++)n[u]=n[u].map(c);let d=r.mapDesc(h,!0);n.push(l.range.map(d)),r=r.compose(c),o=W.mapEffects(o,c).concat(W.mapEffects(fs(l.effects),d))}return{changes:r,selection:$.create(n,i.mainIndex),effects:o}}changes(e=[]){return e instanceof we?e:we.of(e,this.doc.length,this.facet(J.lineSeparator))}toText(e){return Y.of(e.split(this.facet(J.lineSeparator)||fa))}sliceDoc(e=0,i=this.doc.length){return this.doc.sliceString(e,i,this.lineBreak)}facet(e){let i=this.config.address[e.id];return i==null?e.default:(Js(this,i),On(this,i))}toJSON(e){let i={doc:this.sliceDoc(),selection:this.selection.toJSON()};if(e)for(let s in e){let r=e[s];r instanceof Re&&this.config.address[r.id]!=null&&(i[s]=r.spec.toJSON(this.field(e[s]),this))}return i}static fromJSON(e,i={},s){if(!e||typeof e.doc!="string")throw new RangeError("Invalid JSON representation for EditorState");let r=[];if(s){for(let n in s)if(Object.prototype.hasOwnProperty.call(e,n)){let o=s[n],a=e[n];r.push(o.init(l=>o.spec.fromJSON(a,l)))}}return J.create({doc:e.doc,selection:$.fromJSON(e.selection),extensions:i.extensions?r.concat([i.extensions]):r})}static create(e={}){let i=$n.resolve(e.extensions||[],new Map),s=e.doc instanceof Y?e.doc:Y.of((e.doc||"").split(i.staticFacet(J.lineSeparator)||fa)),r=e.selection?e.selection instanceof $?e.selection:$.single(e.selection.anchor,e.selection.head):$.single(0);return nu(r,s.length),i.staticFacet(va)||(r=r.asSingle()),new J(i,s,r,i.dynamicSlots.map(()=>null),(n,o)=>o.create(n),null)}get tabSize(){return this.facet(J.tabSize)}get lineBreak(){return this.facet(J.lineSeparator)||`
@@ -1909,7 +1913,7 @@ const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./install-dialog-e1AhK
       line-height: 1.5;
       overflow: auto;
     }
-  `;hh([ie({type:String})],Cr.prototype,"value",2);hh([ie({type:Boolean})],Cr.prototype,"readonly",2);Cr=hh([Se("esp-config-editor")],Cr);const Ik="modulepreload",Fk=function(t,e){return new URL(t,e).href},Pd={},em=function(e,i,s){let r=Promise.resolve();if(i&&i.length>0){let o=function(c){return Promise.all(c.map(d=>Promise.resolve(d).then(u=>({status:"fulfilled",value:u}),u=>({status:"rejected",reason:u}))))};const a=document.getElementsByTagName("link"),l=document.querySelector("meta[property=csp-nonce]"),h=(l==null?void 0:l.nonce)||(l==null?void 0:l.getAttribute("nonce"));r=o(i.map(c=>{if(c=Fk(c,s),c in Pd)return;Pd[c]=!0;const d=c.endsWith(".css"),u=d?'[rel="stylesheet"]':"";if(!!s)for(let g=a.length-1;g>=0;g--){const y=a[g];if(y.href===c&&(!d||y.rel==="stylesheet"))return}else if(document.querySelector(`link[href="${c}"]${u}`))return;const m=document.createElement("link");if(m.rel=d?"stylesheet":Ik,d||(m.as="script"),m.crossOrigin="",m.href=c,h&&m.setAttribute("nonce",h),document.head.appendChild(m),d)return new Promise((g,y)=>{m.addEventListener("load",g),m.addEventListener("error",()=>y(new Error(`Unable to preload CSS for ${c}`)))})}))}function n(o){const a=new Event("vite:preloadError",{cancelable:!0});if(a.payload=o,window.dispatchEvent(a),!a.defaultPrevented)throw o}return r.then(o=>{for(const a of o||[])a.status==="rejected"&&n(a.reason);return e().catch(n)})},Nk=["ESP32-C61","ESP32-C6","ESP32-C5","ESP32-C3","ESP32-C2","ESP32-H2","ESP32-P4","ESP32-S3","ESP32-S2","ESP8266","ESP32"],Uk={baudRate:115200,bufferSize:8192};function Rs(){return typeof window<"u"&&window.isSecureContext&&"serial"in navigator}function ch(t){if(!t)return null;const e=t.trim().toUpperCase().replace(/\s+/g,"");for(const i of Nk)if(e.includes(i)||e.includes(i.replace(/-/g,"")))return i;return null}async function Hk(){if(!Rs()||!navigator.serial)return[];try{return await navigator.serial.getPorts()}catch{return[]}}async function Wk(){return(await Hk()).filter(e=>{try{return!!e.getInfo().usbVendorId}catch{return!1}})}async function zk(){if(!navigator.serial)throw new Error("Web Serial is not available in this browser.");try{return await navigator.serial.requestPort()}catch(t){if(t instanceof DOMException&&t.name==="NotFoundError")return"cancelled";throw t}}async function to(t={}){if(!Rs()||!navigator.serial)throw new Error("Web Serial is not available in this browser.");if(!t.forcePicker){const e=await Wk();if(e.length===1)return e[0]}return zk()}async function dl(t){const{Transport:e,ESPLoader:i}=await em(async()=>{const{Transport:r,ESPLoader:n}=await import("./index-CVEpFw44.js");return{Transport:r,ESPLoader:n}},[],import.meta.url),s=new e(t,!0);try{const r=new i({transport:s,baudrate:115200,terminal:{clean:()=>{},writeLine:()=>{},write:()=>{}},debugLogging:!1}),n=String(await r.main());return{detected:n,family:ch(n)}}finally{try{await s.disconnect()}catch{}}}async function dh(t){if(!Rs())throw new Error("Browser USB flashing needs Chrome or Edge on a secure HTTPS page.");let e=t.port??null;if(!e){const l=await to();if(l==="cancelled")return"cancelled";e=l}await em(()=>import("./install-dialog-e1AhKAEf.js"),__vite__mapDeps([0,1]),import.meta.url),e.readable===null&&await e.open(Uk);const i=document.createElement("ewt-install-dialog");i.port=e,i.manifestPath=t.manifestUrl;let s=!1,r=!1,n=null;const o=()=>{n==null||n.disconnect(),n=null};return(()=>{t.onFinished&&(n=new MutationObserver(()=>{var h;const l=i.getAttribute("state");if(l==="INSTALL"){s=!0;return}s&&!r&&(l==="DASHBOARD"||l==="PROVISION")&&(r=!0,(h=t.onFinished)==null||h.call(t))}),n.observe(i,{attributes:!0,attributeFilter:["state"]}))})(),i.addEventListener("closed",()=>{var l;o(),e.close().catch(()=>{}),(l=t.onClosed)==null||l.call(t)},{once:!0}),document.body.appendChild(i),"opened"}var qk=Object.defineProperty,Vk=Object.getOwnPropertyDescriptor,ue=(t,e,i,s)=>{for(var r=s>1?void 0:s?Vk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&qk(e,i,r),r};const jk=new Set(["queued","starting","announcing","transferring","verifying","transfer_success_waiting_rejoin"]),Qk=new Set(["success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"]);function Kk(t){const e=t||"";if(/^\s*esp8266\s*:/m.test(e))return"ESP8266";if(!/^\s*esp32\s*:/m.test(e))return null;const i=e.match(/^\s*variant\s*:\s*["']?([A-Za-z0-9_-]+)["']?\s*$/m),s=((i==null?void 0:i[1])||"").toUpperCase().replace(/_/g,"-");return s?s.includes("ESP32-C61")?"ESP32-C61":s.includes("ESP32-C6")?"ESP32-C6":s.includes("ESP32-C5")?"ESP32-C5":s.includes("ESP32-C3")?"ESP32-C3":s.includes("ESP32-C2")?"ESP32-C2":s.includes("ESP32-H2")?"ESP32-H2":s.includes("ESP32-P4")?"ESP32-P4":s.includes("ESP32-S3")?"ESP32-S3":s.includes("ESP32-S2")?"ESP32-S2":"ESP32":"ESP32"}let re=class extends pe{constructor(){super(...arguments),this.mac="",this.state="loading",this.device=null,this.config=null,this.editorContent="",this.saveIndicator="",this.hasUnsavedChanges=!1,this.error="",this.compilePhase="idle",this.topology=[],this.compileJobId=null,this.compileQueuePosition=null,this.preflight=null,this.chipUnknown=!1,this.yamlWarnings=[],this.showExternalComponentsFix=!1,this.showSecretsWarning=!1,this.missingSecrets=[],this.pendingAction=null,this.pendingAutoFlash=!1,this.showCompileLog=!0,this.compileStartedAt=null,this.flashIntent="none",this.browserFlashManifestUrl="",this.browserFlashError="",this.browserFlashOpen=!1,this.browserFlashFirmwareBlobUrl="",this.elapsedTimer=null,this.pollTimer=null,this.devicePollTimer=null}connectedCallback(){super.connectedCallback(),this.load()}disconnectedCallback(){this.stopPolling(),this.stopDevicePolling(),super.disconnectedCallback()}startPolling(){this.pollTimer||(this.pollTimer=setInterval(()=>this.pollCompileStatus(),2e3))}stopPolling(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}stopCompileLogViewer(){this.compileLogViewer&&(this.compileLogViewer.stopped=!0)}startDevicePolling(){this.devicePollTimer||(this.devicePollTimer=setInterval(()=>void this.pollDevice(),3e4))}stopDevicePolling(){this.devicePollTimer&&(clearInterval(this.devicePollTimer),this.devicePollTimer=null)}async pollDevice(){try{const t=await S.device(this.mac);this.device=t||{}}catch{}}get isCompilingActive(){return this.compilePhase==="compiling"||this.compilePhase==="compile_queued"}get browserSupportsUsbFlash(){return Rs()}get browserFlashChipFamily(){var e,i;const t=String(((e=this.preflight)==null?void 0:e.chip.new)||((i=this.device)==null?void 0:i.chip_name)||"");return Kk(this.editorContent)||ch(t)}getElapsedTime(){if(!this.compileStartedAt)return"00:00";const t=Math.floor((Date.now()-this.compileStartedAt)/1e3),e=Math.floor(t/60).toString().padStart(2,"0"),i=(t%60).toString().padStart(2,"0");return`${e}:${i}`}startElapsedTimer(){this.stopElapsedTimer(),this.elapsedTimer=setInterval(()=>this.requestUpdate(),1e3)}stopElapsedTimer(){this.elapsedTimer&&(clearInterval(this.elapsedTimer),this.elapsedTimer=null)}async load(){this.state="loading";try{const[t,e,i]=await Promise.all([S.device(this.mac).catch(()=>null),S.getConfig(this.mac).catch(()=>null),S.topology().catch(()=>[])]);this.device=t||{},this.topology=i,this.startDevicePolling(),e&&e.has_config?(this.config=e,this.editorContent=this.config.content,this.hasUnsavedChanges=!1,this.state="editor"):this.state="no_config",await this.pollCompileStatus()}catch{this.state="no_config"}}clearBrowserFlashManifestUrl(){this.browserFlashManifestUrl&&(URL.revokeObjectURL(this.browserFlashManifestUrl),this.browserFlashManifestUrl=""),this.browserFlashFirmwareBlobUrl&&(URL.revokeObjectURL(this.browserFlashFirmwareBlobUrl),this.browserFlashFirmwareBlobUrl="")}async updateBrowserFlashManifestUrl(){var e,i,s,r;if(this.compilePhase!=="compiled")return;const t=this.browserFlashChipFamily;if(!t){this.clearBrowserFlashManifestUrl();return}try{const n=S.downloadFactoryBinary(this.mac),o=await fetch(n);if(!o.ok){this.clearBrowserFlashManifestUrl();return}const a=await o.blob(),l=URL.createObjectURL(a),h={name:String(((e=this.device)==null?void 0:e.esphome_name)||((i=this.device)==null?void 0:i.label)||this.mac),version:String(((s=this.device)==null?void 0:s.project_version)||((r=this.device)==null?void 0:r.firmware_version)||"compiled"),new_install_prompt_erase:!1,new_install_improv_wait_time:0,builds:[{chipFamily:t,parts:[{path:l,offset:0}]}]},c=new Blob([JSON.stringify(h)],{type:"application/json"}),d=URL.createObjectURL(c);this.clearBrowserFlashManifestUrl(),this.browserFlashManifestUrl=d,this.browserFlashFirmwareBlobUrl=l}catch{this.clearBrowserFlashManifestUrl()}}async pollCompileStatus(){try{const t=await S.getCompileStatus(this.mac);t.status==="compile_queued"?(this.compilePhase="compile_queued",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.startPolling()):t.status==="compiling"?(this.compilePhase="compiling",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.startPolling()):jk.has(t.status)?(this.compilePhase="queued_for_flash",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.flashIntent="ota",this.startPolling(),window.location.hash=`/device/${encodeURIComponent(this.mac)}`):t.status==="compiled"?(this.compilePhase="compiled",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.stopElapsedTimer(),this.updateBrowserFlashManifestUrl(),this.stopPolling(),this.flashIntent==="ota"&&(window.location.hash=`/device/${encodeURIComponent(this.mac)}`)):Qk.has(t.status)&&(this.compilePhase="idle",this.compileJobId=null,this.compileQueuePosition=null,this.compileStartedAt=null,this.flashIntent="none",this.clearBrowserFlashManifestUrl(),this.stopElapsedTimer(),this.stopPolling(),this.stopCompileLogViewer())}catch{}}async createScaffold(){try{const t=await S.saveConfig(this.mac,"",!0);this.config=t,this.editorContent=t.content,this.chipUnknown=t.chip_unknown??!1,this.state="editor"}catch(t){this.error=t instanceof Error?t.message:String(t)}}async importYaml(){const t=document.createElement("input");t.type="file",t.accept=".yaml,.yml",t.onchange=async()=>{var i;const e=(i=t.files)==null?void 0:i[0];if(e)try{const s=await S.importConfig(this.mac,e);this.config=s,this.editorContent=s.content,this.state="editor"}catch(s){this.error=s instanceof Error?s.message:String(s)}},t.click()}async saveConfig(t=!1){if(!t&&!cl(this.editorContent)){this.pendingAction="save",this.showExternalComponentsFix=!0;return}this.saveIndicator="Saving...";try{const e=await S.saveConfig(this.mac,this.editorContent);this.config=e,this.hasUnsavedChanges=!1,this.saveIndicator="Saved",setTimeout(()=>{this.saveIndicator="",this.requestUpdate()},2e3)}catch(e){this.saveIndicator="",this.error=e instanceof Error?e.message:String(e)}}onEditorChange(t){const e=t.detail;this.editorContent=e.content,this.yamlWarnings=e.warnings??[],this.hasUnsavedChanges=this.config?this.editorContent!==this.config.content:!0}get isBridgeDevice(){var t;return!!((t=this.device)!=null&&t.is_bridge)}get isEsp8266Device(){var e;const t=String(((e=this.device)==null?void 0:e.chip_name)??"");return t==="ESP8266"||t==="ESP-01"||t==="ESP-12E"}get remoteComponentName(){return this.isBridgeDevice?"esp_tree_bridge":this.isEsp8266Device?"espnow_82xx_remote":"esp_tree_remote"}get externalComponentsFixYaml(){return`external_components:
+  `;hh([ie({type:String})],Cr.prototype,"value",2);hh([ie({type:Boolean})],Cr.prototype,"readonly",2);Cr=hh([Se("esp-config-editor")],Cr);const Ik="modulepreload",Fk=function(t,e){return new URL(t,e).href},Pd={},em=function(e,i,s){let r=Promise.resolve();if(i&&i.length>0){let o=function(c){return Promise.all(c.map(d=>Promise.resolve(d).then(u=>({status:"fulfilled",value:u}),u=>({status:"rejected",reason:u}))))};const a=document.getElementsByTagName("link"),l=document.querySelector("meta[property=csp-nonce]"),h=(l==null?void 0:l.nonce)||(l==null?void 0:l.getAttribute("nonce"));r=o(i.map(c=>{if(c=Fk(c,s),c in Pd)return;Pd[c]=!0;const d=c.endsWith(".css"),u=d?'[rel="stylesheet"]':"";if(!!s)for(let g=a.length-1;g>=0;g--){const y=a[g];if(y.href===c&&(!d||y.rel==="stylesheet"))return}else if(document.querySelector(`link[href="${c}"]${u}`))return;const m=document.createElement("link");if(m.rel=d?"stylesheet":Ik,d||(m.as="script"),m.crossOrigin="",m.href=c,h&&m.setAttribute("nonce",h),document.head.appendChild(m),d)return new Promise((g,y)=>{m.addEventListener("load",g),m.addEventListener("error",()=>y(new Error(`Unable to preload CSS for ${c}`)))})}))}function n(o){const a=new Event("vite:preloadError",{cancelable:!0});if(a.payload=o,window.dispatchEvent(a),!a.defaultPrevented)throw o}return r.then(o=>{for(const a of o||[])a.status==="rejected"&&n(a.reason);return e().catch(n)})},Nk=["ESP32-C61","ESP32-C6","ESP32-C5","ESP32-C3","ESP32-C2","ESP32-H2","ESP32-P4","ESP32-S3","ESP32-S2","ESP8266","ESP32"],Uk={baudRate:115200,bufferSize:8192};function Rs(){return typeof window<"u"&&window.isSecureContext&&"serial"in navigator}function ch(t){if(!t)return null;const e=t.trim().toUpperCase().replace(/\s+/g,"");for(const i of Nk)if(e.includes(i)||e.includes(i.replace(/-/g,"")))return i;return null}async function Hk(){if(!Rs()||!navigator.serial)return[];try{return await navigator.serial.getPorts()}catch{return[]}}async function Wk(){return(await Hk()).filter(e=>{try{return!!e.getInfo().usbVendorId}catch{return!1}})}async function zk(){if(!navigator.serial)throw new Error("Web Serial is not available in this browser.");try{return await navigator.serial.requestPort()}catch(t){if(t instanceof DOMException&&t.name==="NotFoundError")return"cancelled";throw t}}async function to(t={}){if(!Rs()||!navigator.serial)throw new Error("Web Serial is not available in this browser.");if(!t.forcePicker){const e=await Wk();if(e.length===1)return e[0]}return zk()}async function dl(t){const{Transport:e,ESPLoader:i}=await em(async()=>{const{Transport:r,ESPLoader:n}=await import("./index-Dg9LnRo3.js");return{Transport:r,ESPLoader:n}},[],import.meta.url),s=new e(t,!0);try{const r=new i({transport:s,baudrate:115200,terminal:{clean:()=>{},writeLine:()=>{},write:()=>{}},debugLogging:!1}),n=String(await r.main());return{detected:n,family:ch(n)}}finally{try{await s.disconnect()}catch{}}}async function dh(t){if(!Rs())throw new Error("Browser USB flashing needs Chrome or Edge on a secure HTTPS page.");let e=t.port??null;if(!e){const l=await to();if(l==="cancelled")return"cancelled";e=l}await em(()=>import("./install-dialog-DEyzgznf.js"),__vite__mapDeps([0,1]),import.meta.url),e.readable===null&&await e.open(Uk);const i=document.createElement("ewt-install-dialog");i.port=e,i.manifestPath=t.manifestUrl;let s=!1,r=!1,n=null;const o=()=>{n==null||n.disconnect(),n=null};return(()=>{t.onFinished&&(n=new MutationObserver(()=>{var h;const l=i.getAttribute("state");if(l==="INSTALL"){s=!0;return}s&&!r&&(l==="DASHBOARD"||l==="PROVISION")&&(r=!0,(h=t.onFinished)==null||h.call(t))}),n.observe(i,{attributes:!0,attributeFilter:["state"]}))})(),i.addEventListener("closed",()=>{var l;o(),e.close().catch(()=>{}),(l=t.onClosed)==null||l.call(t)},{once:!0}),document.body.appendChild(i),"opened"}var qk=Object.defineProperty,Vk=Object.getOwnPropertyDescriptor,ue=(t,e,i,s)=>{for(var r=s>1?void 0:s?Vk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&qk(e,i,r),r};const jk=new Set(["queued","starting","announcing","transferring","verifying","transfer_success_waiting_rejoin"]),Qk=new Set(["success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"]);function Kk(t){const e=t||"";if(/^\s*esp8266\s*:/m.test(e))return"ESP8266";if(!/^\s*esp32\s*:/m.test(e))return null;const i=e.match(/^\s*variant\s*:\s*["']?([A-Za-z0-9_-]+)["']?\s*$/m),s=((i==null?void 0:i[1])||"").toUpperCase().replace(/_/g,"-");return s?s.includes("ESP32-C61")?"ESP32-C61":s.includes("ESP32-C6")?"ESP32-C6":s.includes("ESP32-C5")?"ESP32-C5":s.includes("ESP32-C3")?"ESP32-C3":s.includes("ESP32-C2")?"ESP32-C2":s.includes("ESP32-H2")?"ESP32-H2":s.includes("ESP32-P4")?"ESP32-P4":s.includes("ESP32-S3")?"ESP32-S3":s.includes("ESP32-S2")?"ESP32-S2":"ESP32":"ESP32"}let re=class extends pe{constructor(){super(...arguments),this.mac="",this.state="loading",this.device=null,this.config=null,this.editorContent="",this.saveIndicator="",this.hasUnsavedChanges=!1,this.error="",this.compilePhase="idle",this.topology=[],this.compileJobId=null,this.compileQueuePosition=null,this.preflight=null,this.chipUnknown=!1,this.yamlWarnings=[],this.showExternalComponentsFix=!1,this.showSecretsWarning=!1,this.missingSecrets=[],this.pendingAction=null,this.pendingAutoFlash=!1,this.showCompileLog=!0,this.compileStartedAt=null,this.flashIntent="none",this.browserFlashManifestUrl="",this.browserFlashError="",this.browserFlashOpen=!1,this.browserFlashFirmwareBlobUrl="",this.elapsedTimer=null,this.pollTimer=null,this.devicePollTimer=null}connectedCallback(){super.connectedCallback(),this.load()}disconnectedCallback(){this.stopPolling(),this.stopDevicePolling(),super.disconnectedCallback()}startPolling(){this.pollTimer||(this.pollTimer=setInterval(()=>this.pollCompileStatus(),2e3))}stopPolling(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}stopCompileLogViewer(){this.compileLogViewer&&(this.compileLogViewer.stopped=!0)}startDevicePolling(){this.devicePollTimer||(this.devicePollTimer=setInterval(()=>void this.pollDevice(),3e4))}stopDevicePolling(){this.devicePollTimer&&(clearInterval(this.devicePollTimer),this.devicePollTimer=null)}async pollDevice(){try{const t=await S.device(this.mac);this.device=t||{}}catch{}}get isCompilingActive(){return this.compilePhase==="compiling"||this.compilePhase==="compile_queued"}get browserSupportsUsbFlash(){return Rs()}get browserFlashChipFamily(){var e,i;const t=String(((e=this.preflight)==null?void 0:e.chip.new)||((i=this.device)==null?void 0:i.chip_name)||"");return Kk(this.editorContent)||ch(t)}getElapsedTime(){if(!this.compileStartedAt)return"00:00";const t=Math.floor((Date.now()-this.compileStartedAt)/1e3),e=Math.floor(t/60).toString().padStart(2,"0"),i=(t%60).toString().padStart(2,"0");return`${e}:${i}`}startElapsedTimer(){this.stopElapsedTimer(),this.elapsedTimer=setInterval(()=>this.requestUpdate(),1e3)}stopElapsedTimer(){this.elapsedTimer&&(clearInterval(this.elapsedTimer),this.elapsedTimer=null)}async load(){this.state="loading";try{const[t,e,i]=await Promise.all([S.device(this.mac).catch(()=>null),S.getConfig(this.mac).catch(()=>null),S.topology().catch(()=>[])]);this.device=t||{},this.topology=i,this.startDevicePolling(),e&&e.has_config?(this.config=e,this.editorContent=this.config.content,this.hasUnsavedChanges=!1,this.state="editor"):this.state="no_config",await this.pollCompileStatus()}catch{this.state="no_config"}}clearBrowserFlashManifestUrl(){this.browserFlashManifestUrl&&(URL.revokeObjectURL(this.browserFlashManifestUrl),this.browserFlashManifestUrl=""),this.browserFlashFirmwareBlobUrl&&(URL.revokeObjectURL(this.browserFlashFirmwareBlobUrl),this.browserFlashFirmwareBlobUrl="")}async updateBrowserFlashManifestUrl(){var e,i,s,r;if(this.compilePhase!=="compiled")return;const t=this.browserFlashChipFamily;if(!t){this.clearBrowserFlashManifestUrl();return}try{const n=S.downloadFactoryBinary(this.mac),o=await fetch(n);if(!o.ok){this.clearBrowserFlashManifestUrl();return}const a=await o.blob(),l=URL.createObjectURL(a),h={name:String(((e=this.device)==null?void 0:e.esphome_name)||((i=this.device)==null?void 0:i.label)||this.mac),version:String(((s=this.device)==null?void 0:s.project_version)||((r=this.device)==null?void 0:r.firmware_version)||"compiled"),new_install_prompt_erase:!1,new_install_improv_wait_time:0,builds:[{chipFamily:t,parts:[{path:l,offset:0}]}]},c=new Blob([JSON.stringify(h)],{type:"application/json"}),d=URL.createObjectURL(c);this.clearBrowserFlashManifestUrl(),this.browserFlashManifestUrl=d,this.browserFlashFirmwareBlobUrl=l}catch{this.clearBrowserFlashManifestUrl()}}async pollCompileStatus(){try{const t=await S.getCompileStatus(this.mac);t.status==="compile_queued"?(this.compilePhase="compile_queued",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.startPolling()):t.status==="compiling"?(this.compilePhase="compiling",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.startPolling()):jk.has(t.status)?(this.compilePhase="queued_for_flash",this.compileJobId=t.job_id,this.compileQueuePosition=t.queue_position,this.flashIntent="ota",this.startPolling(),window.location.hash=`/device/${encodeURIComponent(this.mac)}`):t.status==="compiled"?(this.compilePhase="compiled",this.compileJobId=t.job_id,this.compileQueuePosition=null,this.stopElapsedTimer(),this.updateBrowserFlashManifestUrl(),this.stopPolling(),this.flashIntent==="ota"&&(window.location.hash=`/device/${encodeURIComponent(this.mac)}`)):Qk.has(t.status)&&(this.compilePhase="idle",this.compileJobId=null,this.compileQueuePosition=null,this.compileStartedAt=null,this.flashIntent="none",this.clearBrowserFlashManifestUrl(),this.stopElapsedTimer(),this.stopPolling(),this.stopCompileLogViewer())}catch{}}async createScaffold(){try{const t=await S.saveConfig(this.mac,"",!0);this.config=t,this.editorContent=t.content,this.chipUnknown=t.chip_unknown??!1,this.state="editor"}catch(t){this.error=t instanceof Error?t.message:String(t)}}async importYaml(){const t=document.createElement("input");t.type="file",t.accept=".yaml,.yml",t.onchange=async()=>{var i;const e=(i=t.files)==null?void 0:i[0];if(e)try{const s=await S.importConfig(this.mac,e);this.config=s,this.editorContent=s.content,this.state="editor"}catch(s){this.error=s instanceof Error?s.message:String(s)}},t.click()}async saveConfig(t=!1){if(!t&&!cl(this.editorContent)){this.pendingAction="save",this.showExternalComponentsFix=!0;return}this.saveIndicator="Saving...";try{const e=await S.saveConfig(this.mac,this.editorContent);this.config=e,this.hasUnsavedChanges=!1,this.saveIndicator="Saved",setTimeout(()=>{this.saveIndicator="",this.requestUpdate()},2e3)}catch(e){this.saveIndicator="",this.error=e instanceof Error?e.message:String(e)}}onEditorChange(t){const e=t.detail;this.editorContent=e.content,this.yamlWarnings=e.warnings??[],this.hasUnsavedChanges=this.config?this.editorContent!==this.config.content:!0}get isBridgeDevice(){var t;return!!((t=this.device)!=null&&t.is_bridge)}get isEsp8266Device(){var e;const t=String(((e=this.device)==null?void 0:e.chip_name)??"");return t==="ESP8266"||t==="ESP-01"||t==="ESP-12E"}get remoteComponentName(){return this.isBridgeDevice?"esp_tree_bridge":this.isEsp8266Device?"espnow_82xx_remote":"esp_tree_remote"}get externalComponentsFixYaml(){return`external_components:
   - source:
       type: local
       path: /opt/esp-tree/components
@@ -1939,7 +1943,7 @@ external_components:
                   </div>
                 </div>
               </div>
-            `:v}
+            `:b}
         ${this.showSecretsWarning?p`
               <div class="ec-fix-backdrop" @click=${this.dismissSecretsWarning}>
                 <div class="ec-fix-modal" @click=${m=>m.stopPropagation()}>
@@ -1955,7 +1959,7 @@ external_components:
                   </div>
                 </div>
               </div>
-            `:v}
+            `:b}
         <div>
           <nav class="crumbs" aria-label="Breadcrumb">
             <a href="#/">Network</a>${C("chevronRight")}
@@ -1985,7 +1989,7 @@ external_components:
                       ${C("alert")}<span>This remote reported a chip type ESP Tree can't build for. Check the chip before compiling.</span>
                       <button class="btn sm icon text" aria-label="Dismiss" @click=${()=>{this.chipUnknown=!1}}>${C("close")}</button>
                     </div>
-                  `:v}
+                  `:b}
                   ${C("code")}
                   <strong>No YAML for this remote yet</strong>
                   <p>Start from a scaffold filled in from what the bridge knows about this remote, or import an existing ESPHome YAML file.</p>
@@ -1993,7 +1997,7 @@ external_components:
                     <button class="btn primary" @click=${this.createScaffold}>Create from scaffold</button>
                     <button class="btn" @click=${this.importYaml}>${C("upload")}Import YAML</button>
                   </div>
-                  ${this.error?p`<p class="error">${this.error}</p>`:v}
+                  ${this.error?p`<p class="error">${this.error}</p>`:b}
                 </div>
               `:this.state==="editor"?p`
                     <div class="main-content">
@@ -2017,7 +2021,7 @@ external_components:
                             @content-change=${this.onEditorChange}
                           ></esp-config-editor>
 
-                          ${this.yamlWarnings.length>0?p`<div class="notice warn yaml-warnings">${C("alert")}<div>${this.yamlWarnings.map(m=>p`<p>${m}</p>`)}</div></div>`:v}
+                          ${this.yamlWarnings.length>0?p`<div class="notice warn yaml-warnings">${C("alert")}<div>${this.yamlWarnings.map(m=>p`<p>${m}</p>`)}</div></div>`:b}
                         `}
                     </div>
 
@@ -2032,7 +2036,7 @@ external_components:
                           ${C("clock")}<span><strong>Build queued</strong> · position ${this.compileQueuePosition!==null?this.compileQueuePosition:"?"}. It starts when the current build finishes.</span>
                           <span class="notice-actions"><button class="btn sm" @click=${this.cancelCompile}>Cancel build</button></span>
                         </div>
-                      `:v}
+                      `:b}
 
                   <div class="action-bar">
                     <span class="save-state ${this.hasUnsavedChanges?"dirty":""}" aria-live="polite">
@@ -2044,7 +2048,7 @@ external_components:
                             <button class="btn" ?disabled=${!this.config} @click=${this.triggerCompile}>${C("build")}Compile</button>
                             <button class="btn" ?disabled=${!this.config} @click=${this.triggerBrowserFlashFlow} title="Compile, then flash a board plugged into this computer">${C("usb")}Compile &amp; flash by USB</button>
                             <button class="btn primary" ?disabled=${!this.config} @click=${this.triggerOtaFlash} title="Compile, then upload over the ESP-NOW mesh">${C("upload")}Compile &amp; install</button>
-                          `:this.compilePhase==="compiling"||this.compilePhase==="compile_queued"?p`<button class="btn danger" @click=${this.cancelCompile}>Cancel build</button>`:v}
+                          `:this.compilePhase==="compiling"||this.compilePhase==="compile_queued"?p`<button class="btn danger" @click=${this.cancelCompile}>Cancel build</button>`:b}
                     </span>
                   </div>
 
@@ -2060,7 +2064,7 @@ external_components:
                             </button>
                             <a class="btn" href=${S.downloadFactoryBinary(this.mac)} download>Download factory .bin</a>
                           </div>
-                          ${this.browserFlashError?p`<p class="browser-flash-error">${this.browserFlashError}</p>`:v}
+                          ${this.browserFlashError?p`<p class="browser-flash-error">${this.browserFlashError}</p>`:b}
                         `:p`
                           <div class="browser-flash-hint hint">
                             ${this.compilePhase==="compiled"&&!a?p`<p>Browser USB flash is unavailable because the chip family could not be determined for this build.</p>`:this.browserSupportsUsbFlash?p`<p>USB flashing becomes available here after a successful build.</p>`:p`<p>Browser USB flash requires Chrome or Edge with Web Serial on an HTTPS page.</p>`}
@@ -2069,7 +2073,7 @@ external_components:
                         `}
                   </div>
 
-                  ${this.error&&this.compilePhase!=="compiling"?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:v}
+                  ${this.error&&this.compilePhase!=="compiling"?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:b}
 
                   ${this.compilePhase==="compiled"?p`
                         <div class="success-section">
@@ -2078,14 +2082,14 @@ external_components:
                                 <div class="warnings">
                                   ${this.preflight.warnings.map(m=>p`<p>${m}</p>`)}
                                 </div>
-                              `:v}
+                              `:b}
                           ${this.flashIntent==="browser"?p`<p class="hint">Build complete. Connect the device by USB and use the browser flash control above.</p>`:p`<p class="hint">Install it over the air or by USB from the buttons above, or download the binaries.</p>`}
                           <div class="download-links">
                             <a class="btn" href=${S.downloadFactoryBinary(this.mac)} download>Download .bin</a>
                             <a class="btn" href=${S.downloadCompileBinary(this.mac)} download>Download .ota.bin</a>
                           </div>
                         </div>
-                      `:v}
+                      `:b}
 
                   ${this.compilePhase==="failed"?p`
                         <div class="fail-section">
@@ -2095,8 +2099,8 @@ external_components:
                           </div>
                           <p class="hint">Check the log for the first error, fix the YAML above, then compile again.</p>
                         </div>
-                      `:v}
-                `:v}
+                      `:b}
+                `:b}
       </div>
     `}};re.styles=[Ee,de`
     :host { display: block; }
@@ -2183,7 +2187,7 @@ external_components:
       .bar-actions { width: 100%; }
       .bar-actions .btn { flex: 1 1 auto; }
     }
-  `];ue([ie({type:String})],re.prototype,"mac",2);ue([b()],re.prototype,"state",2);ue([b()],re.prototype,"device",2);ue([b()],re.prototype,"config",2);ue([b()],re.prototype,"editorContent",2);ue([b()],re.prototype,"saveIndicator",2);ue([b()],re.prototype,"hasUnsavedChanges",2);ue([b()],re.prototype,"error",2);ue([b()],re.prototype,"compilePhase",2);ue([b()],re.prototype,"topology",2);ue([b()],re.prototype,"compileJobId",2);ue([b()],re.prototype,"compileQueuePosition",2);ue([b()],re.prototype,"preflight",2);ue([b()],re.prototype,"chipUnknown",2);ue([b()],re.prototype,"yamlWarnings",2);ue([b()],re.prototype,"showExternalComponentsFix",2);ue([b()],re.prototype,"showSecretsWarning",2);ue([b()],re.prototype,"missingSecrets",2);ue([b()],re.prototype,"showCompileLog",2);ue([b()],re.prototype,"compileStartedAt",2);ue([b()],re.prototype,"flashIntent",2);ue([b()],re.prototype,"browserFlashManifestUrl",2);ue([b()],re.prototype,"browserFlashError",2);ue([b()],re.prototype,"browserFlashOpen",2);ue([bl("esp-compile-log-viewer")],re.prototype,"compileLogViewer",2);re=ue([Se("esp-config-page")],re);var Xk=Object.defineProperty,Jk=Object.getOwnPropertyDescriptor,Ls=(t,e,i,s)=>{for(var r=s>1?void 0:s?Jk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Xk(e,i,r),r};let xi=class extends pe{constructor(){super(...arguments),this.from="/",this.content="",this.saved=!1,this.loading=!0,this.error=""}connectedCallback(){super.connectedCallback(),this.load()}async load(){this.loading=!0;try{const t=await S.getSecrets();this.content=t.content,this.error=""}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loading=!1}}async save(){this.saved=!1;try{await S.saveSecrets(this.content),this.saved=!0,this.error="",setTimeout(()=>{this.saved=!1,this.requestUpdate()},2e3)}catch(t){this.error=t instanceof Error?t.message:String(t)}}onInput(t){this.content=t.target.value}render(){const t=(this.from||"").replace(/^#/,""),e=t&&t!=="/"?t:"/settings",i=e.startsWith("/device/")?"YAML":e.startsWith("/settings")?"Settings":"Back";return p`
+  `];ue([ie({type:String})],re.prototype,"mac",2);ue([v()],re.prototype,"state",2);ue([v()],re.prototype,"device",2);ue([v()],re.prototype,"config",2);ue([v()],re.prototype,"editorContent",2);ue([v()],re.prototype,"saveIndicator",2);ue([v()],re.prototype,"hasUnsavedChanges",2);ue([v()],re.prototype,"error",2);ue([v()],re.prototype,"compilePhase",2);ue([v()],re.prototype,"topology",2);ue([v()],re.prototype,"compileJobId",2);ue([v()],re.prototype,"compileQueuePosition",2);ue([v()],re.prototype,"preflight",2);ue([v()],re.prototype,"chipUnknown",2);ue([v()],re.prototype,"yamlWarnings",2);ue([v()],re.prototype,"showExternalComponentsFix",2);ue([v()],re.prototype,"showSecretsWarning",2);ue([v()],re.prototype,"missingSecrets",2);ue([v()],re.prototype,"showCompileLog",2);ue([v()],re.prototype,"compileStartedAt",2);ue([v()],re.prototype,"flashIntent",2);ue([v()],re.prototype,"browserFlashManifestUrl",2);ue([v()],re.prototype,"browserFlashError",2);ue([v()],re.prototype,"browserFlashOpen",2);ue([bl("esp-compile-log-viewer")],re.prototype,"compileLogViewer",2);re=ue([Se("esp-config-page")],re);var Xk=Object.defineProperty,Jk=Object.getOwnPropertyDescriptor,Ls=(t,e,i,s)=>{for(var r=s>1?void 0:s?Jk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Xk(e,i,r),r};let xi=class extends pe{constructor(){super(...arguments),this.from="/",this.content="",this.saved=!1,this.loading=!0,this.error=""}connectedCallback(){super.connectedCallback(),this.load()}async load(){this.loading=!0;try{const t=await S.getSecrets();this.content=t.content,this.error=""}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loading=!1}}async save(){this.saved=!1;try{await S.saveSecrets(this.content),this.saved=!0,this.error="",setTimeout(()=>{this.saved=!1,this.requestUpdate()},2e3)}catch(t){this.error=t instanceof Error?t.message:String(t)}}onInput(t){this.content=t.target.value}render(){const t=(this.from||"").replace(/^#/,""),e=t&&t!=="/"?t:"/settings",i=e.startsWith("/device/")?"YAML":e.startsWith("/settings")?"Settings":"Back";return p`
       <div class="page">
         <div>
           <nav class="crumbs" aria-label="Breadcrumb"><a href="#${e}">${i}</a>${C("chevronRight")}<span aria-current="page">Secrets</span></nav>
@@ -2207,8 +2211,8 @@ external_components:
                   <span class="hint" id="secret-help">${C("info")}Stored as plain text, protected by Home Assistant sign-in. The bridge and every remote must share the same network ID and PSK.</span>
                   <span class="foot-actions">
                     <span role="status">
-                      ${this.saved?p`<span class="saved">${C("check")}Saved</span>`:v}
-                      ${this.error?p`<span class="error-text">${this.error}</span>`:v}
+                      ${this.saved?p`<span class="saved">${C("check")}Saved</span>`:b}
+                      ${this.error?p`<span class="error-text">${this.error}</span>`:b}
                     </span>
                     <button class="btn primary" @click=${this.save} ?disabled=${this.loading}>Save</button>
                   </span>
@@ -2236,31 +2240,33 @@ external_components:
     .saved { display: inline-flex; align-items: center; gap: 4px; color: var(--ok); font-size: var(--text-sm); font-weight: 500; }
     .saved svg { width: 16px; height: 16px; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  `];Ls([ie({type:String})],xi.prototype,"from",2);Ls([b()],xi.prototype,"content",2);Ls([b()],xi.prototype,"saved",2);Ls([b()],xi.prototype,"loading",2);Ls([b()],xi.prototype,"error",2);xi=Ls([Se("esp-secrets-page")],xi);var Yk=Object.defineProperty,Gk=Object.getOwnPropertyDescriptor,Si=(t,e,i,s)=>{for(var r=s>1?void 0:s?Gk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Yk(e,i,r),r};const Zk={compile_queued:"Queued for compile",compiling:"Compiling",compile_success:"Compile success",queued:"Queued for flash",starting:"Starting",announcing:"Waiting for device accept",transferring:"Transferring",verifying:"Verifying",transfer_success_waiting_rejoin:"Waiting for device rejoin",success:"Success",failed:"Failed",aborted:"Aborted",rejoin_timeout:"Rejoin timeout",version_mismatch:"Version mismatch",rejoined_unverified:"Rejoined — build unconfirmed"},eS=["compile_success","success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"];let Ut=class extends pe{constructor(){super(...arguments),this.jobId=0,this.from="/queue",this.job=null,this.logData=null,this.error="",this.loading=!0,this.expandedOutput=new Set,this.pollTimer=null}connectedCallback(){super.connectedCallback()}disconnectedCallback(){this.stopPolling(),super.disconnectedCallback()}updated(t){t.has("jobId")&&this.jobId&&(this.loading=!0,this.error="",this.fetchLog())}startPolling(){this.pollTimer||(this.pollTimer=setInterval(()=>this.fetchLog(),2e3))}stopPolling(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}async fetchJob(){var t;if(this.jobId){try{this.job=await S.job(this.jobId);return}catch{}try{const e=(t=this.logData)==null?void 0:t.mac;if(e){const s=(await S.history(e)).jobs.find(r=>r.id===this.jobId);this.job=s||null}}catch{}}}async fetchLog(){var t,e;if(this.jobId)try{this.logData=await S.jobLog(this.jobId),this.loading=!1,!this.job&&((t=this.logData)!=null&&t.mac)&&await this.fetchJob(),(e=this.logData)!=null&&e.is_terminal?this.stopPolling():this.startPolling()}catch(i){this.error=i instanceof Error?i.message:String(i),this.loading=!1,this.stopPolling()}}toggleOutput(t){const e=new Set(this.expandedOutput);e.has(t)?e.delete(t):e.add(t),this.expandedOutput=e}formatEventTime(t){return new Date(t*1e3).toLocaleTimeString()}renderEvent(t,e){const i=this.formatEventTime(t.ts),s=t.type==="compile_output",r=this.expandedOutput.has(e),o={compile_success:"ok",flash_success:"ok",flash_rejoined:"ok",compile_failed:"danger",flash_failed:"danger",flash_aborted:"danger",flash_version_mismatch:"warn",flash_identity_unverified:"warn",flash_rejoin_timeout:"warn"}[t.type]||"";return p`
+  `];Ls([ie({type:String})],xi.prototype,"from",2);Ls([v()],xi.prototype,"content",2);Ls([v()],xi.prototype,"saved",2);Ls([v()],xi.prototype,"loading",2);Ls([v()],xi.prototype,"error",2);xi=Ls([Se("esp-secrets-page")],xi);var Yk=Object.defineProperty,Gk=Object.getOwnPropertyDescriptor,Si=(t,e,i,s)=>{for(var r=s>1?void 0:s?Gk(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&Yk(e,i,r),r};const Zk={compile_queued:"Queued for compile",compiling:"Compiling",compile_success:"Compile success",queued:"Queued for flash",starting:"Starting",announcing:"Waiting for device accept",transferring:"Transferring",verifying:"Verifying",transfer_success_waiting_rejoin:"Waiting for device rejoin",success:"Success",failed:"Failed",aborted:"Aborted",rejoin_timeout:"Rejoin timeout",version_mismatch:"Version mismatch",rejoined_unverified:"Rejoined — build unconfirmed"},eS=["compile_success","success","failed","aborted","rejoin_timeout","version_mismatch","rejoined_unverified"];let Ut=class extends pe{constructor(){super(...arguments),this.jobId=0,this.from="/queue",this.job=null,this.logData=null,this.error="",this.loading=!0,this.expandedOutput=new Set,this.pollTimer=null}connectedCallback(){super.connectedCallback()}disconnectedCallback(){this.stopPolling(),super.disconnectedCallback()}updated(t){t.has("jobId")&&this.jobId&&(this.loading=!0,this.error="",this.fetchLog())}startPolling(){this.pollTimer||(this.pollTimer=setInterval(()=>this.fetchLog(),2e3))}stopPolling(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}async fetchJob(){var t;if(this.jobId){try{this.job=await S.job(this.jobId);return}catch{}try{const e=(t=this.logData)==null?void 0:t.mac;if(e){const s=(await S.history(e)).jobs.find(r=>r.id===this.jobId);this.job=s||null}}catch{}}}async fetchLog(){var t,e;if(this.jobId)try{this.logData=await S.jobLog(this.jobId),this.loading=!1,!this.job&&((t=this.logData)!=null&&t.mac)&&await this.fetchJob(),(e=this.logData)!=null&&e.is_terminal?this.stopPolling():this.startPolling()}catch(i){this.error=i instanceof Error?i.message:String(i),this.loading=!1,this.stopPolling()}}toggleOutput(t){const e=new Set(this.expandedOutput);e.has(t)?e.delete(t):e.add(t),this.expandedOutput=e}formatEventTime(t){return new Date(t*1e3).toLocaleTimeString()}renderEvent(t,e){const i=this.formatEventTime(t.ts),s=t.type==="compile_output",r=this.expandedOutput.has(e),o={compile_success:"ok",flash_success:"ok",flash_rejoined:"ok",compile_failed:"danger",flash_failed:"danger",flash_aborted:"danger",flash_version_mismatch:"warn",flash_identity_confirmed:"ok",flash_identity_unverified:"warn",flash_rejoin_timeout:"warn"}[t.type]||"";return p`
       <div class="event ${s?"event-output":""} ${o}">
         <div class="event-header">
           <span class="event-dot" aria-hidden="true"></span>
           <span class="event-time">${i}</span>
           <span class="event-type">${(()=>{const a=t.type.replace(/^(flash|compile)_/,"$1 ").replaceAll("_"," ");return a.charAt(0).toUpperCase()+a.slice(1)})()}</span>
-          ${t.percent!=null?p`<span class="event-detail">${t.percent}%</span>`:v}
-          ${t.error?p`<span class="event-error">${t.error}</span>`:v}
-          ${t.reason?p`<span class="event-detail">${t.reason}</span>`:v}
-          ${t.esphome_name?p`<span class="event-detail">${t.esphome_name}</span>`:v}
-          ${t.host?p`<span class="event-detail">at ${t.host}</span>`:v}
-          ${t.current_build_date?p`<span class="event-detail">running build: ${t.current_build_date}</span>`:v}
-          ${t.expected_build_date?p`<span class="event-detail">expected build: ${t.expected_build_date}</span>`:v}
-          ${t.actual_build_date?p`<span class="event-detail">reported build: ${t.actual_build_date}</span>`:v}
-          ${t.firmware_name?p`<span class="event-detail">${t.firmware_name}</span>`:v}
-          ${t.duration_s!=null?p`<span class="event-detail">took ${yt(t.duration_s)}</span>`:v}
-          ${t.current_md5?p`<span class="event-detail">current running firmware MD5: ${t.current_md5}</span>`:v}
-          ${t.md5?p`<span class="event-detail">New firmware MD5: ${t.md5}</span>`:v}
-          ${t.rejoined_md5&&t.expected_md5?p`<span class="event-detail">running firmware MD5: ${t.rejoined_md5} expected MD5: ${t.expected_md5}</span>`:v}
-          ${t.rejoined_md5&&!t.expected_md5?p`<span class="event-detail">running firmware MD5: ${t.rejoined_md5}</span>`:v}
-          ${t.expected_md5&&!t.rejoined_md5?p`<span class="event-detail">expected MD5: ${t.expected_md5}</span>`:v}
-          ${t.md5_match?p`<span class="chip ${t.md5_match==="match"?"ok":"warn"}">MD5 ${t.md5_match}</span>`:v}
-          ${s?p`<button class="btn sm text toggle" aria-expanded=${r?"true":"false"} @click=${()=>this.toggleOutput(e)}>${r?"Hide output":"Show output"}</button>`:v}
+          ${t.percent!=null?p`<span class="event-detail">${t.percent}%</span>`:b}
+          ${t.error?p`<span class="event-error">${t.error}</span>`:b}
+          ${t.reason?p`<span class="event-detail">${t.reason}</span>`:b}
+          ${t.esphome_name?p`<span class="event-detail">${t.esphome_name}</span>`:b}
+          ${t.host?p`<span class="event-detail">at ${t.host}</span>`:b}
+          ${t.current_build_date?p`<span class="event-detail">running build: ${t.current_build_date}</span>`:b}
+          ${t.expected_build_date?p`<span class="event-detail">expected build: ${t.expected_build_date}</span>`:b}
+          ${t.actual_build_date?p`<span class="event-detail">reported build: ${t.actual_build_date}</span>`:b}
+          ${t.actual_md5?p`<span class="event-detail">reported MD5: ${t.actual_md5}</span>`:b}
+          ${t.method?p`<span class="event-detail">confirmed by ${t.method}</span>`:b}
+          ${t.firmware_name?p`<span class="event-detail">${t.firmware_name}</span>`:b}
+          ${t.duration_s!=null?p`<span class="event-detail">took ${yt(t.duration_s)}</span>`:b}
+          ${t.current_md5?p`<span class="event-detail">current running firmware MD5: ${t.current_md5}</span>`:b}
+          ${t.md5?p`<span class="event-detail">New firmware MD5: ${t.md5}</span>`:b}
+          ${t.rejoined_md5&&t.expected_md5?p`<span class="event-detail">running firmware MD5: ${t.rejoined_md5} expected MD5: ${t.expected_md5}</span>`:b}
+          ${t.rejoined_md5&&!t.expected_md5?p`<span class="event-detail">running firmware MD5: ${t.rejoined_md5}</span>`:b}
+          ${t.expected_md5&&!t.rejoined_md5?p`<span class="event-detail">expected MD5: ${t.expected_md5}</span>`:b}
+          ${t.md5_match?p`<span class="chip ${t.md5_match==="match"?"ok":"warn"}">MD5 ${t.md5_match}</span>`:b}
+          ${s?p`<button class="btn sm text toggle" aria-expanded=${r?"true":"false"} @click=${()=>this.toggleOutput(e)}>${r?"Hide output":"Show output"}</button>`:b}
         </div>
-        ${s&&r?p`<pre class="log compile-output">${t.output||""}</pre>`:v}
+        ${s&&r?p`<pre class="log compile-output">${t.output||""}</pre>`:b}
       </div>
     `}render(){const t=this.logData,e=this.job,i=(t==null?void 0:t.log_events)||[],s=(t==null?void 0:t.status)||(e==null?void 0:e.status)||"",r=(t==null?void 0:t.is_terminal)??(e?eS.includes(e.status):!1),n=(e==null?void 0:e.parsed_esphome_name)||(e==null?void 0:e.esphome_name)||(e==null?void 0:e.firmware_name)||"Firmware",o=this.from||"/queue",a=o.startsWith("/device/"),l=Jd(s);return p`
       <div class="page">
@@ -2272,16 +2278,16 @@ external_components:
             <div>
               <h1>${n}</h1>
               <p class="sub meta">
-                ${s?p`<span class="chip ${l.tone==="neutral"?"":l.tone}">${Zk[s]||l.label}</span>`:v}
-                ${r?v:p`<span class="live"><span class="pulse"></span>Live</span>`}
-                ${e?p`<a href=${`#/device/${encodeURIComponent(e.mac)}`} class="mono">${e.mac}</a>`:v}
+                ${s?p`<span class="chip ${l.tone==="neutral"?"":l.tone}">${Zk[s]||l.label}</span>`:b}
+                ${r?b:p`<span class="live"><span class="pulse"></span>Live</span>`}
+                ${e?p`<a href=${`#/device/${encodeURIComponent(e.mac)}`} class="mono">${e.mac}</a>`:b}
               </p>
             </div>
           </div>
         </div>
 
-        ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:v}
-        ${e!=null&&e.error_msg?p`<div class="notice ${l.tone==="warn"?"warn":"danger"}" role="status">${C("alert")}<span>${e.error_msg}</span><span class="notice-actions"><a class="btn sm" href=${`#/device/${encodeURIComponent(e.mac)}`}>Open device</a></span></div>`:v}
+        ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:b}
+        ${e!=null&&e.error_msg?p`<div class="notice ${l.tone==="warn"?"warn":"danger"}" role="status">${C("alert")}<span>${e.error_msg}</span><span class="notice-actions"><a class="btn sm" href=${`#/device/${encodeURIComponent(e.mac)}`}>Open device</a></span></div>`:b}
 
         ${e?p`
           <section class="card">
@@ -2291,11 +2297,11 @@ external_components:
               <div><dt>Started</dt><dd>${e.started_at?Vi(e.started_at):"—"}</dd></div>
               <div><dt>Finished</dt><dd>${e.completed_at?Vi(e.completed_at):"—"}</dd></div>
               <div><dt>Duration</dt><dd>${e.started_at&&e.completed_at?yt(e.completed_at-e.started_at):"—"}</dd></div>
-              ${e.parsed_version?p`<div><dt>Version</dt><dd>${e.old_firmware_version?`${e.old_firmware_version} → `:""}${e.parsed_version}</dd></div>`:v}
-              ${e.parsed_build_date?p`<div><dt>Image build</dt><dd>${e.parsed_build_date}</dd></div>`:v}
+              ${e.parsed_version?p`<div><dt>Version</dt><dd>${e.old_firmware_version?`${e.old_firmware_version} → `:""}${e.parsed_version}</dd></div>`:b}
+              ${e.parsed_build_date?p`<div><dt>Image build</dt><dd>${e.parsed_build_date}</dd></div>`:b}
             </dl>
           </section>
-        `:v}
+        `:b}
 
         <section class="card">
           <div class="card-head"><h2>Events</h2><span class="hint">${i.length} recorded</span></div>
@@ -2330,7 +2336,7 @@ external_components:
     .event-error { color: var(--danger); font-size: var(--text-sm); }
     .event.danger .event-type { color: var(--danger); }
     .compile-output { margin: 8px 0 4px; max-height: 420px; }
-  `];Si([ie({type:Number})],Ut.prototype,"jobId",2);Si([ie({type:String})],Ut.prototype,"from",2);Si([b()],Ut.prototype,"job",2);Si([b()],Ut.prototype,"logData",2);Si([b()],Ut.prototype,"error",2);Si([b()],Ut.prototype,"loading",2);Si([b()],Ut.prototype,"expandedOutput",2);Ut=Si([Se("esp-job-page")],Ut);var tS=Object.defineProperty,iS=Object.getOwnPropertyDescriptor,Ci=(t,e,i,s)=>{for(var r=s>1?void 0:s?iS(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&tS(e,i,r),r};function Td(t){return/\b(ERROR|CRITICAL|FATAL)\b/.test(t)?"error":/\bWARN(ING)?\b/.test(t)?"warn":/\bDEBUG\b/.test(t)?"debug":"info"}let Ht=class extends pe{constructor(){super(...arguments),this.logs=[],this.error="",this.loading=!0,this.fullscreen=!1,this.connected=!1,this.query="",this.level="all",this.eventSource=null,this.handleFullscreenChange=()=>{this.fullscreen=!!document.fullscreenElement}}connectedCallback(){super.connectedCallback(),this.connect()}connect(){this.disconnect(),this.loading=!0,this.error="",this.logs=[],this.eventSource=S.activityLog(t=>{this.logs=[t,...this.logs],this.loading=!1,this.connected=!0,this.requestUpdate()},()=>{this.loading=!1},t=>{this.loading=!1,this.logs.length===0&&(this.error="Could not load activity log")})}disconnect(){this.eventSource&&(this.eventSource.close(),this.eventSource=null,this.connected=!1)}clearLogs(){this.logs=[]}downloadLog(){const t=this.logs.join(`
+  `];Si([ie({type:Number})],Ut.prototype,"jobId",2);Si([ie({type:String})],Ut.prototype,"from",2);Si([v()],Ut.prototype,"job",2);Si([v()],Ut.prototype,"logData",2);Si([v()],Ut.prototype,"error",2);Si([v()],Ut.prototype,"loading",2);Si([v()],Ut.prototype,"expandedOutput",2);Ut=Si([Se("esp-job-page")],Ut);var tS=Object.defineProperty,iS=Object.getOwnPropertyDescriptor,Ci=(t,e,i,s)=>{for(var r=s>1?void 0:s?iS(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&tS(e,i,r),r};function Td(t){return/\b(ERROR|CRITICAL|FATAL)\b/.test(t)?"error":/\bWARN(ING)?\b/.test(t)?"warn":/\bDEBUG\b/.test(t)?"debug":"info"}let Ht=class extends pe{constructor(){super(...arguments),this.logs=[],this.error="",this.loading=!0,this.fullscreen=!1,this.connected=!1,this.query="",this.level="all",this.eventSource=null,this.handleFullscreenChange=()=>{this.fullscreen=!!document.fullscreenElement}}connectedCallback(){super.connectedCallback(),this.connect()}connect(){this.disconnect(),this.loading=!0,this.error="",this.logs=[],this.eventSource=S.activityLog(t=>{this.logs=[t,...this.logs],this.loading=!1,this.connected=!0,this.requestUpdate()},()=>{this.loading=!1},t=>{this.loading=!1,this.logs.length===0&&(this.error="Could not load activity log")})}disconnect(){this.eventSource&&(this.eventSource.close(),this.eventSource=null,this.connected=!1)}clearLogs(){this.logs=[]}downloadLog(){const t=this.logs.join(`
 `),e=new Blob([t],{type:"text/plain"}),i=URL.createObjectURL(e),s=document.createElement("a");s.href=i,s.download="activity.log",s.click(),URL.revokeObjectURL(i)}toggleFullscreen(){var t,e;this.fullscreen?(e=document.exitFullscreen)==null||e.call(document):(t=this.requestFullscreen)==null||t.call(this)}firstUpdated(){document.addEventListener("fullscreenchange",this.handleFullscreenChange)}disconnectedCallback(){this.disconnect(),document.removeEventListener("fullscreenchange",this.handleFullscreenChange),super.disconnectedCallback()}renderLine(t){return p`<pre class="log-line ${Td(t)}">${t}</pre>`}render(){const t=this.query.trim().toLowerCase(),e=this.logs.filter(s=>{const r=Td(s);return this.level==="error"&&r!=="error"||this.level==="warn"&&r!=="warn"&&r!=="error"?!1:!t||s.toLowerCase().includes(t)}),i=e.length!==this.logs.length;return p`
       <div class="page">
         <div class="page-head">
@@ -2388,7 +2394,7 @@ external_components:
       .search { max-width: none; order: 5; flex-basis: 100%; }
       .log-panel { max-height: calc(100vh - 260px); min-height: 340px; }
     }
-  `];Ci([b()],Ht.prototype,"logs",2);Ci([b()],Ht.prototype,"error",2);Ci([b()],Ht.prototype,"loading",2);Ci([b()],Ht.prototype,"fullscreen",2);Ci([b()],Ht.prototype,"connected",2);Ci([b()],Ht.prototype,"query",2);Ci([b()],Ht.prototype,"level",2);Ht=Ci([Se("esp-activity-log-page")],Ht);/*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT */function tm(t){return typeof t>"u"||t===null}function sS(t){return typeof t=="object"&&t!==null}function rS(t){return Array.isArray(t)?t:tm(t)?[]:[t]}function nS(t,e){var i,s,r,n;if(e)for(n=Object.keys(e),i=0,s=n.length;i<s;i+=1)r=n[i],t[r]=e[r];return t}function oS(t,e){var i="",s;for(s=0;s<e;s+=1)i+=t;return i}function aS(t){return t===0&&Number.NEGATIVE_INFINITY===1/t}var lS=tm,hS=sS,cS=rS,dS=oS,uS=aS,fS=nS,Ue={isNothing:lS,isObject:hS,toArray:cS,repeat:dS,isNegativeZero:uS,extend:fS};function im(t,e){var i="",s=t.reason||"(unknown reason)";return t.mark?(t.mark.name&&(i+='in "'+t.mark.name+'" '),i+="("+(t.mark.line+1)+":"+(t.mark.column+1)+")",!e&&t.mark.snippet&&(i+=`
+  `];Ci([v()],Ht.prototype,"logs",2);Ci([v()],Ht.prototype,"error",2);Ci([v()],Ht.prototype,"loading",2);Ci([v()],Ht.prototype,"fullscreen",2);Ci([v()],Ht.prototype,"connected",2);Ci([v()],Ht.prototype,"query",2);Ci([v()],Ht.prototype,"level",2);Ht=Ci([Se("esp-activity-log-page")],Ht);/*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT */function tm(t){return typeof t>"u"||t===null}function sS(t){return typeof t=="object"&&t!==null}function rS(t){return Array.isArray(t)?t:tm(t)?[]:[t]}function nS(t,e){var i,s,r,n;if(e)for(n=Object.keys(e),i=0,s=n.length;i<s;i+=1)r=n[i],t[r]=e[r];return t}function oS(t,e){var i="",s;for(s=0;s<e;s+=1)i+=t;return i}function aS(t){return t===0&&Number.NEGATIVE_INFINITY===1/t}var lS=tm,hS=sS,cS=rS,dS=oS,uS=aS,fS=nS,Ue={isNothing:lS,isObject:hS,toArray:cS,repeat:dS,isNegativeZero:uS,extend:fS};function im(t,e){var i="",s=t.reason||"(unknown reason)";return t.mark?(t.mark.name&&(i+='in "'+t.mark.name+'" '),i+="("+(t.mark.line+1)+":"+(t.mark.column+1)+")",!e&&t.mark.snippet&&(i+=`
 
 `+t.mark.snippet),s+" "+i):s}function $r(t,e){Error.call(this),this.name="YAMLException",this.reason=t,this.mark=e,this.message=im(this,!1),Error.captureStackTrace?Error.captureStackTrace(this,this.constructor):this.stack=new Error().stack||""}$r.prototype=Object.create(Error.prototype);$r.prototype.constructor=$r;$r.prototype.toString=function(e){return this.name+": "+im(this,e)};var Kt=$r;function ha(t,e,i,s,r){var n="",o="",a=Math.floor(r/2)-1;return s-e>a&&(n=" ... ",e=s-a+n.length),i-s>a&&(o=" ...",i=s+a-o.length),{str:n+t.slice(e,i).replace(/\t/g,"→")+o,pos:s-e+n.length}}function ca(t,e){return Ue.repeat(" ",e-t.length)+t}function pS(t,e){if(e=Object.create(e||null),!t.buffer)return null;e.maxLength||(e.maxLength=79),typeof e.indent!="number"&&(e.indent=1),typeof e.linesBefore!="number"&&(e.linesBefore=3),typeof e.linesAfter!="number"&&(e.linesAfter=2);for(var i=/\r?\n|\r|\0/g,s=[0],r=[],n,o=-1;n=i.exec(t.buffer);)r.push(n.index),s.push(n.index+n[0].length),t.position<=n.index&&o<0&&(o=s.length-2);o<0&&(o=s.length-1);var a="",l,h,c=Math.min(t.line+e.linesAfter,r.length).toString().length,d=e.maxLength-(e.indent+c+3);for(l=1;l<=e.linesBefore&&!(o-l<0);l++)h=ha(t.buffer,s[o-l],r[o-l],t.position-(s[o]-s[o-l]),d),a=Ue.repeat(" ",e.indent)+ca((t.line-l+1).toString(),c)+" | "+h.str+`
 `+a;for(h=ha(t.buffer,s[o],r[o],t.position,d),a+=Ue.repeat(" ",e.indent)+ca((t.line+1).toString(),c)+" | "+h.str+`
@@ -2438,10 +2444,10 @@ external_components:
               ${this.step1==="choose"?"Choose how to set up your bridge":this.step1==="scanning"?"Searching your network for bridges…":this.step1==="found"?`${this.discoveredBridges.length} bridge(s) found`:this.step1==="connecting"?"Connecting to the bridge…":this.step1==="pending"?"Checking the bridge connection…":this.step1==="complete"?"Bridge connected":this.step1==="error"?this.activeBridgeUuid?"Bridge offline":"No bridges found":""}
             </p>
           </div>
-          ${t?p`<span class="collapse-icon">${C("chevronRight")}</span>`:v}
+          ${t?p`<span class="collapse-icon">${C("chevronRight")}</span>`:b}
         </div>
 
-        ${t?v:p`
+        ${t?b:p`
           <div class="step-body">
             ${this.step1==="choose"&&this.step1Choice==="choose"?p`
               <div class="choice-cards">
@@ -2456,7 +2462,7 @@ external_components:
                   <p>Flash ESP-NOW firmware onto a new ESP32 device and configure it.</p>
                 </button>
               </div>
-            `:v}
+            `:b}
 
             ${this.step1Choice==="existing"&&this.step1!=="complete"?p`
               <div class="choice-back">
@@ -2467,24 +2473,24 @@ external_components:
                 <button class="tab ${this.flashTab==="manual"?"active":""}" @click=${()=>this.flashTab="manual"}>Manual</button>
                 <button class="tab ${this.flashTab==="serial"?"active":""}" @click=${()=>this.flashTab="serial"}>Serial</button>
               </div>
-              ${this.flashTab==="discover"?this.renderDiscoverTab():v}
-              ${this.flashTab==="manual"?this.renderManualTab():v}
-              ${this.flashTab==="serial"?this.renderSerialTab():v}
-            `:v}
+              ${this.flashTab==="discover"?this.renderDiscoverTab():b}
+              ${this.flashTab==="manual"?this.renderManualTab():b}
+              ${this.flashTab==="serial"?this.renderSerialTab():b}
+            `:b}
 
             ${this.step1Choice==="new"&&this.step1!=="complete"?p`
               <div class="choice-back">
                 <button class="btn btn-outline btn-sm" @click=${()=>void this.handleFlashBack()}>${C("chevronLeft")}${this.flashBackLabel}</button>
               </div>
               ${this.renderFlashTab()}
-            `:v}
+            `:b}
 
             ${this.step1==="complete"&&this.step2==="disabled"?p`
               <div class="complete-state">
                 <span class="check">${C("checkCircle")}</span>
                 <span>${this.bridgeApiStatus||"Bridge connected successfully"}</span>
               </div>
-            `:v}
+            `:b}
           </div>
         `}
       </div>
@@ -2494,7 +2500,7 @@ external_components:
           <span class="spinner large"></span>
           <p>${this.step1==="scanning"?"Searching your network for bridges…":this.step1==="connecting"?"Connecting to the bridge…":"Checking the bridge connection…"}</p>
         </div>
-      `:v}
+      `:b}
 
       ${this.step1==="found"?p`
         ${this.discoveredBridges.length>0?p`
@@ -2504,7 +2510,7 @@ external_components:
                 <div class="bridge-info">
                   <strong>${t.name||t.host}</strong>
                   <span>${t.hostname||t.host}:${t.port}</span>
-                  ${t.network_id?p`<span class="net-id">Network: ${t.network_id}</span>`:v}
+                  ${t.network_id?p`<span class="net-id">Network: ${t.network_id}</span>`:b}
                 </div>
                 ${this.selectedBridge===t?p`
                   <div class="api-key-row">
@@ -2526,8 +2532,8 @@ external_components:
               </div>
             `)}
           </div>
-        `:v}
-      `:v}
+        `:b}
+      `:b}
 
       ${this.step1==="pending"||this.step1==="error"&&this.activeBridgeUuid?p`
         <div class="bridge-list">
@@ -2542,7 +2548,7 @@ external_components:
               </button>
             </div>
         </div>
-      `:v}
+      `:b}
 
       ${this.step1==="error"&&!this.activeBridgeUuid?p`
         <div class="error-block">
@@ -2550,7 +2556,7 @@ external_components:
           <button class="btn btn-primary" @click=${this.retryDiscovery}>Rescan</button>
           <span class="hint">You can also try the Manual tab to connect by IP address.</span>
         </div>
-      `:v}
+      `:b}
 
       ${this.step1!=="connecting"&&this.step1!=="pending"&&this.step1!=="complete"&&!(this.step1==="error"&&!this.activeBridgeUuid)?p`
         ${this.bridgeError?p`
@@ -2558,8 +2564,8 @@ external_components:
             <p>${this.bridgeError}</p>
             <button class="btn btn-outline" @click=${this.retryDiscovery}>Retry</button>
           </div>
-        `:v}
-      `:v}
+        `:b}
+      `:b}
     `}renderManualTab(){return p`
       <div class="manual-form">
         <label>
@@ -2583,7 +2589,7 @@ external_components:
           <p>${this.bridgeError}</p>
           <button class="btn btn-outline" @click=${this.retryDiscovery}>Retry</button>
         </div>
-      `:v}
+      `:b}
     `}async scanSerialPorts(){this.serialScanning=!0,this.serialError=null;try{const t=await S.scanSerialPorts();this.serialPorts=t,t.length===0&&(this.serialError="No serial ports found.")}catch(t){this.serialError=t instanceof Error?t.message:String(t)}finally{this.serialScanning=!1}}async connectSerialBridge(){if(!this.serialSelectedPort){this.serialError="Select a serial port";return}this.serialError=null,this.step1="connecting";try{await S.addBridge("",80,this.serialName||void 0,this.serialApiKey||"","","serial",this.serialSelectedPort,this.serialBaud),this.step1="complete",this.step2="ready",this.pollStatus()}catch(t){this.step1="error",this.serialError=t instanceof Error?t.message:String(t)}}renderSerialTab(){return p`
       <div class="manual-form">
         <label>
@@ -2627,7 +2633,7 @@ external_components:
           <p>${this.serialError}</p>
           <button class="btn btn-outline" @click=${this.retryDiscovery}>Retry</button>
         </div>
-      `:v}
+      `:b}
     `}renderFlashTab(){var t;return this.flashStage!=="config"?this.renderFlashProgress():this.flashTransportChosen?p`
       <div class="flash-stage-indicator">
         <span class="stage-dot active">Configure</span>
@@ -2644,10 +2650,10 @@ external_components:
 
         ${this.flashSecretsWarning?p`
           <div class="flash-warning">${this.flashSecretsWarning}</div>
-        `:v}
+        `:b}
         ${this.flashConfigError?p`
           <div class="error-block"><p>${this.flashConfigError}</p></div>
-        `:v}
+        `:b}
 
         <label>
           ESPHome Name
@@ -2700,7 +2706,7 @@ external_components:
           </label>
           ${this.flashSerialFlashError?p`
             <div class="flash-warning">${this.flashSerialFlashError}</div>
-          `:v}
+          `:b}
           <div class="flash-warning">
             Serial transport: no WiFi credentials are needed. The bridge talks to the add-on over its
             UART0 pins (wired to a USB-UART adapter), and the console is pinned to the same UART so
@@ -2737,10 +2743,10 @@ external_components:
 
         ${this.flashDetectedChip?p`
           <div class="chip-badge detected">Detected: ${this.flashDetectedChip} → ${((t=Pi[this.flashChipName])==null?void 0:t.label)||this.flashChipName}</div>
-        `:v}
+        `:b}
         ${this.flashBrowserDetectError?p`
           <div class="flash-warning">Automatic detection failed: ${this.flashBrowserDetectError}. You can select the board manually.</div>
-        `:v}
+        `:b}
 
         <div class="flash-warning">
           Connect the new ESP to this computer by USB and click Detect Connected ESP before compiling. Detection uses Web Serial in Chrome/Edge. Manual board selection is available as a fallback.
@@ -2792,7 +2798,7 @@ external_components:
           <p>Connects over a USB-UART link to the add-on. No Wi-Fi credentials needed.</p>
         </button>
       </div>
-    `}prefillTag(t){return this.flashPrefilledFields[t]?p`<span class="prefill-tag">pre-filled</span>`:v}renderFlashProgress(){const e=["config","compiling","flashing","detecting","complete"].indexOf(this.flashStage);return p`
+    `}prefillTag(t){return this.flashPrefilledFields[t]?p`<span class="prefill-tag">pre-filled</span>`:b}renderFlashProgress(){const e=["config","compiling","flashing","detecting","complete"].indexOf(this.flashStage);return p`
       <div class="flash-stage-indicator">
         <span class="stage-dot ${e>0?"done":"active"}">Configure</span>
         <span class="stage-line ${e>0?"done":""}"></span>
@@ -2809,16 +2815,16 @@ external_components:
           <p class="muted">Building ESPHome firmware for ${this.flashName}...</p>
           ${this.flashCompileStatus?p`
             <p class="muted compile-status-label">${this.flashCompileStatusLabel}</p>
-          `:v}
+          `:b}
           ${this.flashCompilePercent>0?p`
             <div class="progress-bar-container">
               <div class="progress-bar" style="width: ${this.flashCompilePercent}%"></div>
             </div>
             <p class="muted">${this.flashCompilePercent}%</p>
-          `:v}
+          `:b}
           <div class="flash-log-viewer" id="flash-log-viewer">${this.flashCompileLog}</div>
         </div>
-      `:v}
+      `:b}
 
       ${this.flashStage==="flashing"?p`
         <div class="flash-progress-area">
@@ -2829,13 +2835,13 @@ external_components:
             ${this.flashSerialFlashStatus==="flashing"?p`
               <div class="progress-bar-container"><div class="progress-bar" style="width: 100%"></div></div>
               <p class="muted">Flashing ${this.flashName}...</p>
-            `:v}
+            `:b}
             ${this.flashSerialFlashStatus==="success"?p`
               <div class="complete-state"><span class="check">${C("checkCircle")}</span><span>Flashed over serial.</span></div>
-            `:v}
+            `:b}
             ${this.flashSerialFlashStatus==="failed"?p`
               <div class="flash-warning">Serial flash failed: ${this.flashSerialFlashError||"see log"}</div>
-            `:v}
+            `:b}
             <div class="flash-error-actions">
               <button class="btn btn-outline" @click=${()=>void this.handleFlashBack()}>Back to Configure</button>
               <button class="btn btn-primary"
@@ -2880,9 +2886,9 @@ external_components:
               <summary>View Build Log</summary>
               <div class="flash-log-viewer">${this.flashCompileLog}</div>
             </details>
-          `:v}
+          `:b}
         </div>
-      `:v}
+      `:b}
 
       ${this.flashStage==="detecting"?p`
         <div class="flash-progress-area">
@@ -2896,7 +2902,7 @@ external_components:
             <button class="btn btn-outline" @click=${()=>void this.handleFlashBack()}>Back to Flash</button>
           </div>
         </div>
-      `:v}
+      `:b}
 
       ${this.flashStage==="complete"?p`
         <div class="flash-progress-area">
@@ -2905,7 +2911,7 @@ external_components:
             <span>Bridge detected and connected!</span>
           </div>
         </div>
-      `:v}
+      `:b}
 
       ${this.flashStage==="error"?p`
         <div class="flash-progress-area">
@@ -2916,7 +2922,7 @@ external_components:
               ${this.flashDetectError?p`
                 <button class="btn btn-outline" @click=${()=>{this.flashStage="detecting",this.flashDetectError="",this.startDetection()}}>Retry Scan</button>
                 <button class="btn btn-outline" @click=${()=>{this.resetFlashWizard(),this.step1Choice="choose",this.step1="choose"}}>Skip</button>
-              `:v}
+              `:b}
             </div>
           </div>
           ${this.flashCompileLog?p`
@@ -2924,9 +2930,9 @@ external_components:
               <summary>View Log</summary>
               <div class="flash-log-viewer">${this.flashCompileLog}</div>
             </details>
-          `:v}
+          `:b}
         </div>
-      `:v}
+      `:b}
     `}renderStep2(){const t=this.step2==="complete"&&this.step3!=="disabled",e=this.runningIntegrationVersion||(this.integrationDetected?"detected, version unknown":"not loaded");return p`
       <div class="step ${this.step2==="disabled"?"locked":""} ${t?"collapsed":""} ${this.step2==="complete"?"done":""} ${this.step2==="error"?"has-error":""}">
         <div class="step-header">
@@ -2939,14 +2945,14 @@ external_components:
               ${this.step2==="disabled"?"Complete step 1 first":this.step2==="ready"?"Home Assistant needs to restart to activate the integration":this.step2==="restarting"?"Restarting...":this.step2==="polling"?`Waiting for Home Assistant to come back online... (${this.pollingSeconds}s)`:this.step2==="complete"?"Home Assistant restarted successfully":this.step2==="error"?"Restart failed":""}
             </p>
           </div>
-          ${t?p`<span class="collapse-icon">${C("chevronRight")}</span>`:v}
+          ${t?p`<span class="collapse-icon">${C("chevronRight")}</span>`:b}
         </div>
 
-        ${t?v:p`
+        ${t?b:p`
           <div class="step-body">
             ${this.step2==="disabled"?p`
               <p class="muted">Connect a bridge first to continue.</p>
-            `:v}
+            `:b}
 
             ${this.step2==="ready"?p`
               <p>
@@ -2960,14 +2966,14 @@ external_components:
               <button class="btn btn-primary" @click=${this.handleRestart}>
                 Restart Home Assistant
               </button>
-            `:v}
+            `:b}
 
             ${this.step2==="restarting"?p`
               <div class="scanning-state">
                 <span class="spinner large"></span>
                 <p>Sending restart request...</p>
               </div>
-            `:v}
+            `:b}
 
             ${this.step2==="polling"?p`
               <div class="polling-state">
@@ -2975,9 +2981,9 @@ external_components:
                 <p>Waiting for Home Assistant to come back online...</p>
                 ${this.pollingSeconds>40?p`
                   <p class="muted">Taking longer than expected. Check if Home Assistant restarted successfully.</p>
-                `:v}
+                `:b}
               </div>
-            `:v}
+            `:b}
 
             ${this.step2==="complete"?p`
               <div class="complete-state">
@@ -2987,14 +2993,14 @@ external_components:
                   ${this.runningIntegrationVersion?` ${this.runningIntegrationVersion}`:""}
                 </span>
               </div>
-            `:v}
+            `:b}
 
             ${this.step2==="error"&&this.restartError?p`
               <div class="error-block">
                 <p>Restart failed: ${this.restartError}</p>
                 <button class="btn btn-outline" @click=${this.handleRestart}>Retry</button>
               </div>
-            `:v}
+            `:b}
           </div>
         `}
       </div>
@@ -3015,21 +3021,21 @@ external_components:
         <div class="step-body">
           ${this.step3==="disabled"?p`
             <p class="muted">Restart Home Assistant first to continue.</p>
-          `:v}
+          `:b}
 
           ${this.step3==="triggering"?p`
             <div class="scanning-state">
               <span class="spinner large"></span>
               <p>Setting up the ESP Tree integration...</p>
             </div>
-          `:v}
+          `:b}
 
           ${this.step3==="polling"?p`
             <div class="polling-state">
               <span class="spinner large"></span>
               <p>Waiting for integration to become active...</p>
             </div>
-          `:v}
+          `:b}
 
           ${this.step3==="complete"?p`
             <div class="complete-state">
@@ -3039,7 +3045,7 @@ external_components:
                 ${this.runningIntegrationVersion?` (${this.runningIntegrationVersion})`:""}
               </span>
             </div>
-          `:v}
+          `:b}
 
           ${this.step3==="fallback"?p`
             <div class="fallback-state">
@@ -3056,7 +3062,7 @@ external_components:
                 Retry
               </button>
             </div>
-          `:v}
+          `:b}
 
           ${this.step3==="error"&&this.integrationError?p`
             <div class="error-block">
@@ -3073,10 +3079,10 @@ external_components:
                 Retry
               </button>
             </div>
-          `:v}
+          `:b}
         </div>
       </div>
-    `}renderDone(){return this.step1!=="complete"||this.step2!=="complete"||this.step3!=="complete"?v:p`
+    `}renderDone(){return this.step1!=="complete"||this.step2!=="complete"||this.step3!=="complete"?b:p`
       <div class="step done expanded">
         <div class="step-header">
           <span class="step-icon">${C("checkCircle")}</span>
@@ -3918,7 +3924,7 @@ external_components:
       .choice-cards { flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-  `;I([b()],E.prototype,"step1",2);I([b()],E.prototype,"step1Choice",2);I([b()],E.prototype,"step2",2);I([b()],E.prototype,"step3",2);I([b()],E.prototype,"discoveredBridges",2);I([b()],E.prototype,"bridgeError",2);I([b()],E.prototype,"manualHost",2);I([b()],E.prototype,"manualPort",2);I([b()],E.prototype,"manualApiKey",2);I([b()],E.prototype,"apiKeyInput",2);I([b()],E.prototype,"selectedBridge",2);I([b()],E.prototype,"restartError",2);I([b()],E.prototype,"integrationError",2);I([b()],E.prototype,"runningIntegrationVersion",2);I([b()],E.prototype,"latestIntegrationVersion",2);I([b()],E.prototype,"integrationDetected",2);I([b()],E.prototype,"bridgeApiStatus",2);I([b()],E.prototype,"statusPollTimer",2);I([b()],E.prototype,"integrationPollTimer",2);I([b()],E.prototype,"integrationFailures",2);I([b()],E.prototype,"pollingSeconds",2);I([b()],E.prototype,"flashTab",2);I([b()],E.prototype,"flashStage",2);I([b()],E.prototype,"flashName",2);I([b()],E.prototype,"flashNetworkId",2);I([b()],E.prototype,"flashPsk",2);I([b()],E.prototype,"flashWifiSsid",2);I([b()],E.prototype,"flashWifiPassword",2);I([b()],E.prototype,"flashApiKey",2);I([b()],E.prototype,"flashEspnowMode",2);I([b()],E.prototype,"flashOtaPassword",2);I([b()],E.prototype,"flashChipName",2);I([b()],E.prototype,"flashTransport",2);I([b()],E.prototype,"flashTransportChosen",2);I([b()],E.prototype,"flashPrefilledFields",2);I([b()],E.prototype,"flashSerialPort",2);I([b()],E.prototype,"flashSerialPorts",2);I([b()],E.prototype,"flashSerialPortScanning",2);I([b()],E.prototype,"flashSerialFlashStatus",2);I([b()],E.prototype,"flashSerialFlashError",2);I([b()],E.prototype,"flashBoardInfo",2);I([b()],E.prototype,"flashBrowserDetecting",2);I([b()],E.prototype,"flashBrowserDetectError",2);I([b()],E.prototype,"flashDetectedChip",2);I([b()],E.prototype,"flashBrowserFlashing",2);I([b()],E.prototype,"flashBrowserFlashError",2);I([b()],E.prototype,"flashSecretsWarning",2);I([b()],E.prototype,"flashConfigError",2);I([b()],E.prototype,"flashMac",2);I([b()],E.prototype,"flashCompileLog",2);I([b()],E.prototype,"flashCompilePercent",2);I([b()],E.prototype,"flashCompileStatus",2);I([b()],E.prototype,"flashCompileError",2);I([b()],E.prototype,"flashFlashError",2);I([b()],E.prototype,"flashDetectElapsed",2);I([b()],E.prototype,"flashDetectError",2);I([b()],E.prototype,"flashBrowserManifestUrl",2);I([b()],E.prototype,"serialPorts",2);I([b()],E.prototype,"serialScanning",2);I([b()],E.prototype,"serialSelectedPort",2);I([b()],E.prototype,"serialBaud",2);I([b()],E.prototype,"serialApiKey",2);I([b()],E.prototype,"serialName",2);I([b()],E.prototype,"serialError",2);E=I([Se("esp-setup-wizard")],E);var QC=Object.defineProperty,KC=Object.getOwnPropertyDescriptor,X=(t,e,i,s)=>{for(var r=s>1?void 0:s?KC(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&QC(e,i,r),r};let z=class extends pe{constructor(){super(...arguments),this.name="espnow-remote",this.chips=[],this.chipName="",this.loadingChips=!1,this.detectingChip=!1,this.chipDetectionError="",this.detectedChipName="",this.networkId="",this.psk="",this.bridgeName="",this.credentialsComplete=!1,this.networkIdSource="",this.pskSource="",this.credentialsMismatch=!1,this.bridgeNetworkId="",this.loadingCredentials=!1,this.stage="config",this.error="",this.mac="",this.esphomeName="",this.compilePercent=0,this.compileStatus="",this.manifestUrl="",this.firmwareBlobUrl="",this.preparingManifest=!1,this.usbSupported=!0,this.flashError="",this.flashing=!1,this.flashNeedsConfirm=!1,this.browserFlashPort=null,this.autoInstall=!1,this.haStatus="checking",this.haDeviceId="",this.haBusy=!1,this.haNotice="",this.haPollTimer=null,this.haPollAttempts=0,this.pollTimer=null}connectedCallback(){super.connectedCallback(),this.usbSupported=this.detectUsbSupport(),this.loadChips(),this.loadCredentials()}disconnectedCallback(){this.clearPoll(),this.clearHaPoll(),this.clearManifestUrls(),super.disconnectedCallback()}detectUsbSupport(){return Rs()}async detectChip(t=!1){this.chipDetectionError="",this.detectedChipName="",this.detectingChip=!0;try{if(!this.detectUsbSupport())throw new Error("USB chip detection requires Chrome or Edge on a secure HTTPS page. You can select the chip manually instead.");const e=await to({forcePicker:t});if(e==="cancelled"){this.detectingChip=!1;return}this.browserFlashPort=e;const{detected:i,family:s}=await dl(e),r=s&&this.chips.find(n=>n.chip_name.toUpperCase()===s);if(!s||!r)throw new Error(`Detected ${i}, but this chip is not in the supported firmware list. Choose a supported chip manually.`);this.chipName=r.chip_name,this.detectedChipName=i}catch(e){this.chipDetectionError=e instanceof Error?e.message:String(e)}finally{this.detectingChip=!1}}clearPoll(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}clearManifestUrls(){this.manifestUrl&&(URL.revokeObjectURL(this.manifestUrl),this.manifestUrl=""),this.firmwareBlobUrl&&(URL.revokeObjectURL(this.firmwareBlobUrl),this.firmwareBlobUrl="")}async loadChips(){this.loadingChips=!0;try{const t=await S.getChips();this.chips=t.chips??[]}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loadingChips=!1}}async loadCredentials(){this.loadingCredentials=!0;try{const t=await S.getBridgeNetworkCredentials();this.networkId=t.network_id??"",this.psk=t.psk??"",this.bridgeName=t.bridge_name??"",this.credentialsComplete=!!t.complete,this.networkIdSource=t.network_id_source??"",this.pskSource=t.psk_source??"",this.credentialsMismatch=!!t.mismatch,this.bridgeNetworkId=t.bridge_network_id??""}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loadingCredentials=!1}}get selectedChip(){return this.chips.find(t=>t.chip_name===this.chipName)}get chipFamily(){return this.chipName||null}canSubmit(t={}){var i;if(((i=this.selectedChip)==null?void 0:i.buildable)===!1)return!1;const e=t.chipOptional?!this.chipName||!!this.selectedChip:!!(this.chipName&&this.selectedChip);return!!(this.name.trim()&&e&&this.networkId.trim()&&this.psk.trim())}async compileAndInstall(){if(this.canSubmit({chipOptional:!0})){this.chipDetectionError="",this.flashError="",this.flashNeedsConfirm=!1;try{const t=this.browserFlashPort??await to();if(t==="cancelled")return;this.browserFlashPort=t,this.detectingChip=!0;const{detected:e,family:i}=await dl(t),s=i&&this.chips.find(r=>r.chip_name.toUpperCase()===i);if(!i||!s)throw new Error(`Detected ${e}, but this chip is not in the supported firmware list. Choose a different device or select a chip and use Compile only.`);if(this.chipName&&this.chipName.toUpperCase()!==i)throw new Error(`The connected board is ${e}, but ${this.chipName} is selected. Choose the matching chip, or pick a different device.`);this.chipName=s.chip_name,this.detectedChipName=e}catch(t){this.chipDetectionError=t instanceof Error?t.message:String(t);return}finally{this.detectingChip=!1}this.autoInstall=!0,await this.submit()}}async submit(){const t=this.selectedChip;if(!(!this.canSubmit()||!t)){this.error="",this.stage="compiling",this.compilePercent=0,this.compileStatus="";try{const e=await S.submitFlashWizard({name:this.name.trim(),network_id:this.networkId.trim(),psk:this.psk.trim(),wifi_ssid:"",wifi_password:"",api_key:"",espnow_mode:"lr",ota_password:"",chip_name:this.chipName,board_info:{platform:t.platform,board:t.board,framework:t.framework,...t.variant?{variant:t.variant}:{}},transport:"espnow",kind:"remote"});this.mac=e.mac,this.esphomeName=e.esphome_name,this.startCompilePoll()}catch(e){this.error=e instanceof Error?e.message:String(e),this.stage="error"}}}startCompilePoll(){this.clearPoll(),this.pollTimer=setInterval(()=>{this.pollCompile()},3e3),this.pollCompile()}async pollCompile(){if(this.mac)try{const t=await S.getCompileStatus(this.mac),e=t.status||"idle";if(this.compileStatus=e,e==="compiled"){this.compilePercent=100,this.clearPoll(),this.stage="ready",this.prepareManifest().then(()=>{this.autoInstall&&this.manifestUrl&&this.browserFlashPort&&this.flashInBrowser()});return}if(e==="failed"){this.clearPoll(),this.error=t.error||"Compilation failed",this.stage="error";return}if(e==="compile_queued"){const i=t.queue_position??1;this.compilePercent=Math.max(5,100-i*10)}else e==="compiling"?this.compilePercent=Math.max(this.compilePercent,10):this.compilePercent=Math.max(this.compilePercent,2)}catch{}}get compileStatusLabel(){const t=this.esphomeName||this.name.trim();return this.compileStatus==="compile_queued"?`Queued to compile ${t}`:this.compileStatus==="idle"?"Waiting for the compiler":`Compiling ${t}`}async prepareManifest(){if(!this.mac)return;const t=this.chipFamily;if(!t){this.error="Could not determine the chip family for browser flashing.";return}this.preparingManifest=!0;try{const e=await fetch(S.downloadFactoryBinary(this.mac));if(!e.ok){this.error="Compiled, but no factory image is available for browser flashing. Check the queue page for the build log.";return}const i=URL.createObjectURL(await e.blob()),s={name:this.esphomeName||this.name.trim(),version:"compiled",new_install_prompt_erase:!1,new_install_improv_wait_time:0,builds:[{chipFamily:t,parts:[{path:i,offset:0}]}]},r=URL.createObjectURL(new Blob([JSON.stringify(s)],{type:"application/json"}));this.clearManifestUrls(),this.manifestUrl=r,this.firmwareBlobUrl=i}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.preparingManifest=!1}}async flashInBrowser(){if(this.manifestUrl){this.flashError="",this.flashing=!0;try{await dh({manifestUrl:this.manifestUrl,port:this.browserFlashPort,onFinished:()=>void this.onBrowserFlashDone(),onClosed:()=>{this.stage!=="done"&&(this.flashNeedsConfirm=!0)}})==="cancelled"&&(this.flashError="No USB device was selected.")}catch(t){this.flashError=t instanceof Error?t.message:String(t)}finally{this.flashing=!1}}}async onBrowserFlashDone(){this.clearPoll();try{await S.finalizeFlashWizard()}catch{}this.clearManifestUrls(),this.stage="done",this.watchForHaIntegration()}watchForHaIntegration(){this.clearHaPoll(),this.haStatus="checking",this.haDeviceId="",this.haPollAttempts=0,this.checkHaIntegration(),this.haPollTimer=setInterval(()=>void this.checkHaIntegration(),z.HA_POLL_INTERVAL_MS)}clearHaPoll(){this.haPollTimer&&(clearInterval(this.haPollTimer),this.haPollTimer=null)}async checkHaIntegration(){if(this.mac){this.haPollAttempts+=1;try{const e=(await S.topology(!0)).find(i=>Z(i.mac)===Z(this.mac));if(!e)this.haStatus="waiting-for-join";else if(e.ha_device_id){this.haStatus="managed",this.haDeviceId=e.ha_device_id,this.clearHaPoll();return}else this.haStatus="unmanaged"}catch{this.haStatus="waiting-for-join"}this.haPollAttempts>=z.HA_POLL_MAX_ATTEMPTS&&this.clearHaPoll()}}async addToHomeAssistant(){if(!this.haBusy){this.haBusy=!0,this.haNotice="";try{const t=await S.integrationSetup();!t.success&&t.error&&(this.haNotice=t.error),await this.checkHaIntegration(),this.haStatus!=="managed"&&(this.haPollAttempts=0,this.clearHaPoll(),this.haPollTimer=setInterval(()=>void this.checkHaIntegration(),z.HA_POLL_INTERVAL_MS))}catch(t){this.haNotice=t instanceof Error?t.message:String(t)}finally{this.haBusy=!1}}}startOver(){this.clearPoll(),this.clearHaPoll(),this.stage="config",this.autoInstall=!1,this.error="",this.compileStatus="",this.compilePercent=0,this.mac="",this.esphomeName="",this.haStatus="checking",this.haDeviceId="",this.haNotice=""}renderSteps(){const t=["config","compiling","ready","done"],e=this.stage==="flashing"?"ready":this.stage==="error"?"config":this.stage,i=t.indexOf(e);return p`<ol class="steps" aria-label="Progress">
+  `;I([v()],E.prototype,"step1",2);I([v()],E.prototype,"step1Choice",2);I([v()],E.prototype,"step2",2);I([v()],E.prototype,"step3",2);I([v()],E.prototype,"discoveredBridges",2);I([v()],E.prototype,"bridgeError",2);I([v()],E.prototype,"manualHost",2);I([v()],E.prototype,"manualPort",2);I([v()],E.prototype,"manualApiKey",2);I([v()],E.prototype,"apiKeyInput",2);I([v()],E.prototype,"selectedBridge",2);I([v()],E.prototype,"restartError",2);I([v()],E.prototype,"integrationError",2);I([v()],E.prototype,"runningIntegrationVersion",2);I([v()],E.prototype,"latestIntegrationVersion",2);I([v()],E.prototype,"integrationDetected",2);I([v()],E.prototype,"bridgeApiStatus",2);I([v()],E.prototype,"statusPollTimer",2);I([v()],E.prototype,"integrationPollTimer",2);I([v()],E.prototype,"integrationFailures",2);I([v()],E.prototype,"pollingSeconds",2);I([v()],E.prototype,"flashTab",2);I([v()],E.prototype,"flashStage",2);I([v()],E.prototype,"flashName",2);I([v()],E.prototype,"flashNetworkId",2);I([v()],E.prototype,"flashPsk",2);I([v()],E.prototype,"flashWifiSsid",2);I([v()],E.prototype,"flashWifiPassword",2);I([v()],E.prototype,"flashApiKey",2);I([v()],E.prototype,"flashEspnowMode",2);I([v()],E.prototype,"flashOtaPassword",2);I([v()],E.prototype,"flashChipName",2);I([v()],E.prototype,"flashTransport",2);I([v()],E.prototype,"flashTransportChosen",2);I([v()],E.prototype,"flashPrefilledFields",2);I([v()],E.prototype,"flashSerialPort",2);I([v()],E.prototype,"flashSerialPorts",2);I([v()],E.prototype,"flashSerialPortScanning",2);I([v()],E.prototype,"flashSerialFlashStatus",2);I([v()],E.prototype,"flashSerialFlashError",2);I([v()],E.prototype,"flashBoardInfo",2);I([v()],E.prototype,"flashBrowserDetecting",2);I([v()],E.prototype,"flashBrowserDetectError",2);I([v()],E.prototype,"flashDetectedChip",2);I([v()],E.prototype,"flashBrowserFlashing",2);I([v()],E.prototype,"flashBrowserFlashError",2);I([v()],E.prototype,"flashSecretsWarning",2);I([v()],E.prototype,"flashConfigError",2);I([v()],E.prototype,"flashMac",2);I([v()],E.prototype,"flashCompileLog",2);I([v()],E.prototype,"flashCompilePercent",2);I([v()],E.prototype,"flashCompileStatus",2);I([v()],E.prototype,"flashCompileError",2);I([v()],E.prototype,"flashFlashError",2);I([v()],E.prototype,"flashDetectElapsed",2);I([v()],E.prototype,"flashDetectError",2);I([v()],E.prototype,"flashBrowserManifestUrl",2);I([v()],E.prototype,"serialPorts",2);I([v()],E.prototype,"serialScanning",2);I([v()],E.prototype,"serialSelectedPort",2);I([v()],E.prototype,"serialBaud",2);I([v()],E.prototype,"serialApiKey",2);I([v()],E.prototype,"serialName",2);I([v()],E.prototype,"serialError",2);E=I([Se("esp-setup-wizard")],E);var QC=Object.defineProperty,KC=Object.getOwnPropertyDescriptor,X=(t,e,i,s)=>{for(var r=s>1?void 0:s?KC(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&QC(e,i,r),r};let z=class extends pe{constructor(){super(...arguments),this.name="espnow-remote",this.chips=[],this.chipName="",this.loadingChips=!1,this.detectingChip=!1,this.chipDetectionError="",this.detectedChipName="",this.networkId="",this.psk="",this.bridgeName="",this.credentialsComplete=!1,this.networkIdSource="",this.pskSource="",this.credentialsMismatch=!1,this.bridgeNetworkId="",this.loadingCredentials=!1,this.stage="config",this.error="",this.mac="",this.esphomeName="",this.compilePercent=0,this.compileStatus="",this.manifestUrl="",this.firmwareBlobUrl="",this.preparingManifest=!1,this.usbSupported=!0,this.flashError="",this.flashing=!1,this.flashNeedsConfirm=!1,this.browserFlashPort=null,this.autoInstall=!1,this.haStatus="checking",this.haDeviceId="",this.haBusy=!1,this.haNotice="",this.haPollTimer=null,this.haPollAttempts=0,this.pollTimer=null}connectedCallback(){super.connectedCallback(),this.usbSupported=this.detectUsbSupport(),this.loadChips(),this.loadCredentials()}disconnectedCallback(){this.clearPoll(),this.clearHaPoll(),this.clearManifestUrls(),super.disconnectedCallback()}detectUsbSupport(){return Rs()}async detectChip(t=!1){this.chipDetectionError="",this.detectedChipName="",this.detectingChip=!0;try{if(!this.detectUsbSupport())throw new Error("USB chip detection requires Chrome or Edge on a secure HTTPS page. You can select the chip manually instead.");const e=await to({forcePicker:t});if(e==="cancelled"){this.detectingChip=!1;return}this.browserFlashPort=e;const{detected:i,family:s}=await dl(e),r=s&&this.chips.find(n=>n.chip_name.toUpperCase()===s);if(!s||!r)throw new Error(`Detected ${i}, but this chip is not in the supported firmware list. Choose a supported chip manually.`);this.chipName=r.chip_name,this.detectedChipName=i}catch(e){this.chipDetectionError=e instanceof Error?e.message:String(e)}finally{this.detectingChip=!1}}clearPoll(){this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null)}clearManifestUrls(){this.manifestUrl&&(URL.revokeObjectURL(this.manifestUrl),this.manifestUrl=""),this.firmwareBlobUrl&&(URL.revokeObjectURL(this.firmwareBlobUrl),this.firmwareBlobUrl="")}async loadChips(){this.loadingChips=!0;try{const t=await S.getChips();this.chips=t.chips??[]}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loadingChips=!1}}async loadCredentials(){this.loadingCredentials=!0;try{const t=await S.getBridgeNetworkCredentials();this.networkId=t.network_id??"",this.psk=t.psk??"",this.bridgeName=t.bridge_name??"",this.credentialsComplete=!!t.complete,this.networkIdSource=t.network_id_source??"",this.pskSource=t.psk_source??"",this.credentialsMismatch=!!t.mismatch,this.bridgeNetworkId=t.bridge_network_id??""}catch(t){this.error=t instanceof Error?t.message:String(t)}finally{this.loadingCredentials=!1}}get selectedChip(){return this.chips.find(t=>t.chip_name===this.chipName)}get chipFamily(){return this.chipName||null}canSubmit(t={}){var i;if(((i=this.selectedChip)==null?void 0:i.buildable)===!1)return!1;const e=t.chipOptional?!this.chipName||!!this.selectedChip:!!(this.chipName&&this.selectedChip);return!!(this.name.trim()&&e&&this.networkId.trim()&&this.psk.trim())}async compileAndInstall(){if(this.canSubmit({chipOptional:!0})){this.chipDetectionError="",this.flashError="",this.flashNeedsConfirm=!1;try{const t=this.browserFlashPort??await to();if(t==="cancelled")return;this.browserFlashPort=t,this.detectingChip=!0;const{detected:e,family:i}=await dl(t),s=i&&this.chips.find(r=>r.chip_name.toUpperCase()===i);if(!i||!s)throw new Error(`Detected ${e}, but this chip is not in the supported firmware list. Choose a different device or select a chip and use Compile only.`);if(this.chipName&&this.chipName.toUpperCase()!==i)throw new Error(`The connected board is ${e}, but ${this.chipName} is selected. Choose the matching chip, or pick a different device.`);this.chipName=s.chip_name,this.detectedChipName=e}catch(t){this.chipDetectionError=t instanceof Error?t.message:String(t);return}finally{this.detectingChip=!1}this.autoInstall=!0,await this.submit()}}async submit(){const t=this.selectedChip;if(!(!this.canSubmit()||!t)){this.error="",this.stage="compiling",this.compilePercent=0,this.compileStatus="";try{const e=await S.submitFlashWizard({name:this.name.trim(),network_id:this.networkId.trim(),psk:this.psk.trim(),wifi_ssid:"",wifi_password:"",api_key:"",espnow_mode:"lr",ota_password:"",chip_name:this.chipName,board_info:{platform:t.platform,board:t.board,framework:t.framework,...t.variant?{variant:t.variant}:{}},transport:"espnow",kind:"remote"});this.mac=e.mac,this.esphomeName=e.esphome_name,this.startCompilePoll()}catch(e){this.error=e instanceof Error?e.message:String(e),this.stage="error"}}}startCompilePoll(){this.clearPoll(),this.pollTimer=setInterval(()=>{this.pollCompile()},3e3),this.pollCompile()}async pollCompile(){if(this.mac)try{const t=await S.getCompileStatus(this.mac),e=t.status||"idle";if(this.compileStatus=e,e==="compiled"){this.compilePercent=100,this.clearPoll(),this.stage="ready",this.prepareManifest().then(()=>{this.autoInstall&&this.manifestUrl&&this.browserFlashPort&&this.flashInBrowser()});return}if(e==="failed"){this.clearPoll(),this.error=t.error||"Compilation failed",this.stage="error";return}if(e==="compile_queued"){const i=t.queue_position??1;this.compilePercent=Math.max(5,100-i*10)}else e==="compiling"?this.compilePercent=Math.max(this.compilePercent,10):this.compilePercent=Math.max(this.compilePercent,2)}catch{}}get compileStatusLabel(){const t=this.esphomeName||this.name.trim();return this.compileStatus==="compile_queued"?`Queued to compile ${t}`:this.compileStatus==="idle"?"Waiting for the compiler":`Compiling ${t}`}async prepareManifest(){if(!this.mac)return;const t=this.chipFamily;if(!t){this.error="Could not determine the chip family for browser flashing.";return}this.preparingManifest=!0;try{const e=await fetch(S.downloadFactoryBinary(this.mac));if(!e.ok){this.error="Compiled, but no factory image is available for browser flashing. Check the queue page for the build log.";return}const i=URL.createObjectURL(await e.blob()),s={name:this.esphomeName||this.name.trim(),version:"compiled",new_install_prompt_erase:!1,new_install_improv_wait_time:0,builds:[{chipFamily:t,parts:[{path:i,offset:0}]}]},r=URL.createObjectURL(new Blob([JSON.stringify(s)],{type:"application/json"}));this.clearManifestUrls(),this.manifestUrl=r,this.firmwareBlobUrl=i}catch(e){this.error=e instanceof Error?e.message:String(e)}finally{this.preparingManifest=!1}}async flashInBrowser(){if(this.manifestUrl){this.flashError="",this.flashing=!0;try{await dh({manifestUrl:this.manifestUrl,port:this.browserFlashPort,onFinished:()=>void this.onBrowserFlashDone(),onClosed:()=>{this.stage!=="done"&&(this.flashNeedsConfirm=!0)}})==="cancelled"&&(this.flashError="No USB device was selected.")}catch(t){this.flashError=t instanceof Error?t.message:String(t)}finally{this.flashing=!1}}}async onBrowserFlashDone(){this.clearPoll();try{await S.finalizeFlashWizard()}catch{}this.clearManifestUrls(),this.stage="done",this.watchForHaIntegration()}watchForHaIntegration(){this.clearHaPoll(),this.haStatus="checking",this.haDeviceId="",this.haPollAttempts=0,this.checkHaIntegration(),this.haPollTimer=setInterval(()=>void this.checkHaIntegration(),z.HA_POLL_INTERVAL_MS)}clearHaPoll(){this.haPollTimer&&(clearInterval(this.haPollTimer),this.haPollTimer=null)}async checkHaIntegration(){if(this.mac){this.haPollAttempts+=1;try{const e=(await S.topology(!0)).find(i=>Z(i.mac)===Z(this.mac));if(!e)this.haStatus="waiting-for-join";else if(e.ha_device_id){this.haStatus="managed",this.haDeviceId=e.ha_device_id,this.clearHaPoll();return}else this.haStatus="unmanaged"}catch{this.haStatus="waiting-for-join"}this.haPollAttempts>=z.HA_POLL_MAX_ATTEMPTS&&this.clearHaPoll()}}async addToHomeAssistant(){if(!this.haBusy){this.haBusy=!0,this.haNotice="";try{const t=await S.integrationSetup();!t.success&&t.error&&(this.haNotice=t.error),await this.checkHaIntegration(),this.haStatus!=="managed"&&(this.haPollAttempts=0,this.clearHaPoll(),this.haPollTimer=setInterval(()=>void this.checkHaIntegration(),z.HA_POLL_INTERVAL_MS))}catch(t){this.haNotice=t instanceof Error?t.message:String(t)}finally{this.haBusy=!1}}}startOver(){this.clearPoll(),this.clearHaPoll(),this.stage="config",this.autoInstall=!1,this.error="",this.compileStatus="",this.compilePercent=0,this.mac="",this.esphomeName="",this.haStatus="checking",this.haDeviceId="",this.haNotice=""}renderSteps(){const t=["config","compiling","ready","done"],e=this.stage==="flashing"?"ready":this.stage==="error"?"config":this.stage,i=t.indexOf(e);return p`<ol class="steps" aria-label="Progress">
       ${["Describe","Build","Flash","Join"].map((r,n)=>p`<li class=${n<i?"done":n===i?"current":""} aria-current=${n===i?"step":"false"}>
         <span class="n">${n<i?C("check"):n+1}</span>${r}</li>`)}
     </ol>`}renderHaIntegrationStep(){return this.haStatus==="managed"?p`
@@ -3955,7 +3961,7 @@ external_components:
             automatically. (Adding it from Devices &amp; Services does not work; that page
             can only install the integration itself, which is already installed.)
           </p>
-          ${this.haNotice?p`<p class="hint ha-error">${this.haNotice}</p>`:v}
+          ${this.haNotice?p`<p class="hint ha-error">${this.haNotice}</p>`:b}
           <button class="btn primary" ?disabled=${this.haBusy} @click=${()=>void this.addToHomeAssistant()}>
             ${this.haBusy?"Adding…":"Add to Home Assistant"}
           </button>
@@ -3975,7 +3981,7 @@ external_components:
         ${this.renderSteps()}
       <section class="card">
         <div class="card-body">
-          ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:v}
+          ${this.error?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.error}</span></div>`:b}
 
           ${this.stage==="config"?p`
                 <label class="field">
@@ -4000,7 +4006,7 @@ external_components:
                           </option>`)}
                   </select>
 
-                  ${this.selectedChip&&this.selectedChip.buildable===!1?p`<span class="hint warn-text">${this.selectedChip.unbuildable_reason}</span>`:v}
+                  ${this.selectedChip&&this.selectedChip.buildable===!1?p`<span class="hint warn-text">${this.selectedChip.unbuildable_reason}</span>`:b}
                 </label>
 
                 <div class="chip-detect">
@@ -4009,10 +4015,10 @@ external_components:
                   </button>
                   ${this.usbSupported?p`<button class="btn" ?disabled=${this.detectingChip||this.loadingChips} @click=${()=>void this.detectChip(!0)}>
                         Choose a different device…
-                      </button>`:v}
-                  ${this.detectedChipName?p`<span class="hint">Detected ${this.detectedChipName}; selected ${this.chipName}.</span>`:v}
-                  ${this.chipDetectionError?p`<span class="hint warn-text">${this.chipDetectionError}</span>`:v}
-                  ${this.usbSupported?v:p`<span class="hint">Automatic detection needs Chrome or Edge on a secure HTTPS page. Manual chip selection is available.</span>`}
+                      </button>`:b}
+                  ${this.detectedChipName?p`<span class="hint">Detected ${this.detectedChipName}; selected ${this.chipName}.</span>`:b}
+                  ${this.chipDetectionError?p`<span class="hint warn-text">${this.chipDetectionError}</span>`:b}
+                  ${this.usbSupported?b:p`<span class="hint">Automatic detection needs Chrome or Edge on a secure HTTPS page. Manual chip selection is available.</span>`}
                 </div>
 
                 <div class="creds notice ${this.credentialsComplete?"ok":"warn"}">
@@ -4030,19 +4036,19 @@ external_components:
                           <span>PSK <small class="src">${this.sourceLabel(this.pskSource)}</small></span>
                           <code>••••••••</code>
                         </div>`:p`<p class="hint">
-                        No ESP-NOW credentials found${this.bridgeName?p` for bridge <strong>${this.bridgeName}</strong>`:v}.
+                        No ESP-NOW credentials found${this.bridgeName?p` for bridge <strong>${this.bridgeName}</strong>`:b}.
                         A remote cannot join without them — configure a bridge first, or add
                         <code>espnow_network_id</code> and <code>espnow_psk</code> to secrets.yaml.
                       </p>`}
                   ${this.credentialsComplete?p`<p class="hint">
                         Taken from secrets.yaml so the remote matches what the bridge is running.
-                      </p>`:v}
+                      </p>`:b}
                   ${this.credentialsMismatch?p`<p class="hint warn-text mismatch">
                         Note: the saved bridge record says the network ID is
                         <code>${this.bridgeNetworkId}</code>, which disagrees with secrets.yaml.
                         The bridge firmware reads secrets.yaml, so that value is used here — but
                         the record is stale and worth correcting.
-                      </p>`:v}
+                      </p>`:b}
                   </div>
                 </div>
 
@@ -4056,7 +4062,7 @@ external_components:
                           Compile firmware
                         </button>`}
                 </div>
-              `:v}
+              `:b}
 
           ${this.stage==="compiling"?p`
                 <div class="status info">
@@ -4066,11 +4072,11 @@ external_components:
                       >${this.compileStatusLabel}…${this.compilePercent>0?` ${this.compilePercent}%`:""}</strong
                     >
                     <p class="hint">This uses the add-on's own compiler. It can take a few minutes.</p>
-                    ${this.autoInstall?p`<p class="hint">It will flash to the selected USB device automatically when the build finishes. Keep the board plugged in.</p>`:v}
+                    ${this.autoInstall?p`<p class="hint">It will flash to the selected USB device automatically when the build finishes. Keep the board plugged in.</p>`:b}
                   </div>
                 </div>
                 <esp-compile-log-viewer .mac=${this.mac} .visible=${!0}></esp-compile-log-viewer>
-              `:v}
+              `:b}
 
           ${this.stage==="ready"?p`
                 <div class="status ok">
@@ -4082,23 +4088,23 @@ external_components:
                   </p>
                   </div>
                 </div>
-                ${this.preparingManifest?p`<div class="status"><div class="spinner"></div><span>Preparing firmware…</span></div>`:v}
+                ${this.preparingManifest?p`<div class="status"><div class="spinner"></div><span>Preparing firmware…</span></div>`:b}
                 ${this.manifestUrl?p`
                       <div class="actions">
                         <button class="btn primary" ?disabled=${this.flashing} @click=${()=>void this.flashInBrowser()}>
                           ${this.flashing?p`<span class="spinner"></span>Flashing…`:p`${C("usb")}Flash by USB`}
                         </button>
                       </div>
-                      ${this.flashError?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.flashError}</span></div>`:v}
+                      ${this.flashError?p`<div class="notice danger" role="alert">${C("alert")}<span>${this.flashError}</span></div>`:b}
                       ${this.flashNeedsConfirm?p`
                             <div class="actions">
                               <button class="btn primary" @click=${()=>void this.onBrowserFlashDone()}>
                                 Continue to Home Assistant setup
                               </button>
                             </div>
-                          `:v}
-                    `:v}
-                ${this.usbSupported?v:p`<div class="notice warn">${C("info")}<span>This browser can't flash over USB. Open the add-on in Chrome or Edge over HTTPS, or download the factory image below.</span></div>`}
+                          `:b}
+                    `:b}
+                ${this.usbSupported?b:p`<div class="notice warn">${C("info")}<span>This browser can't flash over USB. Open the add-on in Chrome or Edge over HTTPS, or download the factory image below.</span></div>`}
                 <p class="hint">
                   The button above writes the firmware from this computer. If your browser cannot,
                   use the compiled .bin with your own tool, then continue.
@@ -4121,8 +4127,8 @@ external_components:
                         with your own tool at 0x0. The .ota.bin is an update image and cannot be
                         flashed to empty flash.
                       </p>
-                    `:v}
-              `:v}
+                    `:b}
+              `:b}
 
           ${this.stage==="done"?p`
                 <div class="status ok">
@@ -4137,11 +4143,11 @@ external_components:
                 </div>
                 ${this.renderHaIntegrationStep()}
                 <div class="actions"><a class="btn primary" href="#/">Go to network</a></div>
-              `:v}
+              `:b}
 
           ${this.stage==="error"?p`
                 <div class="actions"><button class="btn" @click=${()=>this.startOver()}>Start over</button></div>
-              `:v}
+              `:b}
         </div>
       </section>
       </div>
@@ -4195,7 +4201,7 @@ external_components:
       .steps li { flex-direction: column; align-items: flex-start; gap: 4px; font-size: var(--text-xs); }
       .card-body { padding: 16px; }
     }
-  `];X([b()],z.prototype,"name",2);X([b()],z.prototype,"chips",2);X([b()],z.prototype,"chipName",2);X([b()],z.prototype,"loadingChips",2);X([b()],z.prototype,"detectingChip",2);X([b()],z.prototype,"chipDetectionError",2);X([b()],z.prototype,"detectedChipName",2);X([b()],z.prototype,"networkId",2);X([b()],z.prototype,"psk",2);X([b()],z.prototype,"bridgeName",2);X([b()],z.prototype,"credentialsComplete",2);X([b()],z.prototype,"networkIdSource",2);X([b()],z.prototype,"pskSource",2);X([b()],z.prototype,"credentialsMismatch",2);X([b()],z.prototype,"bridgeNetworkId",2);X([b()],z.prototype,"loadingCredentials",2);X([b()],z.prototype,"stage",2);X([b()],z.prototype,"error",2);X([b()],z.prototype,"mac",2);X([b()],z.prototype,"esphomeName",2);X([b()],z.prototype,"compilePercent",2);X([b()],z.prototype,"compileStatus",2);X([b()],z.prototype,"manifestUrl",2);X([b()],z.prototype,"firmwareBlobUrl",2);X([b()],z.prototype,"preparingManifest",2);X([b()],z.prototype,"usbSupported",2);X([b()],z.prototype,"flashError",2);X([b()],z.prototype,"flashing",2);X([b()],z.prototype,"flashNeedsConfirm",2);X([b()],z.prototype,"autoInstall",2);X([b()],z.prototype,"haStatus",2);X([b()],z.prototype,"haDeviceId",2);X([b()],z.prototype,"haBusy",2);X([b()],z.prototype,"haNotice",2);z=X([Se("esp-remote-wizard")],z);const XC=de`
+  `];X([v()],z.prototype,"name",2);X([v()],z.prototype,"chips",2);X([v()],z.prototype,"chipName",2);X([v()],z.prototype,"loadingChips",2);X([v()],z.prototype,"detectingChip",2);X([v()],z.prototype,"chipDetectionError",2);X([v()],z.prototype,"detectedChipName",2);X([v()],z.prototype,"networkId",2);X([v()],z.prototype,"psk",2);X([v()],z.prototype,"bridgeName",2);X([v()],z.prototype,"credentialsComplete",2);X([v()],z.prototype,"networkIdSource",2);X([v()],z.prototype,"pskSource",2);X([v()],z.prototype,"credentialsMismatch",2);X([v()],z.prototype,"bridgeNetworkId",2);X([v()],z.prototype,"loadingCredentials",2);X([v()],z.prototype,"stage",2);X([v()],z.prototype,"error",2);X([v()],z.prototype,"mac",2);X([v()],z.prototype,"esphomeName",2);X([v()],z.prototype,"compilePercent",2);X([v()],z.prototype,"compileStatus",2);X([v()],z.prototype,"manifestUrl",2);X([v()],z.prototype,"firmwareBlobUrl",2);X([v()],z.prototype,"preparingManifest",2);X([v()],z.prototype,"usbSupported",2);X([v()],z.prototype,"flashError",2);X([v()],z.prototype,"flashing",2);X([v()],z.prototype,"flashNeedsConfirm",2);X([v()],z.prototype,"autoInstall",2);X([v()],z.prototype,"haStatus",2);X([v()],z.prototype,"haDeviceId",2);X([v()],z.prototype,"haBusy",2);X([v()],z.prototype,"haNotice",2);z=X([Se("esp-remote-wizard")],z);const XC=de`
   --canvas: #f4f6f6;
   --surface: #ffffff;
   --surface-subtle: #f2f5f5;
@@ -4318,7 +4324,7 @@ external_components:
       --gutter: 16px;
     }
   }
-`;var GC=Object.defineProperty,ZC=Object.getOwnPropertyDescriptor,Ct=(t,e,i,s)=>{for(var r=s>1?void 0:s?ZC(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&GC(e,i,r),r};let nt=class extends pe{constructor(){super(...arguments),this.route=this.readRoute(),this.queueData=null,this.compileData=null,this.addonConnected=!0,this.bridgeConnected=null,this.bridgeConfigured=null,this.integrationLoaded=null,this.integrationConfigured=!1,this.restartRequired=!1,this.bridgeLabel="",this.pollTimer=null,this.bridgeStreamHandle=null,this.setupDismissed=!1,this.syncHaTheme=()=>{var i;let t=null;try{if(window.parent!==window){const s=window.parent.document.documentElement,r=window.parent.getComputedStyle(s).getPropertyValue("--primary-background-color").trim(),n=document.createElement("span");n.style.color=r,document.body.appendChild(n);const o=(i=getComputedStyle(n).color.match(/\d+(\.\d+)?/g))==null?void 0:i.map(Number);n.remove(),r&&o&&o.length>=3&&(t=(.2126*o[0]+.7152*o[1]+.0722*o[2])/255<.5?"dark":"light")}}catch{t=null}t?this.setAttribute("theme",t):this.removeAttribute("theme");const e=document.querySelector('meta[name="color-scheme"]');e==null||e.setAttribute("content",t??"light dark"),document.documentElement.style.background=t==="dark"?"#111414":t==="light"?"#f4f6f6":""},this.themeTimer=null,this.onHashChange=()=>{this.route=this.readRoute()},this.onSetupDismissed=()=>{this.setupDismissed=!0}}connectedCallback(){super.connectedCallback(),this.syncHaTheme(),this.themeTimer=setInterval(this.syncHaTheme,5e3),window.addEventListener("hashchange",this.onHashChange),this.addEventListener("setup-dismissed",this.onSetupDismissed),this.bridgeStreamHandle=Nm(t=>{this.bridgeConnected=t,this.fetchConfig()}),this.fetchQueue(),this.pollTimer=setInterval(()=>{this.fetchQueue(),this.fetchConfig(),this.checkRestartRequired()},3e3),this.fetchConfig(),this.checkRestartRequired(),this.maybeRedirectToSetup()}async checkRestartRequired(){var t,e;try{const i=await S.restartRequired();this.restartRequired=i.restart_required,this.integrationLoaded=((t=i.integration)==null?void 0:t.loaded)??this.integrationLoaded,this.integrationConfigured=((e=i.integration)==null?void 0:e.configured)??this.integrationConfigured}catch{this.restartRequired=!1}this.maybeRedirectToSetup()}async fetchConfig(){var t,e,i;try{const s=await S.config(),r=s.active_bridge;this.integrationLoaded=((t=s.integration)==null?void 0:t.loaded)??null,this.integrationConfigured=((e=s.integration)==null?void 0:e.configured)??!1,this.bridgeLabel=(r==null?void 0:r.name)||(r==null?void 0:r.hostname)||(r==null?void 0:r.host)||"",this.bridgeConfigured=!!(r&&!r.error||(((i=s.bridges)==null?void 0:i.length)??0)>0),this.addonConnected=!0}catch{this.addonConnected=!1}this.maybeRedirectToSetup()}needsSetup(){return this.addonConnected?this.bridgeConfigured===!1||this.restartRequired||!this.integrationConfigured&&this.integrationLoaded===!1:!1}maybeRedirectToSetup(){this.needsSetup()&&this.route.name==="topology"&&!this.setupDismissed&&this.navigate("/setup")}disconnectedCallback(){var t;this.themeTimer&&clearInterval(this.themeTimer),window.removeEventListener("hashchange",this.onHashChange),this.removeEventListener("setup-dismissed",this.onSetupDismissed),this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null),(t=this.bridgeStreamHandle)==null||t.close(),this.bridgeStreamHandle=null,super.disconnectedCallback()}async fetchQueue(){try{const[t,e]=await Promise.all([S.getQueue(),S.getCompileQueue()]);this.queueData=t,this.compileData=e,this.addonConnected=!0}catch{this.addonConnected=!1}}readRoute(){const t=window.location.hash.replace(/^#\/?/,"").replace(/\/+$/,"");if(t.startsWith("device/")){const e=t.slice(7);return e.endsWith("/config")?{name:"device-config",mac:decodeURIComponent(e.replace(/\/config$/,""))}:{name:"device",mac:decodeURIComponent(e)}}if(t.startsWith("job/")){const e=t.slice(4),[i,s]=e.split("?"),r=parseInt(i,10);let n="/queue";return s&&(n=new URLSearchParams(s).get("from")||"/queue"),{name:"job",jobId:r,from:n}}return t==="settings"?{name:"settings"}:t==="queue"?{name:"queue"}:t==="secrets"?{name:"secrets",from:"/"}:t.startsWith("secrets?")?{name:"secrets",from:new URLSearchParams(t.slice(7)).get("from")||"/"}:t==="activity-log"?{name:"activity-log"}:t==="setup"?{name:"setup"}:t==="add-remote"?{name:"remote-wizard"}:{name:"topology"}}navigate(t){window.location.hash=t}activeRoute(){return this.route.name==="topology"||this.route.name==="device"||this.route.name==="device-config"||this.route.name==="remote-wizard"?"network":this.route.name==="queue"||this.route.name==="job"?"queue":this.route.name==="activity-log"?"activity":"settings"}queueSummary(){const t=this.queueData,e=this.compileData,i=!!(t!=null&&t.active_job),s=!!(e!=null&&e.active_job),r=((t==null?void 0:t.count)??0)+((e==null?void 0:e.count)??0)+(i?1:0);return{label:`${r}`,count:r,active:i||s,paused:!!(t!=null&&t.paused)}}renderTab(t,e,i,s=v){const r=this.activeRoute()===t;return p`
+`;var GC=Object.defineProperty,ZC=Object.getOwnPropertyDescriptor,Ct=(t,e,i,s)=>{for(var r=s>1?void 0:s?ZC(e,i):e,n=t.length-1,o;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&GC(e,i,r),r};let nt=class extends pe{constructor(){super(...arguments),this.route=this.readRoute(),this.queueData=null,this.compileData=null,this.addonConnected=!0,this.bridgeConnected=null,this.bridgeConfigured=null,this.integrationLoaded=null,this.integrationConfigured=!1,this.restartRequired=!1,this.bridgeLabel="",this.pollTimer=null,this.bridgeStreamHandle=null,this.setupDismissed=!1,this.syncHaTheme=()=>{var i;let t=null;try{if(window.parent!==window){const s=window.parent.document.documentElement,r=window.parent.getComputedStyle(s).getPropertyValue("--primary-background-color").trim(),n=document.createElement("span");n.style.color=r,document.body.appendChild(n);const o=(i=getComputedStyle(n).color.match(/\d+(\.\d+)?/g))==null?void 0:i.map(Number);n.remove(),r&&o&&o.length>=3&&(t=(.2126*o[0]+.7152*o[1]+.0722*o[2])/255<.5?"dark":"light")}}catch{t=null}t?this.setAttribute("theme",t):this.removeAttribute("theme");const e=document.querySelector('meta[name="color-scheme"]');e==null||e.setAttribute("content",t??"light dark"),document.documentElement.style.background=t==="dark"?"#111414":t==="light"?"#f4f6f6":""},this.themeTimer=null,this.onHashChange=()=>{this.route=this.readRoute()},this.onSetupDismissed=()=>{this.setupDismissed=!0}}connectedCallback(){super.connectedCallback(),this.syncHaTheme(),this.themeTimer=setInterval(this.syncHaTheme,5e3),window.addEventListener("hashchange",this.onHashChange),this.addEventListener("setup-dismissed",this.onSetupDismissed),this.bridgeStreamHandle=Nm(t=>{this.bridgeConnected=t,this.fetchConfig()}),this.fetchQueue(),this.pollTimer=setInterval(()=>{this.fetchQueue(),this.fetchConfig(),this.checkRestartRequired()},3e3),this.fetchConfig(),this.checkRestartRequired(),this.maybeRedirectToSetup()}async checkRestartRequired(){var t,e;try{const i=await S.restartRequired();this.restartRequired=i.restart_required,this.integrationLoaded=((t=i.integration)==null?void 0:t.loaded)??this.integrationLoaded,this.integrationConfigured=((e=i.integration)==null?void 0:e.configured)??this.integrationConfigured}catch{this.restartRequired=!1}this.maybeRedirectToSetup()}async fetchConfig(){var t,e,i;try{const s=await S.config(),r=s.active_bridge;this.integrationLoaded=((t=s.integration)==null?void 0:t.loaded)??null,this.integrationConfigured=((e=s.integration)==null?void 0:e.configured)??!1,this.bridgeLabel=(r==null?void 0:r.name)||(r==null?void 0:r.hostname)||(r==null?void 0:r.host)||"",this.bridgeConfigured=!!(r&&!r.error||(((i=s.bridges)==null?void 0:i.length)??0)>0),this.addonConnected=!0}catch{this.addonConnected=!1}this.maybeRedirectToSetup()}needsSetup(){return this.addonConnected?this.bridgeConfigured===!1||this.restartRequired||!this.integrationConfigured&&this.integrationLoaded===!1:!1}maybeRedirectToSetup(){this.needsSetup()&&this.route.name==="topology"&&!this.setupDismissed&&this.navigate("/setup")}disconnectedCallback(){var t;this.themeTimer&&clearInterval(this.themeTimer),window.removeEventListener("hashchange",this.onHashChange),this.removeEventListener("setup-dismissed",this.onSetupDismissed),this.pollTimer&&(clearInterval(this.pollTimer),this.pollTimer=null),(t=this.bridgeStreamHandle)==null||t.close(),this.bridgeStreamHandle=null,super.disconnectedCallback()}async fetchQueue(){try{const[t,e]=await Promise.all([S.getQueue(),S.getCompileQueue()]);this.queueData=t,this.compileData=e,this.addonConnected=!0}catch{this.addonConnected=!1}}readRoute(){const t=window.location.hash.replace(/^#\/?/,"").replace(/\/+$/,"");if(t.startsWith("device/")){const e=t.slice(7);return e.endsWith("/config")?{name:"device-config",mac:decodeURIComponent(e.replace(/\/config$/,""))}:{name:"device",mac:decodeURIComponent(e)}}if(t.startsWith("job/")){const e=t.slice(4),[i,s]=e.split("?"),r=parseInt(i,10);let n="/queue";return s&&(n=new URLSearchParams(s).get("from")||"/queue"),{name:"job",jobId:r,from:n}}return t==="settings"?{name:"settings"}:t==="queue"?{name:"queue"}:t==="secrets"?{name:"secrets",from:"/"}:t.startsWith("secrets?")?{name:"secrets",from:new URLSearchParams(t.slice(7)).get("from")||"/"}:t==="activity-log"?{name:"activity-log"}:t==="setup"?{name:"setup"}:t==="add-remote"?{name:"remote-wizard"}:{name:"topology"}}navigate(t){window.location.hash=t}activeRoute(){return this.route.name==="topology"||this.route.name==="device"||this.route.name==="device-config"||this.route.name==="remote-wizard"?"network":this.route.name==="queue"||this.route.name==="job"?"queue":this.route.name==="activity-log"?"activity":"settings"}queueSummary(){const t=this.queueData,e=this.compileData,i=!!(t!=null&&t.active_job),s=!!(e!=null&&e.active_job),r=((t==null?void 0:t.count)??0)+((e==null?void 0:e.count)??0)+(i?1:0);return{label:`${r}`,count:r,active:i||s,paused:!!(t!=null&&t.paused)}}renderTab(t,e,i,s=b){const r=this.activeRoute()===t;return p`
       <a class="tab ${r?"current":""}" href="#${i}" aria-current=${r?"page":"false"}>
         <span>${e}</span>${s}
       </a>
@@ -4332,10 +4338,10 @@ external_components:
         ${C("info")}
         <span><strong>Home Assistant needs a restart</strong> to load the updated ESP Tree integration.</span>
         <a class="outage-link" href="#/setup">Finish setup</a>
-      </div>`:v:p`<div class="outage" role="alert">
+      </div>`:b:p`<div class="outage" role="alert">
         ${C("alert")}
         <span><strong>Can't reach the ESP Tree add-on.</strong> Retrying every few seconds. If this continues, check the add-on is running in Home Assistant under Settings → Add-ons.</span>
-      </div>`}render(){if(this.route.name==="setup")return p`<esp-setup-wizard></esp-setup-wizard>`;const t=this.queueSummary(),e=t.count>0||t.active?p`<span class="tab-count ${t.active?"live":""}" aria-label=${`${t.count} job${t.count===1?"":"s"} running or queued${t.paused?", paused":""}`}>${t.paused?C("pause"):v}${t.count}</span>`:v;return p`
+      </div>`}render(){if(this.route.name==="setup")return p`<esp-setup-wizard></esp-setup-wizard>`;const t=this.queueSummary(),e=t.count>0||t.active?p`<span class="tab-count ${t.active?"live":""}" aria-label=${`${t.count} job${t.count===1?"":"s"} running or queued${t.paused?", paused":""}`}>${t.paused?C("pause"):b}${t.count}</span>`:b;return p`
       <header class="toolbar">
         <div class="toolbar-inner">
           <a class="brand" href="#/" aria-label="ESP Tree, network">
@@ -4354,7 +4360,7 @@ external_components:
       <main class="content">
         ${this.route.name==="remote-wizard"?p`<esp-remote-wizard></esp-remote-wizard>`:this.route.name==="topology"?p`<esp-topology-map .addonDown=${!this.addonConnected} @node-selected=${i=>this.navigate(`/device/${encodeURIComponent(i.detail)}`)}></esp-topology-map>`:this.route.name==="device"?p`<esp-device-detail .mac=${this.route.mac}></esp-device-detail>`:this.route.name==="device-config"?p`<esp-config-page .mac=${this.route.mac}></esp-config-page>`:this.route.name==="job"?p`<esp-job-page .jobId=${this.route.jobId} .from=${this.route.from}></esp-job-page>`:this.route.name==="queue"?p`<esp-queue-page></esp-queue-page>`:this.route.name==="secrets"?p`<esp-secrets-page .from=${this.route.from}></esp-secrets-page>`:this.route.name==="activity-log"?p`<esp-activity-log-page></esp-activity-log-page>`:p`<esp-settings></esp-settings>`}
       </main>
-      <footer class="build">ESP Tree UI · ${"b44041b"}</footer>
+      <footer class="build">ESP Tree UI · ${"e692615"}</footer>
     `}};nt.styles=[YC,Ee,de`
     :host {
       display: block;
@@ -4510,5 +4516,5 @@ external_components:
       .content { padding-top: 16px; }
       .status-text { max-width: 40vw; }
     }
-  `];Ct([b()],nt.prototype,"route",2);Ct([b()],nt.prototype,"queueData",2);Ct([b()],nt.prototype,"compileData",2);Ct([b()],nt.prototype,"addonConnected",2);Ct([b()],nt.prototype,"bridgeConnected",2);Ct([b()],nt.prototype,"bridgeConfigured",2);Ct([b()],nt.prototype,"integrationLoaded",2);Ct([b()],nt.prototype,"integrationConfigured",2);Ct([b()],nt.prototype,"restartRequired",2);Ct([b()],nt.prototype,"bridgeLabel",2);nt=Ct([Se("espnow-app")],nt);export{v as A,Mm as D,xs as E,em as _,pe as a,gg as b,bg as c,mg as d,Dm as e,bl as f,p as g,fg as h,de as i,ie as n,s2 as p,b as r,Se as t,q as w};
-//# sourceMappingURL=index-DYgSjzFA.js.map
+  `];Ct([v()],nt.prototype,"route",2);Ct([v()],nt.prototype,"queueData",2);Ct([v()],nt.prototype,"compileData",2);Ct([v()],nt.prototype,"addonConnected",2);Ct([v()],nt.prototype,"bridgeConnected",2);Ct([v()],nt.prototype,"bridgeConfigured",2);Ct([v()],nt.prototype,"integrationLoaded",2);Ct([v()],nt.prototype,"integrationConfigured",2);Ct([v()],nt.prototype,"restartRequired",2);Ct([v()],nt.prototype,"bridgeLabel",2);nt=Ct([Se("espnow-app")],nt);export{b as A,Mm as D,xs as E,em as _,pe as a,gg as b,bg as c,mg as d,Dm as e,bl as f,p as g,fg as h,de as i,ie as n,s2 as p,v as r,Se as t,q as w};
+//# sourceMappingURL=index-B21eytjn.js.map

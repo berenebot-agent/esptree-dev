@@ -405,7 +405,7 @@ def create_app() -> FastAPI:
         bridge_manager=bridge_manager,
     )
 
-    app = FastAPI(title="ESP Tree Add-on", version="0.1.352")
+    app = FastAPI(title="ESP Tree Add-on", version="0.1.353")
     # HA ingress authenticates the user, but host networking otherwise exposes
     # this unauthenticated API on the LAN. Restrict the actual socket peer.
     app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
@@ -2831,6 +2831,9 @@ def create_app() -> FastAPI:
                 "firmware_name": file.filename or path.name,
                 "firmware_size": size,
                 "firmware_md5": md5,
+                # An uploaded .ota.bin is the OTA image itself, so its digest is the
+                # one a device reports after booting it.
+                "ota_md5": md5,
                 "parsed_project_name": info.project_name,
                 "parsed_version": info.parsed_version,
                 "parsed_esphome_name": info.project_name,
@@ -3700,6 +3703,7 @@ def create_app() -> FastAPI:
                     "firmware_name": compile_job.get("firmware_name"),
                     "firmware_size": compile_job.get("firmware_size"),
                     "firmware_md5": compile_job.get("firmware_md5"),
+                    "ota_md5": compile_job.get("ota_md5"),
                     "parsed_project_name": compile_job.get("parsed_project_name"),
                     "parsed_version": compile_job.get("parsed_version"),
                     "parsed_esphome_name": compile_job.get("parsed_esphome_name"),

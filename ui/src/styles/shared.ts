@@ -381,6 +381,9 @@ export const historyStyles = css`
   .hist .what strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist .what small { color: var(--muted); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist .what .err { color: var(--danger); white-space: normal; }
+  /* An unverified flash delivered the image; it is not an error, so its message
+     must not be dressed in the danger red the .err class uses. */
+  .hist .what .note { color: var(--accent); white-space: normal; }
   .hist .when { color: var(--muted); font-size: var(--text-sm); text-align: right; font-variant-numeric: tabular-nums; }
   .hist .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
   .chip-spin { width: 10px !important; height: 10px !important; border-width: 1.5px !important; border-color: currentColor !important; border-top-color: transparent !important; }

@@ -7,7 +7,11 @@ import esphome.core as core
 
 CODEOWNERS = ["@esphome"]
 DEPENDENCIES = ["web_server"]
-AUTO_LOAD = ["esp_tree_common"]
+# `md5` is loaded explicitly because esp_tree_bridge.cpp hashes the running partition
+# to report its firmware MD5 (the identity the add-on needs to confirm a flash). ESPHome
+# only copies LOADED components into the build tree, so relying on it arriving
+# transitively stops the build at "fatal error: md5.h: No such file or directory".
+AUTO_LOAD = ["esp_tree_common", "md5"]
 
 CONF_NETWORK_ID = "network_id"
 CONF_PSK = "psk"

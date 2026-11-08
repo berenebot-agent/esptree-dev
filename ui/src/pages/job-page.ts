@@ -135,6 +135,7 @@ export class EspJobPage extends LitElement {
       flash_failed: 'danger',
       flash_aborted: 'danger',
       flash_version_mismatch: 'warn',
+      flash_identity_confirmed: 'ok',
       flash_identity_unverified: 'warn',
       flash_rejoin_timeout: 'warn',
     };
@@ -154,6 +155,8 @@ export class EspJobPage extends LitElement {
           ${ev.current_build_date ? html`<span class="event-detail">running build: ${ev.current_build_date}</span>` : nothing}
           ${ev.expected_build_date ? html`<span class="event-detail">expected build: ${ev.expected_build_date}</span>` : nothing}
           ${ev.actual_build_date ? html`<span class="event-detail">reported build: ${ev.actual_build_date}</span>` : nothing}
+          ${ev.actual_md5 ? html`<span class="event-detail">reported MD5: ${ev.actual_md5}</span>` : nothing}
+          ${ev.method ? html`<span class="event-detail">confirmed by ${ev.method}</span>` : nothing}
           ${ev.firmware_name ? html`<span class="event-detail">${ev.firmware_name}</span>` : nothing}
           ${ev.duration_s != null ? html`<span class="event-detail">took ${fmtDuration(ev.duration_s as number)}</span>` : nothing}
           ${ev.current_md5 ? html`<span class="event-detail">current running firmware MD5: ${ev.current_md5}</span>` : nothing}

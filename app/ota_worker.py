@@ -342,10 +342,17 @@ class OTAWorker:
         self.db.update_job(job_id, status=WAITING_REJOIN, percent=100, bridge_state="Rebooting")
         self.db.append_job_event(job_id, "flash_rejoin_waiting", mechanism="esphome_ota")
         latest = self.db.get_job(job_id) or current
+        # Verify against the artifact we just sent, not against what the device used to
+        # report. The old check demanded a *changed* build date, which can never
+        # confirm anything (see _wait_for_rejoin), and told the user nothing when it
+        # failed. The job already parsed the .ota.bin's own app descriptor
+        # (parsed_build_date) and its digest, so matching those is positive proof.
         await self._wait_for_rejoin(
             latest,
             initial_uptime_s=initial_uptime_s,
+            expected_build_date=str(latest.get("parsed_build_date") or "").strip() or None,
             expect_changed_build_date=initial_build_date or None,
+            expected_md5=str(latest.get("ota_md5") or "").strip() or None,
             verify_bridge_identity=True,
         )
 
@@ -613,6 +620,8 @@ class OTAWorker:
         *,
         initial_uptime_s: float | None = None,
         expect_changed_build_date: str | None = None,
+        expected_build_date: str | None = None,
+        expected_md5: str | None = None,
         verify_bridge_identity: bool = False,
     ) -> None:
         target_mac = normalize_mac(str(job["mac"]))
@@ -645,27 +654,62 @@ class OTAWorker:
                 if initial_uptime_s is None or current_uptime < initial_uptime_s:
                     self.db.append_job_event(job_id, "flash_rejoined")
                     if verify_bridge_identity:
-                        # A bridge reports no project version and no firmware MD5, so a
-                        # *changed* build date is the only evidence available that it
-                        # booted the image just sent. But that date is
-                        # `__DATE__`/`__TIME__` expanded in the bridge's own setup(),
-                        # i.e. the compile time of ONE translation unit - and the add-on
-                        # compiles into a persistent build tree, so an image rebuilt
-                        # from unchanged component sources boots with the same string.
-                        # An unchanged date therefore cannot mean "the upload did not
-                        # take effect": it means the device's identity cannot settle the
-                        # question, which is not the same verdict as a failure.
+                        # A bridge used to report only `__DATE__`/`__TIME__` expanded in
+                        # its own setup(), i.e. the compile time of ONE translation unit.
+                        # The add-on compiles into a persistent build tree, so a rebuild
+                        # from unchanged sources booted with the same string, and this
+                        # check - which demanded a *changed* date - reported a real
+                        # reflash as a failure while an absent baseline read as success.
+                        #
+                        # The bridge now reports the same ESP-IDF app descriptor fields
+                        # the add-on parses out of the .ota.bin (see app/bin_parser.py)
+                        # plus the MD5 of its running partition. So the check is no
+                        # longer "did something change" but "is the device running the
+                        # artifact we sent", which is the only claim worth a green tick.
                         actual_build_date = str(node.get("firmware_build_date") or "").strip()
-                        expected = (expect_changed_build_date or "").strip()
-                        if expected and actual_build_date and actual_build_date != expected:
+                        actual_md5 = str(node.get("firmware_md5") or "").strip().lower()
+                        expected_date = (expected_build_date or "").strip()
+                        expected_digest = (expected_md5 or "").strip().lower()
+                        previous_date = (expect_changed_build_date or "").strip()
+
+                        # An MD5 match is conclusive; a build-date match is strong but a
+                        # rebuild of identical sources can share a date with the image
+                        # already running, so it only confirms when the date actually
+                        # moved or no digest was available to compare.
+                        if expected_digest and actual_md5 and actual_md5 == expected_digest:
+                            self.db.append_job_event(
+                                job_id,
+                                "flash_identity_confirmed",
+                                method="md5",
+                                expected_build_date=expected_date,
+                                actual_build_date=actual_build_date,
+                                actual_md5=actual_md5,
+                            )
                             self._finish(job_id, SUCCESS)
                             return
-                        reason, message = _bridge_identity_unverified(expected, actual_build_date)
+                        if expected_date and actual_build_date == expected_date:
+                            # Same date as the artifact. Only proof of a reflash if it
+                            # differs from what the device ran before the upload.
+                            if not previous_date or previous_date != actual_build_date or not expected_digest:
+                                self.db.append_job_event(
+                                    job_id,
+                                    "flash_identity_confirmed",
+                                    method="build_date",
+                                    expected_build_date=expected_date,
+                                    actual_build_date=actual_build_date,
+                                    actual_md5=actual_md5,
+                                )
+                                self._finish(job_id, SUCCESS)
+                                return
+                        reason, message = _bridge_identity_unverified(
+                            expected_date, actual_build_date, actual_md5, previous_date
+                        )
                         self.db.append_job_event(
                             job_id,
                             "flash_identity_unverified",
-                            expected_build_date=expected,
+                            expected_build_date=expected_date,
                             actual_build_date=actual_build_date,
+                            actual_md5=actual_md5,
                             reason=reason,
                         )
                         self._finish(job_id, REJOINED_UNVERIFIED, message)
@@ -723,30 +767,43 @@ class OTAWorker:
             self.db.clear_job_firmware(int(job["id"]))
 
 
-def _bridge_identity_unverified(expected: str, actual: str) -> tuple[str, str]:
+def _bridge_identity_unverified(
+    expected: str,
+    actual: str,
+    actual_md5: str = "",
+    previous: str = "",
+) -> tuple[str, str]:
     """Why a bridge's post-reboot identity could not settle what it booted.
 
     Returns (short reason for the event log, sentence for the job's message). Each
     case is a different missing fact, so each gets its own wording rather than one
-    blanket "mismatch": an absent baseline and an absent report are not evidence of
-    a failed upload either.
+    blanket "mismatch": an absent report is not evidence of a failed upload, and a
+    device still running the old image is.
     """
-    if not expected:
-        return (
-            "no baseline build date",
-            "bridge rejoined but no build date was recorded before the upload, so the "
-            "image it booted could not be confirmed",
-        )
-    if not actual:
+    if not actual and not actual_md5:
         return (
             "no build date reported",
-            "bridge rejoined without reporting a build date, so the image it booted "
-            "could not be confirmed",
+            "bridge rejoined without reporting a build date or firmware MD5, so the "
+            "image it booted could not be confirmed - this bridge firmware predates "
+            "the change; reflash it once over USB to enable verification",
+        )
+    if not expected:
+        return (
+            "no artifact build date",
+            "the uploaded image carried no build date to compare against, so the image "
+            "the bridge booted could not be confirmed",
+        )
+    if previous and actual == previous:
+        return (
+            "device still reports its previous build",
+            "bridge rejoined still reporting the build it ran before the upload, so the "
+            "new image did not take effect",
         )
     return (
-        "build date unchanged",
-        "bridge rejoined but its build date is unchanged, so the image it booted "
-        "could not be confirmed",
+        "reported build does not match the uploaded image",
+        "bridge rejoined running "
+        f"{actual or 'an unidentified build'} but {expected} was uploaded, so the image "
+        "it booted could not be confirmed",
     )
 
 

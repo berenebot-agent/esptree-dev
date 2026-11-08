@@ -411,11 +411,23 @@ private async start(): Promise<void> {
 
   private renderFlashResult(job: OtaJob) {
     const isSuccess = job.status === 'success';
-    const resultClass = isSuccess ? 'success' : 'failure';
-    const resultLabel = isSuccess ? 'Update complete' : (() => { const t = job.status.replaceAll('_', ' '); return t.charAt(0).toUpperCase() + t.slice(1); })();
+    // A flash that delivered the image but could not prove which build the device
+    // booted is NOT a failure: the transfer succeeded and the device came back. It
+    // used to fall into the `failure` branch below purely because its status was not
+    // `success`, so the card showed a red banner and the user read "your update
+    // failed" while the add-on's own log said the upload had landed fine.
+    const isUnverified = job.status === 'rejoined_unverified';
+    const resultClass = isSuccess ? 'success' : isUnverified ? 'unverified' : 'failure';
+    const resultLabel = isSuccess
+      ? 'Update complete'
+      : isUnverified
+        ? 'Delivered \u2014 build unconfirmed'
+        : (() => { const t = job.status.replaceAll('_', ' '); return t.charAt(0).toUpperCase() + t.slice(1); })();
     const resultMessage = isSuccess
       ? 'The device accepted the new firmware and rejoined the network.'
-      : job.error_msg || 'The firmware update did not complete successfully.';
+      : isUnverified
+        ? (job.error_msg || 'The device accepted the firmware and rejoined, but its reported build could not confirm which image it booted.')
+        : job.error_msg || 'The firmware update did not complete successfully.';
 
     const jobName = job.parsed_esphome_name || job.esphome_name || job.firmware_name || '-';
     const nodeName = this.node.esphome_name || '-';
@@ -452,14 +464,14 @@ private async start(): Promise<void> {
     return html`
       <div class="flash-result ${resultClass}">
         <div class="result-banner">
-          <span class="result-icon">${icon('alert')}</span>
+          <span class="result-icon">${isUnverified ? icon('checkCircle') : icon('alert')}</span>
           <span class="result-label">${resultLabel}</span>
         </div>
         <h3>${jobName}</h3>
         <p class="result-message">${resultMessage}</p>
         <table class="compare-table">
           <thead>
-            <tr><th></th><th>Flashed</th><th>Remote now</th></tr>
+            <tr><th></th><th>Flashed</th><th>${isUnverified ? 'Device reports' : 'Remote now'}</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -546,6 +558,7 @@ private async start(): Promise<void> {
     .result-icon { display: inline-flex; }
     .result-icon svg { width: 22px; height: 22px; }
     .flash-result.success .result-banner { color: var(--ok); }
+    .flash-result.unverified .result-banner { color: var(--accent); }
     .flash-result.failure .result-banner { color: var(--danger); }
     .result-message { color: var(--ink-2); }
 

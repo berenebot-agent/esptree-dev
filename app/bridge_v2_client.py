@@ -1242,6 +1242,7 @@ class BridgeV2Manager:
                 "project_name": snapshot.bridge.project_name,
                 "firmware_version": snapshot.bridge.project_version,
                 "firmware_build_date": snapshot.bridge.firmware_build_date,
+                "firmware_md5": snapshot.bridge.firmware_md5,
                 "online": snapshot.bridge_runtime.online,
                 "rssi": snapshot.bridge_runtime.wifi_rssi,
                 "hops": 0,

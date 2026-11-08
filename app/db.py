@@ -120,6 +120,7 @@ class Database:
                     firmware_name TEXT,
                     firmware_size INTEGER,
                     firmware_md5 TEXT,
+                    ota_md5 TEXT,
                     parsed_project_name TEXT,
                     parsed_version TEXT,
                     parsed_esphome_name TEXT,
@@ -487,6 +488,7 @@ class Database:
             "firmware_name",
             "firmware_size",
             "firmware_md5",
+            "ota_md5",
             "parsed_project_name",
             "parsed_version",
             "parsed_esphome_name",
@@ -1213,3 +1215,12 @@ def migration_020_add_ota_password(conn: sqlite3.Connection) -> None:
     # shared secrets.yaml:ota_password - after which the first bridge rejects every
     # over-the-air upload with a password error and nothing is on record to retry with.
     _add_column_if_not_exists(conn, "bridges", "ota_password", "TEXT DEFAULT ''")
+
+
+@register_migration(version=21, description="Add ota_md5 to ota_jobs")
+def migration_021_add_ota_md5_to_jobs(conn: sqlite3.Connection) -> None:
+    # `firmware_md5` is the digest of the *merged* full-flash image, while a device
+    # reports the digest of its app partition only - so the two can never match and
+    # the MD5 could not be used to confirm a flash. `ota_md5` records the digest of
+    # the .ota.bin, which is the same bytes the device hashes after booting it.
+    _add_column_if_not_exists(conn, "ota_jobs", "ota_md5", "TEXT DEFAULT ''")

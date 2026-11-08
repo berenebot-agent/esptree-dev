@@ -150,6 +150,14 @@ class CompileWorker:
                 size = active_path.stat().st_size
                 md5 = hashlib.md5(active_path.read_bytes()).hexdigest()
 
+            # The MD5 of the .ota.bin, which is NOT the same thing as `md5` above:
+            # that one covers the merged full-flash image, while the device reports
+            # the digest of its app partition after booting the OTA image. Only these
+            # bytes are comparable, so this is what a bridge flash is checked against.
+            ota_md5 = ""
+            if ota_path and ota_path.exists():
+                ota_md5 = hashlib.md5(ota_path.read_bytes()).hexdigest()
+
             # Retain the build immediately: a compile artefact with no expiry was
             # never swept (the cleanup query requires retained_until), so every
             # recompile leaked a binary until /data filled. Retention also gives the
@@ -198,6 +206,7 @@ class CompileWorker:
                 firmware_name=f"{esphome_name}.ota.bin",
                 firmware_size=size,
                 firmware_md5=md5,
+                ota_md5=ota_md5,
                 parsed_project_name=info_dict.get("project_name"),
                 parsed_version=info_dict.get("parsed_version"),
                 parsed_esphome_name=info_dict.get("esphome_name"),
@@ -223,6 +232,7 @@ class CompileWorker:
                         "firmware_name": f"{esphome_name}.ota.bin",
                         "firmware_size": size,
                         "firmware_md5": md5,
+                        "ota_md5": ota_md5,
                         "parsed_project_name": info_dict.get("project_name"),
                         "parsed_version": info_dict.get("parsed_version"),
                         "parsed_esphome_name": info_dict.get("esphome_name"),
