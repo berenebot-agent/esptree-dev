@@ -3106,19 +3106,6 @@ def create_app() -> FastAPI:
             node = find_node_by_mac(topo, normalize_mac(mac))
             if not node:
                 raise HTTPException(status_code=404, detail="device not found in topology")
-            # A Wi-Fi bridge's transport lives on its bridges row, not the topology
-            # node. Without it the scaffold drops the wifi: block and the compile
-            # fails with "Either wifi: or serial_transport: must be configured".
-            bridge_row = next(
-                (b for b in db.list_bridges()
-                 if b.get("enabled") and normalize_mac(str(b.get("mac") or "")) == normalize_mac(mac)),
-                None,
-            )
-            if bridge_row and bridge_row.get("transport", "wifi") != "serial":
-                node = dict(node)
-                node.setdefault("is_bridge", True)
-                node["wifi_ssid_secret"] = "wifi_ssid"
-                node["wifi_password_secret"] = "wifi_password"
             content, chip_unknown = generate_scaffold(node)
         if not content.strip():
             raise HTTPException(status_code=400, detail="config content is empty")
