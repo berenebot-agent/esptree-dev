@@ -8,6 +8,8 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+## 0.1.358
+
 - **ESP8266 remotes are back in the wizard.** The chip is offered and scaffolds a config that actually compiles. The leaf's receiver links ESPHome's ESP8266 OTA backend and the component calls the ESP8266 WiFi API, and ESPHome copies a component — and links `ESP8266WiFi` — only when it is loaded, so an ESP-NOW-only leaf could never build on that platform. `generate_scaffold()` now emits, for ESP8266 remotes only, `wifi:` with a password-protected `ap:` plus `captive_portal:`, `network:` and `ota: - platform: esphome`. Firmware still arrives over ESP-NOW; the access point is a recovery portal at `192.168.4.1`. The AP password is generated once per device at submit and kept in the node record, so regenerating the scaffold cannot lock anyone out of a portal they already noted. No channel is pinned — the component sets the radio channel and the AP follows it. Verified: ESPHome 2026.6.5 compiles the generated config clean (RAM 44.2 %, flash 41.6 %, 438 896-byte `.ota.bin`/`.factory.bin`). ESP8266 remotes are scaffolded as `esp12e` (4 MB) because a 1 MB ESP-01S has no second app slot and cannot take an OTA image. The chip gate in `flash_wizard.py` stays, with an empty table, so a future scaffold regression can still disable a chip with a reason.
 
 ## 0.1.353
