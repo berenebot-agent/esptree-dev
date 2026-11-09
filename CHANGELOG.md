@@ -8,6 +8,9 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+- **A node now reports the firmware version it is running, so the Firmware column has something to show.** Nothing ever put a version in the identity push: the components return `ESPHOME_PROJECT_VERSION`, which ESPHome only defines for a YAML with `esphome: project:`, and no scaffold emits one — so every node, bridge included, reported `""` and the Network page, the device page, Home Assistant's `sw_version`, the MQTT `project_version` sensor and the `devices.current_firmware_version` column all rendered empty. The components now fall back to `esp_tree_common/esp_tree_version.h`, which the release tooling bumps with the add-on version, so a firmware reports the release its sources shipped in. The wire needed nothing: the ESP-NOW identity descriptor (`project_version[16]`) and both protobuf identities have carried the field all along. Firmware already flashed stays blank until it is reflashed — for those, the Firmware cell now shows the first 8 digits of the running app's MD5 instead of `—`.
+- **A project-less image no longer claims the ESPHome version as its firmware version.** `bin_parser` decided "this is a project build" from a non-empty `project_name`, but PlatformIO fills that field with the build environment's name (the node name), so it is never empty and a fresh image claimed `2026.6.5` — the toolchain version — on its job card while the device itself reported nothing. The check now requires ESPHome's documented `author.project` shape (a dot), which a build environment name never has.
+
 ## 0.1.360
 
 - **Remote flashing now follows the active bridge's ESP-NOW mode.** Add Remote used to send LR by default even when the Wi-Fi bridge was configured for regular mode. The wizard now reads the bridge config, the add-on enforces that mode for new and regenerated remote YAML, and missing/invalid bridge mode fails closed rather than producing an isolated remote.

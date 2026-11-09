@@ -1,5 +1,7 @@
 #include "esp_tree_remote.h"
 
+#include "esp_tree_common/esp_tree_version.h"
+
 #include "esphome/core/application.h"
 #include "esphome/core/defines.h"
 
@@ -81,7 +83,10 @@ static const char *project_version_() {
 #ifdef ESPHOME_PROJECT_VERSION
   return ESPHOME_PROJECT_VERSION;
 #else
-  return "";
+  // ESPHome only defines the project macros for a YAML with `esphome: project:`,
+  // and no scaffold emits one. Report the firmware version we were built from
+  // instead of nothing, so the UI and Home Assistant can show what is running.
+  return ESP_TREE_VERSION;
 #endif
 }
 

@@ -37,6 +37,8 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 
+#include "esp_tree_common/esp_tree_version.h"
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <sstream>
@@ -384,7 +386,10 @@ static const char *project_version_() {
 #ifdef ESPHOME_PROJECT_VERSION
   return ESPHOME_PROJECT_VERSION;
 #else
-  return "";
+  // ESPHome only defines the project macros for a YAML with `esphome: project:`,
+  // and no scaffold emits one. Report the firmware version we were built from
+  // instead of nothing, so the UI and Home Assistant can show what is running.
+  return ESP_TREE_VERSION;
 #endif
 }
 

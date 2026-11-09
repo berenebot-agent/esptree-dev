@@ -107,9 +107,15 @@ def parse_firmware(path: Path) -> FirmwareInfo:
     # Only a project build carries a version of its own. A project-less ESPHome image
     # leaves `PROJECT_VER` at the *toolchain* version (esphome 2026.6.5), and no
     # scaffold here emits `esphome: project:` - so reporting that as the firmware
-    # version puts the build tool's version on the device's job card. Keep the raw
-    # field in `app_version` and claim no version when there is no project.
-    parsed_version = app_version if project_name else ""
+    # version puts the build tool's version on the device's job card.
+    #
+    # A non-empty `project_name` does not prove a project block: PlatformIO fills that
+    # field with the build environment's name (the node name, e.g. "espnow-bridge-c3"),
+    # so it is never empty for an image built here. ESPHome asks creators to name a
+    # project `author.project`, and a build environment name never contains a dot,
+    # so that shape is what actually distinguishes the two. Keep the raw field in
+    # `app_version` and claim no version when the descriptor has no project name.
+    parsed_version = app_version if "." in project_name else ""
 
     return FirmwareInfo(
         valid=True,

@@ -134,6 +134,10 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
   const fw = isRoot
     ? (ctx.firmware?.running?.version || node.project_version || node.firmware_version || '')
     : (node.project_version || node.firmware_version || '');
+  // Firmware built before ESP_TREE_VERSION existed reports no version at all. Show
+  // the running app's digest instead of an empty cell, so the column still says
+  // something true about the image on the device.
+  const fwDigest = fw ? '' : (node.firmware_md5 || '').slice(0, 8);
   const deviceHref = `#/device/${encodeURIComponent(node.mac)}`;
   const fwJob = ctx.firmware?.job;
   const bridgeBusy = !!fwJob && !TERMINAL.includes(fwJob.status);
@@ -163,7 +167,11 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
             ? html`<span title="Bridge uptime">Up ${fmtDuration(node.uptime_s) || '—'}</span>`
             : html`<span><span class="m-label">Seen </span>${ago(node.last_seen_ago)}</span>`}
         </div>
-        <div class="cell fw" role="gridcell">${fw ? html`<span class="ver" title=${node.firmware_build_date ? `Built ${node.firmware_build_date}` : ''}>${fw}</span>` : html`<span class="muted">—</span>`}</div>
+        <div class="cell fw" role="gridcell">${fw
+          ? html`<span class="ver" title=${node.firmware_build_date ? `Built ${node.firmware_build_date}` : ''}>${fw}</span>`
+          : fwDigest
+            ? html`<span class="ver mono digest" title="This firmware reports no version — showing the first 8 digits of the running app's MD5">${fwDigest}</span>`
+            : html`<span class="muted">—</span>`}</div>
         <div class="cell status" role="gridcell">${statusCell(row, ctx)}</div>
       </div>
       <div class="cell actions" role="gridcell">
@@ -276,6 +284,7 @@ export const treeStyles = css`
   .m-label { display: none; }
   .num, .seen, .fw { font-variant-numeric: tabular-nums; color: var(--ink-2); }
   .fw .ver { font-size: var(--text-sm); }
+  .fw .digest { color: var(--muted); }
   /* Above the stretched name link, or the overlay would swallow the row actions. */
   .actions { display: flex; justify-content: flex-end; position: relative; z-index: 1; }
   .actions .btn svg { width: 16px; height: 16px; }
