@@ -79,7 +79,6 @@ class ESPNow82xxRemote : public Component {
   void set_espnow_mode(const std::string &mode) { espnow_mode_ = mode; }
   void add_preferred_parent(const std::array<uint8_t, 6> &mac) { preferred_parents_.push_back(mac); }
   void set_channel(uint8_t channel) { espnow_channel_ = channel; }
-
 #ifdef USE_SENSOR
   void register_sensor_entity(sensor::Sensor *sensor, const char *entity_id = "");
 #endif
@@ -142,6 +141,12 @@ class ESPNow82xxRemote : public Component {
  protected:
   bool setup_transport_();
   bool send_frame_(const uint8_t *mac, const uint8_t *frame, size_t frame_len);
+  // Put the radio on the operating channel before a transmit. A configured
+  // channel (1-13) is pinned, as before; 0 means "follow the radio" — the
+  // discovery sweep and the WiFi stack own the channel, so it is left alone and
+  // the peer table is re-registered when the radio moves.
+  void apply_tx_channel_();
+  void resync_peers_to_channel_(uint8_t channel);
 #ifdef USE_ESP8266
   bool scanning_permutations_{false};
   size_t permutation_index_{0};
@@ -179,7 +184,10 @@ class ESPNow82xxRemote : public Component {
   uint16_t heartbeat_interval_{ESPNOW_HEARTBEAT_INTERVAL_S};
   bool ota_over_espnow_{false};
   std::vector<std::array<uint8_t, 6>> preferred_parents_{};
-  uint8_t espnow_channel_{11};
+  // 0 = follow the radio: the discovery sweep and the WiFi stack own the
+  // channel and the peer table is re-registered when it moves. 1-13 pins it.
+  uint8_t espnow_channel_{0};
+  uint8_t peer_channel_{0};  // channel the ESP-NOW peer table is registered on
   bool protocol_ready_{false};
   bool transport_ready_{false};
   bool dynamic_schema_options_refreshed_{false};

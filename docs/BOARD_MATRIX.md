@@ -151,11 +151,12 @@ Consequences worth knowing:
   out of a portal they have already noted. It is a literal in the YAML, not a
   `!secret`: a missing secret is a hard failure at config load.
 - **No channel is pinned.** The scaffold emits no `channel:` and no `ap: channel:`;
-  the component sets the radio channel for ESP-NOW and the AP follows it. Joining
-  a real WiFi network is *not* offered: the radio is single-channel, so a station
-  association on another channel and ESP-NOW on the network's channel cannot
-  coexist, and the component currently forces `wifi_set_channel(espnow_channel_)`
-  before transmit.
+  `channel: 0` (the default) means follow the radio — the discovery sweep locks onto
+  the bridge's channel and `apply_tx_channel_()` re-registers the ESP-NOW peer table
+  when the radio moves, the same `peer.channel = 0` reasoning `esp_tree_bridge` uses.
+  Joining a real WiFi network is still *not* offered: a single radio cannot be
+  associated on one channel and transmit ESP-NOW on another. It is no longer needed
+  either — the leaf follows the bridge's channel instead of a configured one.
 - **The build was verified, not assumed**: ESPHome 2026.6.5, `SUCCESS` in 58.6 s,
   RAM 44.2 %, flash 41.6 %, `firmware.ota.bin`/`.factory.bin`/`.bin` all 438 896 B.
 

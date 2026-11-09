@@ -372,7 +372,8 @@ bool ESPNow82xxRemote::add_peer_(const uint8_t *mac) {
   uint8_t ch;
 #if defined(ARDUINO_ARCH_ESP8266)
   ch = espnow_channel_;
-  if (ch == 0) ch = 11;  // Default to ch11 if not set
+  if (ch == 0) ch = wifi_get_channel();  // auto: whatever the radio is on
+  if (ch == 0) ch = 1;
 #else
   ch = espnow_channel_;
   if (ch == 0) {
@@ -389,6 +390,7 @@ bool ESPNow82xxRemote::add_peer_(const uint8_t *mac) {
            static_cast<unsigned>(peer_role), existed);
   int add_err = esp_now_add_peer(mac_copy, peer_role, ch, nullptr, 0);
   if (add_err == 0) {
+    peer_channel_ = ch;
     note_peer_activity_(mac);
     return true;
   }
@@ -403,8 +405,52 @@ bool ESPNow82xxRemote::add_peer_(const uint8_t *mac) {
     ESP_LOGW(TAG, "esp_now_add_peer retry failed for %s channel=%u", fmt_mac(mac).c_str(), ch);
     return false;
   }
+  peer_channel_ = ch;
   note_peer_activity_(mac);
   return true;
+}
+
+void ESPNow82xxRemote::apply_tx_channel_() {
+  if (espnow_channel_ > 0) {
+    if (wifi_get_channel() != espnow_channel_) {
+      wifi_set_channel(espnow_channel_);
+    }
+    return;
+  }
+  // Auto mode: the radio is already on the operating channel — the discovery
+  // sweep parks it there, and an associated AP moves it. ESP-NOW peers cache the
+  // channel they were registered on, so re-register them when it moves. This is
+  // the same reason esp_tree_bridge registers its peer with channel 0 instead of
+  // pinning: a pinned key stops matching after an AP channel change.
+  const uint8_t live = wifi_get_channel();
+  if (live != 0 && live != peer_channel_) {
+    resync_peers_to_channel_(live);
+  }
+}
+
+void ESPNow82xxRemote::resync_peers_to_channel_(uint8_t channel) {
+  if (channel == 0) return;
+  std::vector<std::array<uint8_t, 6>> peers;
+  peers.reserve(peer_last_used_ms_.size());
+  for (const auto &entry : peer_last_used_ms_) {
+    std::array<uint8_t, 6> mac{};
+    if (sscanf(entry.first.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
+               &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]) != 6) {
+      continue;
+    }
+    peers.push_back(mac);
+  }
+  ESP_LOGI(TAG, "Radio now on ch=%u (peer table was ch=%u): re-registering %u peers",
+           static_cast<unsigned>(channel), static_cast<unsigned>(peer_channel_),
+           static_cast<unsigned>(peers.size()));
+  for (const auto &mac : peers) {
+    esp_now_del_peer(const_cast<uint8_t *>(mac.data()));
+    if (esp_now_add_peer(const_cast<uint8_t *>(mac.data()), ESP_NOW_ROLE_COMBO, channel, nullptr, 0) != 0) {
+      ESP_LOGW(TAG, "Peer re-register failed for %s on ch=%u", fmt_mac(mac.data()).c_str(),
+               static_cast<unsigned>(channel));
+    }
+  }
+  peer_channel_ = channel;
 }
 
 void ESPNow82xxRemote::note_peer_activity_(const uint8_t *mac) {
@@ -523,9 +569,9 @@ bool ESPNow82xxRemote::send_frame_raw_(const uint8_t *mac, const uint8_t *frame,
   pkt[idx++] = 0x02;
   memcpy(&pkt[idx], frame, frame_len);
   idx += frame_len;
-  wifi_set_channel(espnow_channel_);
+  apply_tx_channel_();
   ESP_LOGI(TAG, "[RAW TX> 0x0800] ch=%u to=%s len=%zu fc=0x0800 %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-           espnow_channel_, fmt_mac(mac).c_str(), total_len,
+           wifi_get_channel(), fmt_mac(mac).c_str(), total_len,
            pkt[0], pkt[1], pkt[2], pkt[3], pkt[4], pkt[5],
            pkt[6], pkt[7], pkt[8], pkt[9], pkt[10], pkt[11],
            pkt[12], pkt[13], pkt[14], pkt[15]);
@@ -557,16 +603,17 @@ bool ESPNow82xxRemote::send_frame_raw_(const uint8_t *mac, const uint8_t *frame,
     pkt2[idx++] = 0x04;
     memcpy(&pkt2[idx], frame, frame_len);
     idx += frame_len;
-    wifi_set_channel(espnow_channel_);
+    apply_tx_channel_();
     ESP_LOGI(TAG, "[RAW TX> 0x00D0] ch=%u to=%s len=%zu fc=0x00D0 %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-             espnow_channel_, fmt_mac(mac).c_str(), total_len,
+             wifi_get_channel(), fmt_mac(mac).c_str(), total_len,
              pkt2[0], pkt2[1], pkt2[2], pkt2[3], pkt2[4], pkt2[5],
              pkt2[6], pkt2[7], pkt2[8], pkt2[9], pkt2[10], pkt2[11],
              pkt2[12], pkt2[13], pkt2[14], pkt2[15]);
     err = wifi_send_pkt_freedom(pkt2, static_cast<int>(total_len), 0);
     free(pkt2);
     if (err != 0) {
-      ESP_LOGW(TAG, "[RAW TX] fc=0x00D0 also failed=%d", espnow_channel_, fmt_mac(mac).c_str(), total_len, err);
+      ESP_LOGW(TAG, "[RAW TX] fc=0x00D0 also failed=%d ch=%u to=%s len=%zu", err,
+               wifi_get_channel(), fmt_mac(mac).c_str(), total_len);
       return false;
     }
     ESP_LOGI(TAG, "[RAW TX] fc=0x00D0 succeeded");
@@ -614,8 +661,8 @@ bool ESPNow82xxRemote::send_frame_(const uint8_t *mac, const uint8_t *frame, siz
     ESP_LOGW(TAG, "ESP-NOW send aborted: frame too large (%u bytes)", static_cast<unsigned>(frame_len));
     return false;
   }
-  if (!is_broadcast && espnow_channel_ > 0 && wifi_get_channel() != espnow_channel_) {
-    wifi_set_channel(espnow_channel_);
+  if (!is_broadcast) {
+    apply_tx_channel_();
   }
   rolling_airtime_.tx_airtime_us += calc_airtime_us_(frame_len);
   rolling_airtime_.tx_packets++;
@@ -1197,6 +1244,12 @@ void ESPNow82xxRemote::dump_config() {
   ESP_LOGCONFIG(TAG, "  Project Name: %s", protocol_.get_project_name().c_str());
   ESP_LOGCONFIG(TAG, "  Project Version: %s", protocol_.get_project_version().c_str());
   ESP_LOGCONFIG(TAG, "  Mode: regular");
+  if (espnow_channel_ > 0) {
+    ESP_LOGCONFIG(TAG, "  Channel: %u (pinned)", static_cast<unsigned>(espnow_channel_));
+  } else {
+    ESP_LOGCONFIG(TAG, "  Channel: auto (follow radio, now ch=%u)",
+                  static_cast<unsigned>(wifi_get_channel()));
+  }
   ESP_LOGCONFIG(TAG, "  Preferred Parents: %u", static_cast<unsigned>(preferred_parents_.size()));
   for (const auto &mac : preferred_parents_)
     ESP_LOGCONFIG(TAG, "    - %s", fmt_mac(mac.data()).c_str());

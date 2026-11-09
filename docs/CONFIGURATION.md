@@ -292,7 +292,7 @@ the network (`README.md:147-151`).
 | `preferred_parents` | no | list of MAC addresses | `[]` | `espnow_82xx_remote/__init__.py:48` |
 | `ota_over_espnow` | no | boolean | `false` | `espnow_82xx_remote/__init__.py:49` |
 | `espnow_mode` | no | `regular` **only** (case-insensitive) | `regular` | `espnow_82xx_remote/__init__.py:50` |
-| `channel` | no | int, 1–13 | `11` | `espnow_82xx_remote/__init__.py:51` |
+| `channel` | no | int, 0–13 (`0` = follow the radio) | `0` | `espnow_82xx_remote/__init__.py:51` |
 
 `AUTO_LOAD = ["esp_tree_common", "md5"]` (`espnow_82xx_remote/__init__.py:25`).
 
@@ -312,23 +312,27 @@ explaining the omission; treat them as unavailable rather than defaulted.
 (`espnow_82xx_remote/__init__.py:50`), so `espnow_mode: lr` fails validation outright. `regular` is the
 only accepted value and also the default.
 
-**`channel`** is stored and used for peer registration and transmission:
-`ch = espnow_channel_` in `add_peer` (`espnow_82xx_remote.cpp:374-388`) and before
-unicast sends (`:617-618`, `:526`). The default of 11 matches
-`espnow_channel_{11}` in the header (`espnow_82xx_remote.h:182`). ESPHome still owns
-the radio: the component does **not** call `WiFi.mode()` or `WiFi.softAP()` for the
-AP's channel; it upgrades the mode to `WIFI_AP_STA` because pure AP or pure STA make
-unicast TX report `status=FAIL` (`espnow_82xx_remote.cpp:320-331`). Both ESP8266
-demos therefore set `channel: 11` on the component *and* `channel: 11` under
-`wifi: ap:` so the two agree (`espnow-remote-esp01.yml:37-53`).
+**`channel`** is the *operating* channel, and by default it is discovered rather
+than configured. `0` — the default — means "follow the radio": the leaf's discovery
+sweep walks channels 1–13, locks onto the one the bridge answered on, and
+`apply_tx_channel_()` (`espnow_82xx_remote.cpp`) leaves the radio there. Peers cache
+the channel they were registered on, so when the radio moves the peer table is
+re-registered on the new channel, the same way `esp_tree_bridge` registers its peer
+with `peer.channel = 0`. That makes a bridge on any channel reachable without the
+leaf knowing it in advance, and lets a leaf follow an AP channel change.
 
-The wizard's ESP8266 scaffold deliberately pins neither: it emits no `channel:` on
-the component and no `channel:` under `ap:`, leaving the component's default to set
-the radio and letting the AP follow it. That is the one place a wizard-generated
-remote differs from the demos. It also does not offer station credentials — a
-single radio cannot be associated to an access point on one channel and run ESP-NOW
-on another, and the component forces `wifi_set_channel(espnow_channel_)` before
-transmit (`espnow_82xx_remote.cpp:526`).
+`1`–`13` pins the radio: `apply_tx_channel_()` calls
+`wifi_set_channel(espnow_channel_)` before every transmit, which is what the ESP8266
+demos do (`channel: 11` on the component *and* `channel: 11` under `wifi: ap:`,
+`espnow-remote-esp01.yml:37-53`). Pinning is what kept a leaf from following a
+bridge that moved; it is now opt-in rather than the default.
+
+The wizard's ESP8266 scaffold emits no `channel:` at all, so it inherits auto mode,
+and no `channel:` under `ap:` — the access point follows the radio the component
+parks. Station credentials are still not offered: one radio cannot be associated to
+an access point on one channel while transmitting ESP-NOW on another, but that is no
+longer a limitation for reaching the bridge, because the leaf follows the *bridge's*
+channel instead of a configured one.
 
 **`espnow_mode` is not read at runtime on this component.** `set_espnow_mode()`
 stores the string (`espnow_82xx_remote.h:79`) and `dump_config()` prints the

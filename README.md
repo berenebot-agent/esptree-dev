@@ -180,7 +180,8 @@ remote — `wifi:` with a password-protected `ap:` for recovery, plus
 `captive_portal:`, `network:` and `ota: - platform: esphome` — because the
 component's receiver links ESPHome's ESP8266 OTA backend and the WiFi API, and
 those blocks are what make them exist in the build tree. It pins no channel: the
-component sets the radio channel for ESP-NOW and the access point follows it.
+leaf's discovery sweep locks onto the bridge's channel and the access point follows
+the radio (`channel: 0`, the default).
 In every configuration, the bridge and remotes must use the same `network_id`,
 PSK and ESP-NOW mode.
 

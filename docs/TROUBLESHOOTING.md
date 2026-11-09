@@ -103,9 +103,14 @@ header available, and the recovery AP exists so a device that will not join can 
 reached at `192.168.4.1`. A 1 MB module (ESP-01S) has no second app slot and
 cannot be OTA-updated; the wizard scaffolds 4 MB boards (`esp12e`) for that reason.
 
-**Channel caveat.** No channel is emitted: the component sets the radio channel for
-ESP-NOW and the AP follows it. A remote cannot be a station on one channel and an
-ESP-NOW peer on another — one radio, one channel.
+**Channel caveat.** No channel is pinned: `channel: 0`, the default, means *follow
+the radio* — the discovery sweep walks 1–13, locks onto the bridge's channel, and the
+peer table is re-registered whenever the radio moves. If a leaf on a hand-written
+config cannot join a bridge that is known to be up, check whether that config pins
+`channel: 11` (the demos do) against a bridge that is not on 11: a pinned leaf never
+sweeps. Station credentials are still not offered — one radio cannot be associated
+on one channel and run ESP-NOW on another — but that is no longer needed to follow
+the bridge.
 
 ## Compile failures
 

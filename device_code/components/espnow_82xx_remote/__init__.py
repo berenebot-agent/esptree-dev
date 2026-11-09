@@ -48,7 +48,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_PREFERRED_PARENTS, default=[]): cv.ensure_list(cv.mac_address),
         cv.Optional(CONF_OTA_OVER_ESPNOW, default=False): cv.boolean,
         cv.Optional(CONF_ESPNOW_MODE, default="regular"): cv.one_of("regular", lower=True),
-        cv.Optional(CONF_CHANNEL, default=11): cv.int_range(min=1, max=13),
+        # 0 = follow the radio: the leaf's discovery sweep finds the bridge's
+        # channel and the radio stays there, so a bridge on any channel works
+        # without the leaf knowing it in advance. 1-13 pins the radio (the demos
+        # pin 11). Pinning is what made an 82xx leaf unable to follow an AP move.
+        cv.Optional(CONF_CHANNEL, default=0): cv.int_range(min=0, max=13),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
