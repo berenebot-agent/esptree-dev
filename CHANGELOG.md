@@ -8,6 +8,8 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+## 0.1.359
+
 - **An ESP8266 leaf now follows the bridge's channel instead of needing to be told it (no more hidden ch 11).** `channel` on `espnow_82xx_remote` defaults to `0`, meaning *follow the radio*: the discovery sweep already walked 1–13, but every transmit forced `wifi_set_channel(espnow_channel_)` first, so the sweep was cosmetic and a leaf could only ever talk on the configured channel — 11 unless someone said otherwise. Transmit now leaves the radio where the sweep (or the WiFi stack) put it, `add_peer` registers on the live channel, and `apply_tx_channel_()` re-registers the peer table when the radio moves, which is the `peer.channel = 0` reasoning `esp_tree_bridge` has always used. `channel: 1`–`13` still pins the radio for anyone who wants it (the ESP8266 demos do). Consequence: a bridge on any channel is reachable without the leaf knowing it in advance, and a leaf recovers from an AP channel change on its next discovery instead of cold-rebooting after ten seconds of no outbound progress. Verified by compile on ESPHome 2026.6.5 in both modes (auto: SUCCESS, RAM 44.3 %, flash 41.6 %; pinned `channel: 11`: SUCCESS); not yet exercised on a board.
 
 ## 0.1.358
