@@ -628,6 +628,7 @@ export const api = {
       complete: boolean;
       bridge_network_id: string;
       mismatch: boolean;
+      espnow_mode: string;
     }>('/api/bridge/network-credentials'),
   saveSecrets: (content: string) => request<{ content: string; saved: boolean }>('/api/secrets', {
     method: 'PUT',
@@ -665,7 +666,7 @@ export const api = {
     wifi_ssid: string;
     wifi_password: string;
     api_key: string;
-    espnow_mode: string;
+    espnow_mode?: string;
     ota_password: string;
     chip_name: string;
     board_info: Record<string, string>;

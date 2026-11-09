@@ -73,7 +73,7 @@ export class EspSetupWizard extends LitElement {
   @state() private flashWifiSsid = '';
   @state() private flashWifiPassword = '';
   @state() private flashApiKey = '';
-  @state() private flashEspnowMode = 'lr';
+  @state() private flashEspnowMode = 'regular';
   @state() private flashOtaPassword = '';
   @state() private flashChipName = '';
   @state() private flashTransport: 'wifi' | 'serial' = 'wifi';

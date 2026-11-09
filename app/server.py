@@ -18,6 +18,7 @@ import uuid
 from pathlib import Path
 from typing import Any, AsyncGenerator
 
+import yaml
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -372,6 +373,32 @@ class FlashWizardDetectChipRequest(BaseModel):
     before: str | None = None
 
 
+def _get_active_bridge_espnow_mode(db: Database, yaml_store: YAMLStore) -> str:
+    bridge = db.get_active_bridge() or {}
+    bridge_mac = normalize_mac(str(bridge.get("mac") or ""))
+    device = db.get_device(bridge_mac) if bridge_mac else None
+    names = [str(bridge.get("name") or "").strip(), str((device or {}).get("esphome_name") or "").strip()]
+    content = None
+    for name in dict.fromkeys(names):
+        if name:
+            content = yaml_store.get_config(name)
+            if content:
+                break
+    if not content:
+        raise HTTPException(status_code=400, detail="active bridge YAML is missing; cannot determine ESP-NOW mode")
+    try:
+        bridge_config = yaml.safe_load(content) or {}
+        mode = (bridge_config.get("esp_tree_bridge") or {}).get("espnow_mode")
+        if mode is None:
+            mode = (bridge_config.get("espnow_bridge") or {}).get("espnow_mode")
+        bridge_mode = str(mode or "").strip().lower()
+    except (TypeError, yaml.YAMLError) as exc:
+        raise HTTPException(status_code=400, detail="active bridge YAML is invalid; cannot determine ESP-NOW mode") from exc
+    if bridge_mode not in {"lr", "regular"}:
+        raise HTTPException(status_code=400, detail=f"active bridge YAML has unsupported ESP-NOW mode: {bridge_mode or 'missing'}")
+    return bridge_mode
+
+
 class FlashWizardSubmitRequest(BaseModel):
     name: str
     network_id: str
@@ -379,7 +406,7 @@ class FlashWizardSubmitRequest(BaseModel):
     wifi_ssid: str = ""
     wifi_password: str = ""
     api_key: str = ""
-    espnow_mode: str = "lr"
+    espnow_mode: str | None = None
     ota_password: str = ""
     chip_name: str
     board_info: dict[str, str]
@@ -405,7 +432,7 @@ def create_app() -> FastAPI:
         bridge_manager=bridge_manager,
     )
 
-    app = FastAPI(title="ESP Tree Add-on", version="0.1.359")
+    app = FastAPI(title="ESP Tree Add-on", version="0.1.360")
     # HA ingress authenticates the user, but host networking otherwise exposes
     # this unauthenticated API on the LAN. Restrict the actual socket peer.
     app.add_middleware(TrustedPeerMiddleware, peers=trusted_peers(settings.supervisor_token))
@@ -1800,28 +1827,19 @@ def create_app() -> FastAPI:
         if is_remote:
             validate_remote_chip_buildable(chip_name, board_info)
 
+        bridge_mode = _get_active_bridge_espnow_mode(db, yaml_store)
+
         node = {
             "esphome_name": name,
             "is_bridge": not is_remote,
             "chip_name": chip_name,
             "board_info": board_info,
-            "espnow_mode": body.espnow_mode,
+            "espnow_mode": bridge_mode if is_remote else (body.espnow_mode or "regular"),
             "transport": transport,
         }
-        if is_remote:
-            # A remote is ESP-NOW LR only: no api:/web_server:, no bridge api_key,
-            # no ota password. generate_scaffold already emits the remote component
-            # shape when is_bridge is false, so nothing extra is needed here beyond
-            # not asking for bridge-only blocks.
-            #
-            # The one per-device value a remote does carry is the password for the
-            # ESP8266 recovery access point. Generate it once here so the scaffold
-            # can be regenerated without silently locking the user out of a portal
-            # they have already noted, and so the value lives in the node record
-            # rather than in a shared !secret.
-            if str(board_info.get("platform") or "").strip().lower() == "esp8266":
-                node["ap_password"] = f"esp-tree-{secrets.token_hex(6)}"
-        else:
+        if is_remote and str(board_info.get("platform") or "").strip().lower() == "esp8266":
+            node["ap_password"] = f"esp-tree-{secrets.token_hex(6)}"
+        if not is_remote:
             node.update({
                 "sdkconfig_options": {
                     "CONFIG_FREERTOS_USE_TRACE_FACILITY": "y",
@@ -1832,8 +1850,6 @@ def create_app() -> FastAPI:
                 "web_server_port": 80,
             })
             if transport == "serial":
-                # No wifi: block in serial mode, so no wifi secrets may be referenced:
-                # a !secret with no matching key is a hard failure at config load.
                 node["serial_transport"] = True
             else:
                 node["wifi_ssid_secret"] = "wifi_ssid"
@@ -1852,9 +1868,6 @@ def create_app() -> FastAPI:
         requested_psk = body.psk.strip()
 
         if is_remote:
-            # Reject a remote that asks for a different network rather than quietly
-            # using either value: the mismatch is exactly the failure that is hardest
-            # to diagnose later (firmware that compiles but can never join).
             validate_remote_network_credentials(
                 requested_network_id, requested_psk, configured_network_id, configured_psk
             )
@@ -1876,8 +1889,11 @@ def create_app() -> FastAPI:
             secrets_to_merge["wifi_ssid"] = body.wifi_ssid
             secrets_to_merge["wifi_password"] = body.wifi_password
 
-        # Generate all content before the first filesystem or DB mutation.
-        yaml_content, _ = generate_scaffold(node)
+        if is_remote:
+            node["espnow_mode"] = bridge_mode
+            yaml_content, _ = generate_scaffold(node, bridge_config={"espnow_mode": bridge_mode})
+        else:
+            yaml_content, _ = generate_scaffold(node)
         yaml_store.save_config(name, yaml_content)
         logger.info("flash_wizard_submit: saved yaml config for %s", name)
         if secrets_to_merge:
@@ -3110,10 +3126,17 @@ def create_app() -> FastAPI:
             node = find_node_by_mac(topo, normalize_mac(mac))
             if not node:
                 raise HTTPException(status_code=404, detail="device not found in topology")
-            content, chip_unknown = generate_scaffold(node)
+            if not bool(node.get("is_bridge")):
+                bridge_mode = _get_active_bridge_espnow_mode(db, yaml_store)
+                node["espnow_mode"] = bridge_mode
+                content, chip_unknown = generate_scaffold(node, bridge_config={"espnow_mode": bridge_mode})
+            else:
+                content, chip_unknown = generate_scaffold(node)
+            if not content.strip():
+                raise HTTPException(status_code=400, detail="config content is empty")
+            yaml_store.save_config(esphome_name, content)
         if not content.strip():
             raise HTTPException(status_code=400, detail="config content is empty")
-        yaml_store.save_config(esphome_name, content)
         return {
             "mac": mac,
             "esphome_name": esphome_name,
@@ -3492,9 +3515,8 @@ def create_app() -> FastAPI:
         disagreement is reported rather than silently flashed onto a new remote - a
         mismatched pair produces a remote that can never join.
         """
-        active = db.get_active_bridge() or {}
-        bridge_network_id = str(active.get("network_id") or "").strip()
-
+        bridge = db.get_active_bridge() or {}
+        bridge_network_id = str(bridge.get("network_id") or "").strip()
         network_id = _secret_from_secrets_yaml("espnow_network_id")
         network_id_source = "secrets.yaml"
         if not network_id:
@@ -3511,8 +3533,8 @@ def create_app() -> FastAPI:
         return {
             "network_id": network_id,
             "psk": psk,
-            "bridge_name": active.get("name") or "",
-            "bridge_uuid": active.get("uuid") or "",
+            "bridge_name": bridge.get("name") or "",
+            "bridge_uuid": bridge.get("uuid") or "",
             "network_id_source": network_id_source,
             "psk_source": "secrets.yaml" if psk else "missing",
             "complete": bool(network_id and psk),
@@ -3520,6 +3542,7 @@ def create_app() -> FastAPI:
             # so the UI can warn instead of handing out credentials that cannot join.
             "bridge_network_id": bridge_network_id,
             "mismatch": mismatch,
+            "espnow_mode": _get_active_bridge_espnow_mode(db, yaml_store),
         }
 
     @app.get("/api/secrets")

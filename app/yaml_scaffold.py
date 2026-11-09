@@ -129,7 +129,7 @@ def find_board_info(node: dict[str, Any]) -> tuple[dict[str, str] | None, bool]:
     return None, chip_name
 
 
-def generate_scaffold(node: dict[str, Any]) -> tuple[str, bool]:
+def generate_scaffold(node: dict[str, Any], bridge_config: dict[str, Any] | None = None) -> tuple[str, bool]:
     esphome_name = str(node.get("esphome_name") or node.get("label") or "").strip()
     if not esphome_name:
         raise ValueError("device has no esphome_name or label, cannot generate scaffold")
@@ -149,7 +149,11 @@ def generate_scaffold(node: dict[str, Any]) -> tuple[str, bool]:
         remote_component = "espnow_82xx_remote"
     else:
         remote_component = "esp_tree_remote"
-    espnow_mode = "regular" if is_8266 else "lr"
+    if bridge_config is not None and not is_bridge:
+        mode_source = bridge_config
+    else:
+        mode_source = node if is_bridge else {}
+    espnow_mode = "regular" if is_8266 else str(mode_source.get("espnow_mode") or "regular").strip().lower()
 
     if board_info is None:
         chip_type = node.get("chip_type")

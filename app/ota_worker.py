@@ -513,6 +513,8 @@ class OTAWorker:
         ota_client.set_handlers(on_chunk_request=on_chunk_request, on_status=on_status, on_abort=on_aborted)
         logger.info("OTA process_v2: handlers set for job id=%s", job_id)
         initial_uptime_s: float | None = None
+        initial_session_id = ""
+        initial_partition_md5 = ""
         if current["status"] == STARTING:
             self._total_chunks = None
             self._chunks_sent = 0
@@ -526,6 +528,8 @@ class OTAWorker:
                 if node:
                     current_md5 = str(node.get("firmware_md5") or "").strip()
                     initial_uptime_s = node.get("uptime_s")
+                    initial_session_id = str(node.get("session_id") or "")
+                    initial_partition_md5 = current_md5
             except Exception:
                 pass
             new_md5 = str(current.get("firmware_md5") or "").strip()
@@ -596,9 +600,12 @@ class OTAWorker:
                 await asyncio.wait_for(terminal_event.wait(), timeout=5.0)
                 logger.info("OTA process_v2: terminal event fired for job id=%s action=%s", current["id"], terminal_action)
                 if terminal_action == "rejoin":
+                    latest_job = self.db.get_job(current["id"]) or current
                     await self._wait_for_rejoin(
-                        self.db.get_job(current["id"]) or current,
+                        latest_job,
                         initial_uptime_s=initial_uptime_s,
+                        initial_session_id=initial_session_id,
+                        initial_partition_md5=initial_partition_md5,
                     )
                 ota_client.close()
                 return
@@ -623,6 +630,8 @@ class OTAWorker:
         expected_build_date: str | None = None,
         expected_md5: str | None = None,
         verify_bridge_identity: bool = False,
+        initial_session_id: str = "",
+        initial_partition_md5: str = "",
     ) -> None:
         target_mac = normalize_mac(str(job["mac"]))
         deadline = now_ts() + self.rejoin_timeout_s
@@ -650,8 +659,10 @@ class OTAWorker:
             node = find_node_by_mac(topology, target_mac)
             if node and bool(node.get("online")):
                 current_uptime = node.get("uptime_s", 0)
-
-                if initial_uptime_s is None or current_uptime < initial_uptime_s:
+                session_changed = bool(
+                    initial_session_id and str(node.get("session_id") or "") not in ("", initial_session_id)
+                )
+                if initial_uptime_s is None or current_uptime < initial_uptime_s or session_changed:
                     self.db.append_job_event(job_id, "flash_rejoined")
                     if verify_bridge_identity:
                         # A bridge used to report only `__DATE__`/`__TIME__` expanded in
@@ -715,6 +726,22 @@ class OTAWorker:
                         self._finish(job_id, REJOINED_UNVERIFIED, message)
                         return
                     latest_job = self.db.get_job(job_id) or job
+                    # The remote reports the running partition digest, not the OTA file
+                    # digest. A changed partition digest proves a changed image; an
+                    # unchanged one on a rejoin means it rebooted onto the old image,
+                    # unless this exact artifact was already flashed successfully.
+                    before = initial_partition_md5.strip().lower()
+                    after = str(node.get("firmware_md5") or "").strip().lower()
+                    if before and after and before == after and set(after) != {"0"}:
+                        wanted = str(latest_job.get("firmware_md5") or "").strip().lower()
+                        if not self._same_as_last_success(latest_job, wanted):
+                            self.db.append_job_event(job_id, "flash_image_unchanged", partition_md5=after)
+                            self._finish(
+                                job_id, FAILED,
+                                "device rejoined but its running image did not change "
+                                f"(partition md5 {after[:8]}) - the new firmware was not applied",
+                            )
+                            return
                     expected_version = (latest_job.get("parsed_version") or "").strip()
                     actual_version = (node.get("firmware_version") or "").strip()
                     if expected_version and actual_version:
@@ -740,6 +767,20 @@ class OTAWorker:
 
         self.db.append_job_event(job_id, "flash_rejoin_timeout", timeout_s=self.rejoin_timeout_s)
         self._finish(job["id"], REJOIN_TIMEOUT, "bridge transfer succeeded but the device did not rejoin before timeout")
+
+    def _same_as_last_success(self, job: dict[str, Any], wanted_md5: str) -> bool:
+        if not wanted_md5:
+            return False
+        try:
+            history = self.db.list_history(mac=str(job["mac"]), limit=50)
+        except Exception:
+            return False
+        for prior in history:
+            if int(prior["id"]) == int(job["id"]):
+                continue
+            if prior.get("status") == SUCCESS:
+                return str(prior.get("firmware_md5") or "").strip().lower() == wanted_md5
+        return False
 
     def _finish(self, job_id: int, status: str, error_msg: str | None = None) -> None:
         job = self.db.get_job(job_id)

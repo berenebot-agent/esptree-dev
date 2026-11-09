@@ -82,6 +82,7 @@ def _flash_job(
             "esphome_name": esphome_name,
             "parsed_build_date": parsed_build_date,
             "ota_md5": ota_md5,
+            "firmware_md5": ota_md5,
         }
     )
     return job, firmware
@@ -245,6 +246,77 @@ async def test_bridge_update_uses_stored_password_and_verifies_the_new_build(tmp
         events = json.loads(events)
     assert any(event.get("type") == "flash_starting" for event in events)
     assert any(event.get("type") == "flash_rejoined" for event in events)
+
+
+@pytest.mark.asyncio
+async def test_remote_rejoin_detected_by_session_change_when_uptime_is_zero(tmp_path: Path) -> None:
+    worker, db = _worker(tmp_path)
+    job, _ = _flash_job(db, tmp_path, mac="AA:BB:CC:DD:EE:01", esphome_name="leaf")
+
+    class RemoteManager:
+        async def topology(self):
+            return [{"mac": "AA:BB:CC:DD:EE:01", "online": True, "uptime_s": 0,
+                     "session_id": "new-session", "firmware_version": ""}]
+
+    worker.bridge_manager = RemoteManager()
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=0,
+        initial_session_id="old-session",
+    )
+
+    completed = db.get_job(job["id"])
+    assert completed is not None
+    assert completed["status"] == models.SUCCESS
+    assert "flash_rejoined" in [event["type"] for event in _events(completed)]
+
+
+@pytest.mark.asyncio
+async def test_remote_rejoin_on_unchanged_image_fails_instead_of_succeeding(tmp_path: Path) -> None:
+    worker, db = _worker(tmp_path)
+    job, _ = _flash_job(db, tmp_path, mac="AA:BB:CC:DD:EE:01", esphome_name="leaf")
+    job = db.update_job(job["id"], firmware_md5="same-artifact") or job
+
+    class RemoteManager:
+        async def topology(self):
+            return [{"mac": "AA:BB:CC:DD:EE:01", "online": True, "uptime_s": 0,
+                     "session_id": "new-session", "firmware_md5": "partition-old"}]
+
+    worker.bridge_manager = RemoteManager()
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=0,
+        initial_session_id="old-session",
+        initial_partition_md5="partition-old",
+    )
+
+    completed = db.get_job(job["id"])
+    assert completed is not None
+    assert completed["status"] == models.FAILED
+    assert "image did not change" in str(completed["error_msg"])
+
+
+@pytest.mark.asyncio
+async def test_remote_same_image_reflash_is_allowed(tmp_path: Path) -> None:
+    worker, db = _worker(tmp_path)
+    prior, _ = _flash_job(db, tmp_path, mac="AA:BB:CC:DD:EE:01", esphome_name="leaf")
+    db.update_job(prior["id"], status=models.SUCCESS, firmware_md5="same-artifact")
+    job, _ = _flash_job(db, tmp_path, mac="AA:BB:CC:DD:EE:01", esphome_name="leaf")
+    db.update_job(job["id"], firmware_md5="same-artifact")
+
+    class RemoteManager:
+        async def topology(self):
+            return [{"mac": "AA:BB:CC:DD:EE:01", "online": True, "uptime_s": 0,
+                     "session_id": "new-session", "firmware_md5": "partition-old"}]
+
+    worker.bridge_manager = RemoteManager()
+    await worker._wait_for_rejoin(
+        db.get_job(job["id"]) or job,
+        initial_uptime_s=0,
+        initial_session_id="old-session",
+        initial_partition_md5="partition-old",
+    )
+    assert (db.get_job(job["id"]) or {})["status"] == models.SUCCESS
 
 
 @pytest.mark.asyncio

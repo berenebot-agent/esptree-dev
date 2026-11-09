@@ -3052,7 +3052,16 @@ void ESPTreeBridge::begin_state_delivery_(const uint8_t *mac, uint8_t entity_ind
   delivery.message_tx_base = message_tx_base;
   delivery.required_sinks = required_sinks;
   delivery.created_ms = millis();
-  pending_state_deliveries_[state_delivery_key_(mac, entity_index, message_tx_base)] = delivery;
+  const std::string key = state_delivery_key_(mac, entity_index, message_tx_base);
+  const auto existing = pending_state_deliveries_.find(key);
+  if (existing != pending_state_deliveries_.end()) {
+    // Retries of the same STATE message must not restart its delivery deadline.
+    // Otherwise the leaf's exponential retry cadence can keep this timer alive
+    // until the leaf gives up and rejoins before it ever receives STATE_ACK.
+    existing->second.required_sinks |= required_sinks;
+    return;
+  }
+  pending_state_deliveries_.emplace(key, std::move(delivery));
 }
 
 void ESPTreeBridge::mark_state_sink_delivered_(const uint8_t *mac, uint8_t entity_index, uint32_t message_tx_base,

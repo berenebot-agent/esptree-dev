@@ -38,6 +38,8 @@ export class EspRemoteWizard extends LitElement {
   @state() private pskSource = '';
   @state() private credentialsMismatch = false;
   @state() private bridgeNetworkId = '';
+  @state() private bridgeEspnowMode = '';
+
   @state() private loadingCredentials = false;
 
   @state() private stage: 'config' | 'compiling' | 'ready' | 'flashing' | 'done' | 'error' = 'config';
@@ -198,6 +200,7 @@ export class EspRemoteWizard extends LitElement {
       this.pskSource = res.psk_source ?? '';
       this.credentialsMismatch = Boolean(res.mismatch);
       this.bridgeNetworkId = res.bridge_network_id ?? '';
+      this.bridgeEspnowMode = res.espnow_mode ?? '';
     } catch (err) {
       this.error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -218,6 +221,7 @@ export class EspRemoteWizard extends LitElement {
     // A chip the API marks unbuildable must not be submittable: the job would run
     // for minutes and end in a compiler error about a header that is absent by
     // design. Refuse here and let the reason render under the chip field.
+    if (!this.credentialsComplete || !this.bridgeEspnowMode) return false;
     if (this.selectedChip?.buildable === false) return false;
     const chipOk = opts.chipOptional ? !this.chipName || Boolean(this.selectedChip) : Boolean(this.chipName && this.selectedChip);
     return Boolean(this.name.trim() && chipOk && this.networkId.trim() && this.psk.trim());
@@ -267,6 +271,11 @@ export class EspRemoteWizard extends LitElement {
     const chip = this.selectedChip;
     if (!this.canSubmit() || !chip) return;
     this.error = '';
+    if (!this.bridgeEspnowMode) {
+      this.error = 'Cannot read ESP-NOW mode from the active bridge configuration. Fix the bridge config before adding a remote.';
+      this.stage = 'error';
+      return;
+    }
     this.stage = 'compiling';
     this.compilePercent = 0;
     this.compileStatus = '';
@@ -281,7 +290,7 @@ export class EspRemoteWizard extends LitElement {
         wifi_ssid: '',
         wifi_password: '',
         api_key: '',
-        espnow_mode: 'lr',
+        ...(this.bridgeEspnowMode ? { espnow_mode: this.bridgeEspnowMode } : {}),
         ota_password: '',
         chip_name: this.chipName,
         // Carry `variant` through when the chip registry supplies it. Without it the

@@ -4,6 +4,7 @@ from app.flash_wizard import is_unbuildable_chip, validate_remote_chip_buildable
 from app.yaml_scaffold import CHIP_NAME_TO_BOARD, esp8266_ap_password, generate_scaffold
 
 ESP8266_BOARD = CHIP_NAME_TO_BOARD["ESP8266"]
+ESP32_C3_BOARD = CHIP_NAME_TO_BOARD["ESP32-C3"]
 
 
 def _remote_node(**overrides):
@@ -51,8 +52,33 @@ def test_esp8266_remote_scaffold_loads_wifi_network_and_ota():
     assert lines[wifi_at + 3] == '    password: "esp-tree-0123456789ab"'
 
 
+def test_esp32_remote_scaffold_inherits_active_bridge_mode():
+    node = _remote_node(
+        chip_name="ESP32-C3",
+        board_info=dict(ESP32_C3_BOARD),
+        espnow_mode="lr",
+    )
+    node.pop("ap_password")
+
+    regular_lines = generate_scaffold(node, bridge_config={"espnow_mode": "regular"})[0].splitlines()
+    lr_lines = generate_scaffold(node, bridge_config={"espnow_mode": "lr"})[0].splitlines()
+
+    assert "  espnow_mode: regular" in regular_lines
+    assert "  espnow_mode: lr" in lr_lines
+    assert all(block not in regular_lines for block in ("wifi:", "captive_portal:", "network:", "ota:"))
+
+
+def test_esp32_remote_scaffold_without_bridge_mode_defaults_to_regular():
+    node = _remote_node(chip_name="ESP32-C3", board_info=dict(ESP32_C3_BOARD))
+    node.pop("ap_password")
+
+    lines = generate_scaffold(node)[0].splitlines()
+
+    assert "  espnow_mode: regular" in lines
+
+
 def test_esp32_remote_scaffold_stays_espnow_only():
-    node = _remote_node(chip_name="ESP32-C3", board_info=dict(CHIP_NAME_TO_BOARD["ESP32-C3"]), espnow_mode="lr")
+    node = _remote_node(chip_name="ESP32-C3", board_info=dict(ESP32_C3_BOARD), espnow_mode="lr")
     node.pop("ap_password")
     lines = generate_scaffold(node)[0].splitlines()
 
