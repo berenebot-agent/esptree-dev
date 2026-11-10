@@ -12,4 +12,4 @@
 // field is left at the *toolchain* version (2026.6.5), which says nothing about
 // what a node is running. Without this fallback a node reports an empty version and
 // the UI's Firmware column has nothing to show.
-#define ESP_TREE_VERSION "0.1.360"
+#define ESP_TREE_VERSION "0.1.361"
