@@ -146,10 +146,10 @@ Consequences worth knowing:
 
 - **The AP is a recovery portal, not the transport.** Firmware still arrives over
   ESP-NOW; the ESPHome OTA listener is inert with no station joined. The password
-  is generated once in the submit handler (`app/server.py`, `ap_password`) and
-  carried in the node record, so regenerating the scaffold does not lock the user
-  out of a portal they have already noted. It is a literal in the YAML, not a
-  `!secret`: a missing secret is a hard failure at config load.
+  is derived from the device name (`app/yaml_scaffold.py`, `esp8266_ap_password`), so
+  regenerating the scaffold yields the same password the flashed device is using and
+  the user is never locked out of a portal they already noted. It is a literal in the
+  YAML, not a `!secret`: a missing secret is a hard failure at config load.
 - **No channel is pinned.** The scaffold emits no `channel:` and no `ap: channel:`;
   `channel: 0` (the default) means follow the radio — the discovery sweep locks onto
   the bridge's channel and `apply_tx_channel_()` re-registers the ESP-NOW peer table

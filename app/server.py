@@ -1837,8 +1837,11 @@ def create_app() -> FastAPI:
             "espnow_mode": bridge_mode if is_remote else (body.espnow_mode or "regular"),
             "transport": transport,
         }
-        if is_remote and str(board_info.get("platform") or "").strip().lower() == "esp8266":
-            node["ap_password"] = f"esp-tree-{secrets.token_hex(6)}"
+        # The ESP8266 recovery-AP password is derived from the device name in
+        # yaml_scaffold.esp8266_ap_password(), not generated here: this handler does
+        # not persist the node dict (the device row is written from
+        # upsert_devices_from_topology), so a random value would be lost on the first
+        # scaffold regeneration while the flashed device kept the old one.
         if not is_remote:
             node.update({
                 "sdkconfig_options": {

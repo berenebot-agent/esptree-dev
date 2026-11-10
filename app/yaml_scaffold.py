@@ -34,11 +34,14 @@ CHIP_NAME_TO_BOARD: dict[str, dict[str, str]] = {
 def esp8266_ap_password(node: dict[str, Any]) -> str:
     """Password for an ESP8266 remote's recovery access point.
 
-    Generated once when the wizard creates the device and carried in the node
-    record, so regenerating the scaffold never changes a password the user has
-    already noted. Devices created before this key existed derive a stable one
-    from their name instead. It is deliberately a literal: it is not a shared
-    network credential, and a missing `!secret` is a hard failure at config load.
+    Derived from the device name rather than generated and stored. Nothing in this
+    add-on persists the scaffold's node dict — the device row is written from the
+    topology — so a random password would be lost on the first regeneration while the
+    flashed device kept the old one. A deterministic value cannot drift, and it is
+    still per device because the name is. It is deliberately a literal in the YAML:
+    it is not a shared network credential, and a missing `!secret` is a hard failure
+    at config load. `node["ap_password"]` still wins if a caller has one (tests, and
+    a future record that does persist it).
     """
     password = str(node.get("ap_password") or "").strip()
     if password:
