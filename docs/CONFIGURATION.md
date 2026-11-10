@@ -334,6 +334,13 @@ an access point on one channel while transmitting ESP-NOW on another, but that i
 longer a limitation for reaching the bridge, because the leaf follows the *bridge's*
 channel instead of a configured one.
 
+**No RSSI on this platform.** ESP8266 ESP-NOW receive callbacks carry no signal
+strength, so the leaf publishes the wire value `0` ("no reading") rather than a made-up
+level: setting up a parent used to seed `-40 dBm // assume good link`, which rendered as
+a healthy signal nobody measured and could trip the preferred-RSSI topology refresh on
+every tick. The topology still shows the link (and its hop count); the signal column
+stays empty.
+
 **`espnow_mode` is not read at runtime on this component.** `set_espnow_mode()`
 stores the string (`espnow_82xx_remote.h:79`) and `dump_config()` prints the
 hardcoded line `"  Mode: regular"` (`espnow_82xx_remote.cpp:1187`). Since the

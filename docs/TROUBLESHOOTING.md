@@ -645,7 +645,11 @@ by `ota_transfer_timeout_s`, **1800 seconds** (`app/config.py:22`). Both are
 
 ### `version_mismatch` — the device rejoined but reports the old version
 
-Applies to **remotes**, which report a project version and a firmware MD5.
+Applies to **remotes**, which report a project version and a firmware MD5. On ESP8266
+the MD5 used to be all zeros (the platform has no app descriptor to read it from), so
+the digest check could never confirm anything; firmware built from 0.1.360 reports
+`ESP.getSketchMD5()` — the running app's own digest, which is what the add-on records
+for the `.ota.bin` — and can be confirmed like an ESP32 leaf.
 
 **Cause.** The node rejoined (detected by an uptime reset) but its reported
 `firmware_version` does not match the expected `parsed_version`. The job is closed as
@@ -657,6 +661,17 @@ skipped and the job is marked successful.
 **Fix.** Reflash. Retention makes reflash-as-rollback the recovery path — any
 retained binary can be reflashed from the job history
 (`README.md:186-190`; `app/server.py:2716`).
+
+### A 1 MB ESP8266 module cannot take an ESP-NOW OTA image
+
+**Cause.** `bin_parser` now decodes the flash size from the image header, and preflight
+warns when it is `1M`. The `esp01_1m` board uses `eagle.flash.1m256.ld`: one app slot
+and no second slot to write an incoming image into, so `ESP.getFreeSketchSpace()` has
+nothing to offer and the transfer is rejected before it starts.
+
+**Fix.** Build the remote for a 4 MB board (`esp12e`, the wizard's mapping) or reflash
+the module over USB each time. The warning names the module so this is visible before
+the upload rather than after it.
 
 ### `rejoined_unverified` — the device came back, but not provably on the new image
 

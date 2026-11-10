@@ -159,6 +159,9 @@ Consequences worth knowing:
   either — the leaf follows the bridge's channel instead of a configured one.
 - **The build was verified, not assumed**: ESPHome 2026.6.5, `SUCCESS` in 58.6 s,
   RAM 44.2 %, flash 41.6 %, `firmware.ota.bin`/`.factory.bin`/`.bin` all 438 896 B.
+- **The image says which board it is for.** `bin_parser` now recognises an ESP8266
+  image (no `0xEEEE` extended header) and decodes its flash size from header byte 3,
+  so a 1 MB module raises a preflight warning instead of failing mid-transfer.
 
 The refusal mechanism remains in `app/flash_wizard.py` (`UNBUILDABLE_CHIP_REASON`,
 `is_unbuildable_chip`, `validate_remote_chip_buildable`) with an **empty table**, so
