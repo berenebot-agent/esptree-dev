@@ -60,6 +60,8 @@ export class EspConfigPage extends LitElement {
   @state() private flashIntent: FlashIntent = 'none';
   @state() private browserFlashManifestUrl = '';
   @state() private browserFlashError = '';
+  @state() private browserFlashPreparing = false;
+  @state() private browserFlashPrepareError = '';
   @state() private browserFlashOpen = false;
   private browserFlashFirmwareBlobUrl = '';
   private elapsedTimer: ReturnType<typeof setInterval> | null = null;
@@ -188,17 +190,18 @@ export class EspConfigPage extends LitElement {
 
   private async updateBrowserFlashManifestUrl(): Promise<void> {
     if (this.compilePhase !== 'compiled') return;
+    this.browserFlashPrepareError = '';
     const chipFamily = this.browserFlashChipFamily;
     if (!chipFamily) {
       this.clearBrowserFlashManifestUrl();
       return;
     }
+    this.browserFlashPreparing = true;
     try {
       const downloadUrl = api.downloadFactoryBinary(this.mac);
       const resp = await fetch(downloadUrl);
       if (!resp.ok) {
-        this.clearBrowserFlashManifestUrl();
-        return;
+        throw new Error('Could not load the factory firmware. Try downloading it below.');
       }
       const firmwareBlob = await resp.blob();
       const newFirmwareBlobUrl = URL.createObjectURL(firmwareBlob);
@@ -228,6 +231,9 @@ export class EspConfigPage extends LitElement {
       this.browserFlashFirmwareBlobUrl = newFirmwareBlobUrl;
     } catch {
       this.clearBrowserFlashManifestUrl();
+      this.browserFlashPrepareError = 'Could not load the factory firmware. Try downloading it below.';
+    } finally {
+      this.browserFlashPreparing = false;
     }
   }
 
@@ -256,11 +262,17 @@ export class EspConfigPage extends LitElement {
         this.compileJobId = status.job_id;
         this.compileQueuePosition = null;
         this.stopElapsedTimer();
-        this.updateBrowserFlashManifestUrl();
         this.stopPolling();
         if (this.flashIntent === 'ota') {
           window.location.hash = `/device/${encodeURIComponent(this.mac)}`;
+        } else if (this.flashIntent === 'browser') {
+          window.scrollTo(0, 0);
         }
+      } else if (status.status === 'failed' && status.compile_status === 'failed') {
+        this.compilePhase = 'failed';
+        this.error = status.error || '';
+        this.stopElapsedTimer();
+        this.stopPolling();
       } else if (FLASH_TERMINAL_STATUSES.has(status.status)) {
         this.compilePhase = 'idle';
         this.compileJobId = null;
@@ -582,6 +594,39 @@ export class EspConfigPage extends LitElement {
     const chipFamily = this.browserFlashChipFamily;
     const showBrowserFlashInstall = this.compilePhase === 'compiled' && !!this.browserFlashManifestUrl;
 
+    if (this.compilePhase === 'compiled' && this.flashIntent === 'browser') {
+      return html`
+        <div class="config-page">
+          <nav class="crumbs" aria-label="Breadcrumb">
+            <a href="#/">Network</a>${icon('chevronRight')}
+            <a href=${`#/device/${encodeURIComponent(this.mac)}`}>${esphomeName}</a>${icon('chevronRight')}
+            <span aria-current="page">Flash by USB</span>
+          </nav>
+          <div class="usb-ready card">
+            <div class="success-banner" role="status">${icon('checkCircle')}<strong>Build succeeded</strong></div>
+            <h1>Flash ${esphomeName} by USB</h1>
+            <p>Connect the device to this computer with a USB cable, then select it in the browser.</p>
+            ${this.preflight?.has_warnings ? html`<div class="warnings">${this.preflight.warnings.map((w) => html`<p>${w}</p>`)}</div>` : nothing}
+            ${!this.browserSupportsUsbFlash
+              ? html`<div class="notice warn">${icon('info')}<span>USB flashing requires a browser with Web Serial, such as Chrome or Edge, on an HTTPS page.</span></div>`
+              : !chipFamily
+                ? html`<div class="notice warn">${icon('info')}<span>USB flashing is unavailable because the chip family could not be determined.</span></div>`
+                : this.browserFlashPrepareError
+                  ? html`<div class="notice danger" role="alert">${icon('alert')}<span>${this.browserFlashPrepareError}</span></div>`
+                  : nothing}
+            <div class="browser-flash-actions">
+              <button class="btn primary" ?disabled=${!this.browserSupportsUsbFlash || !showBrowserFlashInstall || this.browserFlashOpen} @click=${this.openBrowserFlash}>
+                ${icon('usb')}${this.browserFlashOpen ? 'Flashing…' : this.browserFlashPreparing ? 'Preparing firmware…' : 'Flash by USB'}
+              </button>
+              <a class="btn" href=${api.downloadFactoryBinary(this.mac)} download>Download factory .bin</a>
+              <button class="btn" @click=${() => { this.flashIntent = 'none'; }}>Back to YAML</button>
+            </div>
+            ${this.browserFlashError ? html`<p class="browser-flash-error" role="alert">${this.browserFlashError}</p>` : nothing}
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="config-page" data-job-id=${this.compileJobId ?? ''}>
         ${this.showExternalComponentsFix
@@ -856,6 +901,9 @@ export class EspConfigPage extends LitElement {
     .browser-flash-hint { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .browser-flash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .browser-flash-error { color: var(--danger); margin-top: 8px; }
+    .usb-ready { display: grid; gap: 18px; padding: 28px; max-width: 720px; }
+    .usb-ready h1 { margin: 0; }
+    .usb-ready > p { color: var(--ink-2); }
 
     .success-section, .fail-section { display: grid; gap: 10px; padding: 14px 16px; border-radius: var(--radius-lg); }
     .success-section { background: var(--ok-soft); }
