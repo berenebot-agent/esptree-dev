@@ -76,7 +76,7 @@ from .flash_wizard import (
     validate_remote_chip_buildable,
     validate_remote_network_credentials,
 )
-from .yaml_store import YAMLStore
+from .yaml_store import YAMLStore, load_esphome_config
 
 
 logger = logging.getLogger(__name__)
@@ -388,13 +388,20 @@ def _get_active_bridge_espnow_mode(db: Database, yaml_store: YAMLStore) -> str:
     if not content:
         raise HTTPException(status_code=400, detail="active bridge YAML is missing; cannot determine ESP-NOW mode")
     try:
-        bridge_config = yaml.safe_load(content) or {}
-        mode = (bridge_config.get("esp_tree_bridge") or {}).get("espnow_mode")
-        if mode is None:
-            mode = (bridge_config.get("espnow_bridge") or {}).get("espnow_mode")
-        bridge_mode = str(mode or "").strip().lower()
-    except (TypeError, yaml.YAMLError) as exc:
+        bridge_config = load_esphome_config(content)
+    except yaml.YAMLError as exc:
         raise HTTPException(status_code=400, detail="active bridge YAML is invalid; cannot determine ESP-NOW mode") from exc
+    mode = None
+    for block_key in ("esp_tree_bridge", "espnow_bridge"):
+        block = bridge_config.get(block_key)
+        if isinstance(block, dict) and block.get("espnow_mode") is not None:
+            mode = block.get("espnow_mode")
+            break
+    # A bridge YAML that parses but carries no mode is not corrupt: the scaffold
+    # defaults it, so the component is running in `regular` mode. Reporting that
+    # is better than refusing to flash a remote because an operator rewrote the
+    # config by hand and dropped the key.
+    bridge_mode = str(mode or "regular").strip().lower()
     if bridge_mode not in {"lr", "regular"}:
         raise HTTPException(status_code=400, detail=f"active bridge YAML has unsupported ESP-NOW mode: {bridge_mode or 'missing'}")
     return bridge_mode

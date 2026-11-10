@@ -11,6 +11,43 @@ import yaml
 _COMPONENTS_ABSOLUTE = "/opt/esp-tree/components"
 
 
+class ESPHomeLoader(yaml.SafeLoader):
+    """``yaml.SafeLoader`` that survives ESPHome's ``!secret`` tag.
+
+    Every bridge and remote scaffold this add-on writes references its credentials
+    as ``psk: !secret espnow_psk``. ``SafeLoader`` has no constructor for that tag,
+    so ``construct_undefined`` raises ``ConstructorError`` - a ``YAMLError`` - and
+    any code that parsed a real config with ``yaml.safe_load`` saw a parse failure
+    on perfectly valid YAML. That is exactly how the ESP-NOW mode lookup came to
+    report "active bridge YAML is invalid" for every bridge it was supposed to
+    describe.
+
+    Resolving ``!secret`` to the referenced name (rather than to its value) keeps
+    the parse purely structural: no file is read and no arbitrary constructor is
+    reachable, so untrusted config text stays as safe to load as with SafeLoader.
+    """
+
+
+def _construct_secret(loader: yaml.SafeLoader, node: yaml.Node) -> str:
+    return loader.construct_scalar(node)
+
+
+ESPHomeLoader.add_constructor("!secret", _construct_secret)
+
+
+def load_esphome_config(content: str) -> dict:
+    """Parse ESPHome config text, tolerating ``!secret``.
+
+    Returns a mapping always, so callers can index into it without a second
+    ``isinstance`` check; a document that is empty, a scalar, or a sequence is
+    treated as carrying no keys and yields ``{}``.
+
+    Raises ``yaml.YAMLError`` for text that genuinely does not parse.
+    """
+    loaded = yaml.load(content, Loader=ESPHomeLoader)
+    return loaded if isinstance(loaded, dict) else {}
+
+
 class YAMLStore:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -105,9 +142,10 @@ class YAMLStore:
         path = self.root / "secrets.yaml"
         existing: dict = {}
         if path.exists():
-            loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict):
-                existing = loaded
+            # secrets.yaml holds no !secret tags, but parsing it with the same
+            # loader as device configs keeps a hand-edited file that does reference
+            # one from raising an unhandled YAMLError (a 500) out of a merge.
+            existing = load_esphome_config(path.read_text(encoding="utf-8"))
         existing.update(new_values)
         path.parent.mkdir(parents=True, exist_ok=True)
         self._atomic_write(path, yaml.dump(existing, default_flow_style=False))
