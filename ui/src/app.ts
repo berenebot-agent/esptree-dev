@@ -18,7 +18,7 @@ import { icon, brandMark } from './styles/icons';
 declare const __GIT_HASH__: string;
 declare const __GIT_DATE__: string;
 
-type Route = { name: 'topology' } | { name: 'device'; mac: string } | { name: 'device-config'; mac: string } | { name: 'settings' } | { name: 'queue' } | { name: 'secrets'; from: string } | { name: 'job'; jobId: number; from: string } | { name: 'activity-log' } | { name: 'setup' } | { name: 'remote-wizard' };
+type Route = { name: 'topology' } | { name: 'device'; mac: string } | { name: 'device-config'; mac: string; updateFirmware?: boolean } | { name: 'settings' } | { name: 'queue' } | { name: 'secrets'; from: string } | { name: 'job'; jobId: number; from: string } | { name: 'activity-log' } | { name: 'setup' } | { name: 'remote-wizard' };
 
 @customElement('espnow-app')
 export class EspnowApp extends LitElement {
@@ -184,10 +184,16 @@ export class EspnowApp extends LitElement {
     const hash = window.location.hash.replace(/^#\/?/, '').replace(/\/+$/, '');
     if (hash.startsWith('device/')) {
       const rest = hash.slice(7);
-      if (rest.endsWith('/config')) {
-        return { name: 'device-config', mac: decodeURIComponent(rest.replace(/\/config$/, '')) };
+      const [devicePath, query] = rest.split('?');
+      if (devicePath.endsWith('/config')) {
+        const params = new URLSearchParams(query || '');
+        return {
+          name: 'device-config',
+          mac: decodeURIComponent(devicePath.replace(/\/config$/, '')),
+          updateFirmware: params.get('update_firmware') === '1',
+        };
       }
-      return { name: 'device', mac: decodeURIComponent(rest) };
+      return { name: 'device', mac: decodeURIComponent(devicePath) };
     }
     if (hash.startsWith('job/')) {
       const rest = hash.slice(4);
@@ -327,7 +333,7 @@ export class EspnowApp extends LitElement {
           : this.route.name === 'device'
             ? html`<esp-device-detail .mac=${this.route.mac}></esp-device-detail>`
             : this.route.name === 'device-config'
-              ? html`<esp-config-page .mac=${this.route.mac}></esp-config-page>`
+              ? html`<esp-config-page .mac=${this.route.mac} .updateFirmware=${this.route.updateFirmware ?? false}></esp-config-page>`
               : this.route.name === 'job'
                 ? html`<esp-job-page .jobId=${this.route.jobId} .from=${this.route.from}></esp-job-page>`
                 : this.route.name === 'queue'

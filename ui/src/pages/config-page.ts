@@ -36,6 +36,7 @@ function chipFamilyFromYaml(yaml: string): string | null {
 @customElement('esp-config-page')
 export class EspConfigPage extends LitElement {
   @property({ type: String }) mac = '';
+  @property({ type: Boolean }) updateFirmware = false;
   @state() private state: PageState = 'loading';
   @state() private device: Record<string, unknown> | null = null;
   @state() private config: DeviceConfig | null = null;
@@ -68,6 +69,7 @@ export class EspConfigPage extends LitElement {
   @query('esp-compile-log-viewer') private compileLogViewer!: HTMLElement | null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private devicePollTimer: ReturnType<typeof setInterval> | null = null;
+  private autoUpdateStarted = false;
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -172,6 +174,11 @@ export class EspConfigPage extends LitElement {
         this.state = 'no_config';
       }
       await this.pollCompileStatus();
+      if (this.updateFirmware && this.config && !this.autoUpdateStarted
+          && ['idle', 'failed', 'compiled'].includes(this.compilePhase)) {
+        this.autoUpdateStarted = true;
+        await this.triggerOtaFlash();
+      }
     } catch {
       this.state = 'no_config';
     }

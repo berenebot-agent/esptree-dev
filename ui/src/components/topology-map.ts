@@ -86,6 +86,10 @@ export class EspTopologyMap extends LitElement {
 
   private async handleUpdateFirmware(mac: string): Promise<void> {
     const bridge = this.topology.find((n) => normalizeMac(n.mac) === normalizeMac(mac));
+    if (bridge && !bridge.is_bridge) {
+      window.location.hash = `/device/${encodeURIComponent(mac)}/config?update_firmware=1`;
+      return;
+    }
     const uuid = this.firmwareStatus?.uuid || bridge?.bridge_uuid;
     if (!uuid) return;
     const label = bridge?.friendly_name || bridge?.esphome_name || bridge?.label || mac;

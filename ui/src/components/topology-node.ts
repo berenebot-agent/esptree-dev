@@ -151,7 +151,14 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
   const bridgeBusy = !!fwJob && !TERMINAL.includes(fwJob.status);
   const canUpdate = !bridgeBusy && (ctx.firmware ? ctx.firmware.can_update : true);
   const blocker = ctx.firmware?.blocked_reason || '';
-  const outdated = firmwareOutdated(fw, ctx.latestVersion);
+  // project_version may be the user's ESPHome project version, unrelated to
+  // the ESP Tree release. Only compare ESP Tree's fallback version when no
+  // project identity overrides it; offer an update when the running version
+  // cannot be identified (including firmware predating version reporting).
+  const knownEspTreeVersion = !node.project_name && /^\d+\.\d+\.\d+$/.test(fw);
+  const needsUpdate = !!ctx.latestVersion && (knownEspTreeVersion
+    ? firmwareOutdated(fw, ctx.latestVersion)
+    : true);
   const configHref = `#/device/${encodeURIComponent(node.mac)}/config`;
 
   return html`
@@ -186,10 +193,10 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
       </div>
       <div class="cell actions" role="gridcell">
         ${isRoot
-          ? outdated ? html`<button class="btn sm icon" ?disabled=${!canUpdate} aria-label=${`Update firmware for ${name}`}
+          ? needsUpdate && node.online ? html`<button class="btn sm icon" ?disabled=${!canUpdate} aria-label=${`Update firmware for ${name}`}
               title=${blocker || `Update firmware to ${ctx.latestVersion}`} @click=${() => ctx.onUpdateFirmware(node.mac)}>${icon('upload')}</button>` : nothing
           : node.online
-            ? html`${outdated && ctx.config?.config_state !== 'no_config' ? html`<a class="btn sm icon" aria-label=${`Update firmware for ${name}`} title=${`Update firmware to ${ctx.latestVersion}`} href=${configHref}>${icon('upload')}</a>` : nothing}
+            ? html`${needsUpdate && ctx.config?.has_config ? html`<button class="btn sm icon" aria-label=${`Update firmware for ${name}`} title=${`Build and install firmware ${ctx.latestVersion}`} @click=${() => ctx.onUpdateFirmware(node.mac)}>${icon('upload')}</button>` : nothing}
                 <a class="btn sm" aria-label=${`Edit YAML for ${name}`} href=${configHref}>${icon('code')}YAML</a>`
             : html`<button class="btn sm" aria-label=${`Hide ${name}`} title="Move to Hidden devices until it comes back" @click=${() => ctx.onHide(node.mac)}>${icon('eyeOff')}Hide</button>`}
       </div>
