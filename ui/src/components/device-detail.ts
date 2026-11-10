@@ -68,7 +68,8 @@ export class EspDeviceDetail extends LitElement {
   }
 
   private handleReflashResult(e: CustomEvent<{ job: OtaJob; preflight: PreflightComparison }>): void {
-    this.otaBox.preflight = e.detail.preflight;
+    this.otaBox.showPending(e.detail.job, e.detail.preflight);
+    this.otaBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
     void this.load(false);
   }
 

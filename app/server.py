@@ -34,6 +34,7 @@ from .compile_store import CompileStore
 from .compiler import CHIP_NAME_TO_BOARD, ESPHomeCompiler
 from .config import _int_option, _read_options, load_settings
 from .access_control import TrustedPeerMiddleware, trusted_peers
+from .bin_parser import parse_firmware
 from .db import Database
 from .firmware_store import FirmwareStore
 from .compile_worker import CompileWorker
@@ -2968,17 +2969,23 @@ def create_app() -> FastAPI:
         except FileNotFoundError as exc:
             raise HTTPException(status_code=410, detail=str(exc)) from exc
         device = db.get_device(str(source["mac"])) or {}
-        source_firmware_info = {
-            "esphome_name": source.get("parsed_esphome_name"),
-            "parsed_build_date": source.get("parsed_build_date"),
-            "chip_name": source.get("parsed_chip_name"),
-        }
+        source_firmware_info = parse_firmware(path).as_dict()
+        source_firmware_info.update({
+            "esphome_name": source.get("parsed_esphome_name") or source_firmware_info["esphome_name"],
+            "parsed_build_date": source.get("parsed_build_date") or source_firmware_info["parsed_build_date"],
+            "chip_name": source.get("parsed_chip_name") or source_firmware_info["chip_name"],
+            "firmware_md5": source.get("firmware_md5"),
+        })
         node_for_preflight = {
             "esphome_name": device.get("esphome_name"),
             "firmware_build_date": device.get("firmware_build_date"),
             "chip_name": device.get("chip_name"),
         }
         preflight = preflight_comparison(node_for_preflight, source_firmware_info)
+        pending = db.get_job_by_mac_and_status(str(source["mac"]), PENDING_CONFIRM)
+        if pending:
+            db.abort_queued_job(pending["id"])
+            firmware_store.delete_file(pending.get("firmware_path"))
         job = db.create_job(
             {
                 "mac": source["mac"],

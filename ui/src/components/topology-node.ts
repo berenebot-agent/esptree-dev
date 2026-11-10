@@ -26,11 +26,23 @@ export interface RowContext {
   job: OtaJob | null;
   config: ConfigStatus | null;
   firmware: BridgeFirmwareStatus | null;
+  latestVersion: string;
   onUpdateFirmware: (mac: string) => void;
   onHide: (mac: string) => void;
 }
 
 const TERMINAL = ['success', 'failed', 'aborted', 'version_mismatch', 'rejoin_timeout', 'rejoined_unverified'];
+
+export function firmwareOutdated(running: string, latest: string): boolean {
+  const parse = (version: string) => /^\d+\.\d+\.\d+$/.test(version) ? version.split('.').map(Number) : null;
+  const current = parse(running);
+  const target = parse(latest);
+  if (!current || !target) return false;
+  for (let i = 0; i < 3; i++) {
+    if (current[i] !== target[i]) return current[i] < target[i];
+  }
+  return false;
+}
 
 export function nodeName(node: TopologyNode): string {
   return node.friendly_name || node.esphome_name || node.label || node.mac;
@@ -124,10 +136,6 @@ function guides(row: TreeRow): TemplateResult {
   </span>`;
 }
 
-function go(path: string): void {
-  window.location.hash = path;
-}
-
 export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
   const { node, isRoot } = row;
   const name = nodeName(node);
@@ -143,6 +151,8 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
   const bridgeBusy = !!fwJob && !TERMINAL.includes(fwJob.status);
   const canUpdate = !bridgeBusy && (ctx.firmware ? ctx.firmware.can_update : true);
   const blocker = ctx.firmware?.blocked_reason || '';
+  const outdated = firmwareOutdated(fw, ctx.latestVersion);
+  const configHref = `#/device/${encodeURIComponent(node.mac)}/config`;
 
   return html`
     <div class="row ${node.online ? '' : 'is-offline'} ${isRoot ? 'is-root' : ''}" role="row">
@@ -176,11 +186,12 @@ export function renderTreeRow(row: TreeRow, ctx: RowContext): TemplateResult {
       </div>
       <div class="cell actions" role="gridcell">
         ${isRoot
-          ? html`<button class="btn sm" ?disabled=${!canUpdate} title=${blocker || 'Rebuild the bridge from this add-on and upload over WiFi'}
-              @click=${() => ctx.onUpdateFirmware(node.mac)}>Update firmware</button>`
+          ? outdated ? html`<button class="btn sm icon" ?disabled=${!canUpdate} aria-label=${`Update firmware for ${name}`}
+              title=${blocker || `Update firmware to ${ctx.latestVersion}`} @click=${() => ctx.onUpdateFirmware(node.mac)}>${icon('upload')}</button>` : nothing
           : node.online
-            ? html`<button class="btn sm text" aria-label=${`Edit YAML for ${name}`} @click=${() => go(`/device/${encodeURIComponent(node.mac)}/config`)}>${icon('code')}YAML</button>`
-            : html`<button class="btn sm text" aria-label=${`Hide ${name}`} title="Move to Hidden devices until it comes back" @click=${() => ctx.onHide(node.mac)}>${icon('eyeOff')}Hide</button>`}
+            ? html`${outdated && ctx.config?.config_state !== 'no_config' ? html`<a class="btn sm icon" aria-label=${`Update firmware for ${name}`} title=${`Update firmware to ${ctx.latestVersion}`} href=${configHref}>${icon('upload')}</a>` : nothing}
+                <a class="btn sm" aria-label=${`Edit YAML for ${name}`} href=${configHref}>${icon('code')}YAML</a>`
+            : html`<button class="btn sm" aria-label=${`Hide ${name}`} title="Move to Hidden devices until it comes back" @click=${() => ctx.onHide(node.mac)}>${icon('eyeOff')}Hide</button>`}
       </div>
     </div>
   `;
@@ -190,7 +201,7 @@ export const treeStyles = css`
   .tree { font-size: var(--text-md); }
   .row, .tree-head {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) 124px 48px 104px 84px 200px 120px;
+    grid-template-columns: auto minmax(0, 1fr) 124px 48px 104px 84px 200px 124px;
     align-items: center;
     column-gap: var(--tree-gap, 12px);
     padding: 0 16px 0 8px;
@@ -286,7 +297,7 @@ export const treeStyles = css`
   .fw .ver { font-size: var(--text-sm); }
   .fw .digest { color: var(--muted); }
   /* Above the stretched name link, or the overlay would swallow the row actions. */
-  .actions { display: flex; justify-content: flex-end; position: relative; z-index: 1; }
+  .actions { display: flex; justify-content: flex-end; gap: 6px; position: relative; z-index: 1; }
   .actions .btn svg { width: 16px; height: 16px; }
   .chip .spinner.sm { width: 10px; height: 10px; border-width: 1.5px; border-color: currentColor; border-top-color: transparent; }
   .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
@@ -327,7 +338,7 @@ export const treeStyles = css`
   .elbow.down::after { border-top-style: dashed; border-top-color: var(--faint); }
 
   @media (max-width: 1100px) {
-    .row, .tree-head { grid-template-columns: auto minmax(0, 1fr) 116px 48px 100px 184px 112px; }
+    .row, .tree-head { grid-template-columns: auto minmax(0, 1fr) 116px 48px 100px 184px 124px; }
     .fw { display: none; }
   }
   @media (max-width: 860px) {

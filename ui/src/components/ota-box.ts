@@ -21,6 +21,13 @@ export class EspOtaBox extends LitElement {
   
   @state() private showAbortModal = false;
 
+  showPending(job: OtaJob, preflight: PreflightComparison): void {
+    this.pendingJob = job;
+    this.preflight = preflight;
+    this.acceptedWarnings = false;
+    this.error = '';
+  }
+
   private async upload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];

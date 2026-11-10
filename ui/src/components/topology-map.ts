@@ -16,6 +16,7 @@ export class EspTopologyMap extends LitElement {
   @state() private queueData: QueueResponse | null = null;
   @state() private configStatuses: Map<string, ConfigStatus> = new Map();
   @state() private firmwareStatus: BridgeFirmwareStatus | null = null;
+  @state() private latestVersion = '';
   @state() private loading = true;
   @state() private error = '';
   @state() private hiddenExpanded = false;
@@ -28,6 +29,7 @@ export class EspTopologyMap extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     void this.load();
+    void api.health().then((health) => { this.latestVersion = health.version || ''; }).catch(() => {});
     this.stream = streamTopology((msg: WsTopologyMessage) => {
       if (msg.type === 'topology.snapshot' || msg.type === 'topology.changed' || msg.type === 'remote.availability' || msg.type === 'bridge.heartbeat') {
         void this.load(false, true);
@@ -317,7 +319,7 @@ export class EspTopologyMap extends LitElement {
                 <div class="tree" role="grid" aria-label="Devices">
                   <div class="tree-head" role="row">
                     <span></span><span role="columnheader">Device</span><span role="columnheader">Signal</span><span role="columnheader">Hops</span>
-                    <span role="columnheader">Last seen</span><span role="columnheader" class="fw">Firmware</span><span role="columnheader">Status</span><span></span>
+                    <span role="columnheader">Last seen</span><span role="columnheader" class="fw">Firmware</span><span role="columnheader">Status</span><span role="columnheader">Actions</span>
                   </div>
                   ${rows.map((row) => this.row(row))}
                 </div>
@@ -378,6 +380,7 @@ export class EspTopologyMap extends LitElement {
       job: this.jobForMac(row.node.mac),
       config: this.configForMac(row.node.mac),
       firmware: row.isRoot ? this.firmwareForMac(row.node.mac) : null,
+      latestVersion: this.latestVersion,
       onUpdateFirmware: (mac) => void this.handleUpdateFirmware(mac),
       onHide: (mac) => void this.handleHideDevice(mac),
     });
