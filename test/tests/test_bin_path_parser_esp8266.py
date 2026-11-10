@@ -42,6 +42,25 @@ def test_one_megabyte_esp8266_image_decodes_as_1m(tmp_path):
     assert parse_firmware(path).flash_size == "1M"
 
 
+def test_an_image_without_an_extended_header_keeps_its_chip_id(tmp_path):
+    """The absence of 0xEEEE alone must not make an image an ESP8266.
+
+    Only the ESP8266 header shape is proof - a segment count and an entry point in
+    the 0x4010xxxx range. A truncated or synthetic image that has neither keeps its
+    chip id instead of being reported as an ESP8266 with an invented flash layout.
+    """
+    data = bytearray(4096)
+    data[0] = ESP_IMAGE_MAGIC
+    data[12:14] = (0x0005).to_bytes(2, "little")  # ESP32-C3 chip id
+
+    path = tmp_path / "no-extended-header.bin"
+    path.write_bytes(bytes(data))
+    info = parse_firmware(path)
+
+    assert info.chip_name == "ESP32-C3"
+    assert info.flash_size is None
+
+
 def test_esp32_image_still_uses_the_chip_id(tmp_path):
     path = tmp_path / "esp32c3.bin"
     path.write_bytes(_esp32_image())

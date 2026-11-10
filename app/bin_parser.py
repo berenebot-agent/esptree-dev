@@ -87,12 +87,24 @@ def is_esp8266_image(data: bytes) -> bool:
     """True for an ESP8266 image: no 0xEEEE extended header where ESP32 keeps one.
 
     An ESP32 image carries the extended-header magic at offset 8 and the chip id at
-    12..13; an ESP8266 image has the first segment's load address (0x4010xxxx) there.
-    Reading the chip id unconditionally turned every ESP8266 build into
-    "Unknown 0x...." and threw away the flash size, which is what decides whether an
-    ESP-NOW OTA can fit.
+    12..13; an ESP8266 image has the first segment's load address (0x4010xxxx) at
+    offset 4 and no extended header. Reading the chip id unconditionally turned
+    every ESP8266 build into "Unknown 0x...." and threw away the flash size, which
+    is what decides whether an ESP-NOW OTA can fit.
+
+    The check is positive about the ESP8266 header rather than merely "not 0xEEEE",
+    so a blob that has no extended header at all - a truncated or synthetic image,
+    for instance - keeps its chip id instead of being reported as an ESP8266.
     """
-    return len(data) >= 12 and data[8:10] != b"\xee\xee"
+    if len(data) < 12:
+        return False
+    if data[8:10] == b"\xee\xee":
+        return False
+    segment_count = data[1]
+    if not 1 <= segment_count <= 16:
+        return False
+    entry_point = int.from_bytes(data[4:8], "little")
+    return 0x40100000 <= entry_point <= 0x4010FFFF
 
 
 def parse_firmware(path: Path) -> FirmwareInfo:

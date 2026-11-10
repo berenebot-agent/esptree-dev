@@ -23,10 +23,19 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _image(tmp_path: Path, *, app_version: str, project_name: str, idf_version: str = "v5.5.4") -> Path:
-    """A minimal ESP app image: header, app descriptor at offset 32."""
+    """A minimal ESP app image: header, app descriptor at offset 32.
+
+    The image header is a real ESP32 one - an entry point at offset 4 and the 0xEEEE
+    extended-header magic at offset 8 - so the ESP8266 detector does not claim it.
+    """
     desc = 32
     data = bytearray(desc + 160)
     data[0] = ESP_IMAGE_MAGIC
+    data[1] = 0x02  # segment count
+    data[2] = 0x02  # SPI mode
+    data[3] = 0x60  # flash size / frequency
+    data[4:8] = (0x40380000).to_bytes(4, "little")  # entry point
+    data[8:10] = b"\xee\xee"  # extended-header magic
     data[12:14] = (0x0005).to_bytes(2, "little")  # ESP32-C3
     data[desc : desc + 4] = APP_DESC_MAGIC
 
