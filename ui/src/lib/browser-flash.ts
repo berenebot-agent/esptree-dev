@@ -14,6 +14,14 @@
  *    and `InstallButton.isAllowed` is `window.isSecureContext`, both read at module load.
  *    `usbFlashSupported()` asks the same two questions without loading the element.
  *
+ * Attached is not the same as granted. `getPorts()` only lists devices this origin was
+ * already allowed to use; a board plugged in for the first time is invisible to it. So the
+ * port decision cannot be made from `getPorts()` alone: a silent pick is only safe with
+ * exactly one live grant, and anything else opens `requestPort()`, which is the one surface
+ * that shows ungranted devices. A blocked chooser is reported as "click again", never as a
+ * device fault — `requestPort()` needs transient activation and a spent click looks like
+ * nothing happening.
+ *
  * Ordering note: `requestPort()` throws `SecurityError` without transient activation, so it
  * is called *before* any awaited dynamic import. Awaiting the import first consumes the
  * click's activation and the chooser never appears.
@@ -52,6 +60,17 @@ const CHIP_FAMILIES: ChipFamily[] = [
 const SERIAL_OPEN_OPTIONS: SerialOptions = { baudRate: 115200, bufferSize: 8192 };
 
 export type OpenInstallDialogResult = 'opened' | 'cancelled';
+
+/** Which port the dialog actually used. `port` is null when the chooser was dismissed. */
+export interface OpenInstallDialogOutcome {
+  result: OpenInstallDialogResult;
+  /**
+   * The port the dialog settled on: the one passed in, or the one the chooser returned when
+   * there was no usable held port. Callers keep it so a retry does not re-prompt, and so the
+   * page can name the device it is about to write to.
+   */
+  port: SerialPort | null;
+}
 
 /**
  * The DOM's Web Serial port type, under a name that cannot collide.
@@ -116,6 +135,36 @@ export async function listLivePorts(): Promise<SerialPort[]> {
 }
 
 /**
+ * A short, human label for a granted port, so the page can say *which* board it will use.
+ *
+ * Web Serial exposes no product or serial-number string — only the USB vendor/product ids
+ * from the descriptor. That is still enough to tell two boards apart, whereas "the selected
+ * USB device" tells the user nothing when several are plugged in.
+ */
+export function portLabel(port: SerialPort | null | undefined): string {
+  if (!port) return 'no device';
+  try {
+    const { usbVendorId, usbProductId } = port.getInfo();
+    if (usbVendorId === undefined) return 'a serial port';
+    const hex = (n: number | undefined): string => (n === undefined ? '????' : n.toString(16).padStart(4, '0'));
+    return `USB ${hex(usbVendorId)}:${hex(usbProductId)}`;
+  } catch {
+    return 'a serial port';
+  }
+}
+
+/**
+ * The error a blocked chooser deserves.
+ *
+ * `requestPort()` throws `SecurityError` when transient activation has already been spent —
+ * a second click while a detection is still running, or a call made from a poll callback.
+ * That is not a device fault and must not read like one: the raw message ("Must be handling
+ * a user gesture to show a permission request") leaves the user with no next step.
+ */
+const NO_GESTURE_MESSAGE =
+  'The browser blocked the USB device chooser. Click the USB button again to reopen it.';
+
+/**
  * Show the browser's own device chooser.
  *
  * Needs a real user gesture. Resolves `'cancelled'` when the chooser is dismissed.
@@ -127,6 +176,9 @@ export async function pickPort(): Promise<SerialPort | 'cancelled'> {
   } catch (err) {
     // NotFoundError is the documented "picker dismissed" rejection, not a fault.
     if (err instanceof DOMException && err.name === 'NotFoundError') return 'cancelled';
+    if (err instanceof DOMException && err.name === 'SecurityError') {
+      throw new Error(NO_GESTURE_MESSAGE);
+    }
     throw err;
   }
 }
@@ -134,10 +186,12 @@ export async function pickPort(): Promise<SerialPort | 'cancelled'> {
 /**
  * Return a port to use, asking the user whenever the choice is not obvious.
  *
- * Exactly one attached, already-granted device is reused silently (no prompt). With none,
- * or with several, the native chooser opens: guessing among several boards would flash or
- * identify the wrong one, and a never-granted board could not otherwise be reached while an
- * old grant exists. `forcePicker` always opens the chooser.
+ * The only ports Web Serial can see without a prompt are the ones this origin was already
+ * granted (`getPorts()`). A board plugged in for the first time is *not* in that list, so
+ * "one live port" can mean "one board we happen to hold, while three are attached". The
+ * silent fast path therefore stays deliberately narrow: one live port, and only when the
+ * caller has no other reason to ask. Every ambiguous case — none, several, `forcePicker` —
+ * opens the native chooser, which is the only surface that lists ungranted devices.
  *
  * Needs a real user gesture for the chooser — call this from a click handler.
  */
@@ -191,9 +245,10 @@ export async function detectChip(port: SerialPort): Promise<ChipDetectionResult>
  * Open the install dialog.
  *
  * `port` — a port the page already holds (from detection). When omitted, the browser's
- * picker is shown instead, which requires this to be called from a real user gesture.
+ * picker is shown instead, which requires this to be called from a real user gesture. A held
+ * port that can no longer be opened also falls back to the picker.
  *
- * Resolves `'cancelled'` when the user dismisses the picker; the dialog reports its own
+ * Resolves `cancelled` when the user dismisses the picker; the dialog reports its own
  * progress and errors, and its `closed` event is surfaced via `onClosed`.
  */
 export async function openInstallDialog(options: {
@@ -201,7 +256,7 @@ export async function openInstallDialog(options: {
   port?: SerialPort | null;
   onClosed?: () => void;
   onFinished?: () => void;
-}): Promise<OpenInstallDialogResult> {
+}): Promise<OpenInstallDialogOutcome> {
   if (!usbFlashSupported()) {
     throw new Error('Browser USB flashing needs Chrome or Edge on a secure HTTPS page.');
   }
@@ -209,7 +264,7 @@ export async function openInstallDialog(options: {
   let port = options.port ?? null;
   if (!port) {
     const acquired = await acquirePort();
-    if (acquired === 'cancelled') return 'cancelled';
+    if (acquired === 'cancelled') return { result: 'cancelled', port: null };
     port = acquired;
   }
 
@@ -220,7 +275,18 @@ export async function openInstallDialog(options: {
   if (port.readable === null) {
     // A port held from an earlier detection step is closed but still granted; the dialog
     // expects to be handed an open one, exactly as esp-web-tools' own `connect()` does.
-    await port.open(SERIAL_OPEN_OPTIONS);
+    try {
+      await port.open(SERIAL_OPEN_OPTIONS);
+    } catch (err) {
+      if (!options.port) throw err;
+      // The held port is stale — the board was unplugged or re-enumerated after a reset.
+      // Chrome reports that as an opaque "Failed to open serial port" on a handle the user
+      // cannot distinguish from a live one, so ask for a device explicitly instead.
+      const acquired = await acquirePort();
+      if (acquired === 'cancelled') return { result: 'cancelled', port: null };
+      port = acquired;
+      await port.open(SERIAL_OPEN_OPTIONS);
+    }
   }
 
   const el = document.createElement('ewt-install-dialog') as HTMLElement & {
@@ -277,5 +343,5 @@ export async function openInstallDialog(options: {
     { once: true },
   );
   document.body.appendChild(el);
-  return 'opened';
+  return { result: 'opened', port };
 }

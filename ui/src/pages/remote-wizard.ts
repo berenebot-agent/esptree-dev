@@ -4,7 +4,13 @@ import { ChipInfo, api, normalizeMac } from '../api/client';
 import '../components/compile-log-viewer';
 import { shared } from '../styles/shared';
 import { icon } from '../styles/icons';
-import { acquirePort, openInstallDialog, detectChip as detectConnectedChip, usbFlashSupported } from '../lib/browser-flash';
+import {
+  acquirePort,
+  openInstallDialog,
+  portLabel,
+  detectChip as detectConnectedChip,
+  usbFlashSupported,
+} from '../lib/browser-flash';
 
 /**
  * Create Remote wizard.
@@ -68,6 +74,13 @@ export class EspRemoteWizard extends LitElement {
    * install dialog is what removes the browser's second device chooser.
    */
   private browserFlashPort: SerialPort | null = null;
+  /**
+   * Which physical board `browserFlashPort` is, e.g. "USB 303a:1001".
+   *
+   * Three boards on the desk and a hint that says "the selected USB device" names nothing
+   * checkable; the USB ids do, and they come free from `getInfo()`.
+   */
+  @state() private browserFlashPortLabel = '';
   /**
    * True when the user pressed "Compile & install": flash starts by itself once the build
    * finishes. The USB port was chosen on that click (the only moment the browser allows a
@@ -136,11 +149,15 @@ export class EspRemoteWizard extends LitElement {
       }
       const port = await acquirePort({ forcePicker });
       if (port === 'cancelled') {
+        // Not an error, but not nothing either: with several boards attached the chooser is
+        // the user's chance to point at the right one, and dismissing it must say so.
+        this.chipDetectionError = 'No USB device was chosen.';
         this.detectingChip = false;
         return;
       }
       // Keep the granted port: the flash step reuses it instead of re-prompting.
       this.browserFlashPort = port;
+      this.browserFlashPortLabel = portLabel(port);
 
       const { detected, family } = await detectConnectedChip(port);
       const supportedChip = family && this.chips.find((chip) => chip.chip_name.toUpperCase() === family);
@@ -241,8 +258,12 @@ export class EspRemoteWizard extends LitElement {
     this.flashNeedsConfirm = false;
     try {
       const port = this.browserFlashPort ?? (await acquirePort());
-      if (port === 'cancelled') return;
+      if (port === 'cancelled') {
+        this.chipDetectionError = 'No USB device was chosen.';
+        return;
+      }
       this.browserFlashPort = port;
+      this.browserFlashPortLabel = portLabel(port);
 
       // Identify the board now, even when a chip is already selected: a mismatch between
       // the chosen chip and the plugged-in board would otherwise flash the wrong image.
@@ -431,7 +452,7 @@ export class EspRemoteWizard extends LitElement {
     this.flashError = '';
     this.flashing = true;
     try {
-      const result = await openInstallDialog({
+      const { result, port } = await openInstallDialog({
         manifestUrl: this.manifestUrl,
         port: this.browserFlashPort,
         // Advances the wizard to the Home Assistant step as soon as the write completes,
@@ -447,6 +468,9 @@ export class EspRemoteWizard extends LitElement {
       if (result === 'cancelled') {
         this.flashError = 'No USB device was selected.';
       }
+      // The dialog may have fallen back to the chooser because the held port was stale.
+      this.browserFlashPort = port;
+      this.browserFlashPortLabel = port ? portLabel(port) : '';
     } catch (err) {
       this.flashError = err instanceof Error ? err.message : String(err);
     } finally {
@@ -570,6 +594,8 @@ export class EspRemoteWizard extends LitElement {
     this.compilePercent = 0;
     this.mac = '';
     this.esphomeName = '';
+    this.browserFlashPort = null;
+    this.browserFlashPortLabel = '';
     this.haStatus = 'checking';
     this.haDeviceId = '';
     this.haNotice = '';
@@ -722,13 +748,18 @@ export class EspRemoteWizard extends LitElement {
                       </button>`
                     : nothing}
                   ${this.detectedChipName
-                    ? html`<span class="hint">Detected ${this.detectedChipName}; selected ${this.chipName}.</span>`
+                    ? html`<span class="hint">Detected ${this.detectedChipName}${this.browserFlashPortLabel
+                        ? html` on ${this.browserFlashPortLabel}`
+                        : nothing}; selected ${this.chipName}.</span>`
                     : nothing}
                   ${this.chipDetectionError
                     ? html`<span class="hint warn-text">${this.chipDetectionError}</span>`
                     : nothing}
                   ${!this.usbSupported
                     ? html`<span class="hint">Automatic detection needs Chrome or Edge on a secure HTTPS page. Manual chip selection is available.</span>`
+                    : nothing}
+                  ${this.usbSupported && this.browserFlashPortLabel
+                    ? html`<span class="hint">USB device in use: <code>${this.browserFlashPortLabel}</code></span>`
                     : nothing}
                 </div>
 
@@ -798,7 +829,7 @@ export class EspRemoteWizard extends LitElement {
                     >
                     <p class="hint">This uses the add-on's own compiler. It can take a few minutes.</p>
                     ${this.autoInstall
-                      ? html`<p class="hint">It will flash to the selected USB device automatically when the build finishes. Keep the board plugged in.</p>`
+                      ? html`<p class="hint">It will flash to ${this.browserFlashPortLabel || 'the chosen USB device'} automatically when the build finishes. Keep the board plugged in.</p>`
                       : nothing}
                   </div>
                 </div>
@@ -814,7 +845,7 @@ export class EspRemoteWizard extends LitElement {
                   <strong>Firmware built.</strong>
                   <p class="hint">
                     ${this.autoInstall && this.flashing
-                      ? 'Flashing to the selected USB device…'
+                      ? `Flashing to ${this.browserFlashPortLabel || 'the chosen USB device'}…`
                       : 'Plug the remote into this computer by USB, then flash it below.'}
                   </p>
                   </div>

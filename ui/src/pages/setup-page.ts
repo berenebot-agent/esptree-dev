@@ -8,6 +8,7 @@ import {
   chipFamilyFromName,
   detectChip as detectConnectedChip,
   openInstallDialog,
+  portLabel,
   usbFlashSupported,
   type UsbSerialPort,
 } from '../lib/browser-flash';
@@ -94,6 +95,8 @@ export class EspSetupWizard extends LitElement {
    * install dialog is what removes the browser's second device chooser.
    */
   private flashBrowserPort: UsbSerialPort | null = null;
+  /** Which physical board `flashBrowserPort` is, e.g. "USB 303a:1001" (see `portLabel`). */
+  @state() private flashBrowserPortLabel = '';
   @state() private flashBrowserFlashing = false;
   @state() private flashBrowserFlashError = '';
   @state() private flashSecretsWarning = '';
@@ -758,11 +761,13 @@ export class EspSetupWizard extends LitElement {
 
       const port = await acquirePort({ forcePicker });
       if (port === 'cancelled') {
+        this.flashBrowserDetectError = 'No USB device was chosen';
         this.flashBrowserDetecting = false;
         return;
       }
       // Keep the granted port: the flash step reuses it instead of re-prompting.
       this.flashBrowserPort = port;
+      this.flashBrowserPortLabel = portLabel(port);
 
       const { detected, family } = await detectConnectedChip(port);
       if (!family || !CHIP_OPTIONS[family]) {
@@ -968,7 +973,7 @@ export class EspSetupWizard extends LitElement {
     this.flashBrowserFlashError = '';
     this.flashBrowserFlashing = true;
     try {
-      const result = await openInstallDialog({
+      const { result, port } = await openInstallDialog({
         manifestUrl: this.flashBrowserManifestUrl,
         port: this.flashBrowserPort,
         onClosed: () => {
@@ -979,6 +984,10 @@ export class EspSetupWizard extends LitElement {
         this.flashBrowserFlashError = 'No USB device was selected.';
         this.flashBrowserFlashing = false;
       }
+      // Take back whatever port the dialog settled on: it falls back to the chooser when the
+      // held port turned out to be stale, and the retry must reuse that choice.
+      this.flashBrowserPort = port;
+      this.flashBrowserPortLabel = port ? portLabel(port) : '';
     } catch (e) {
       this.flashBrowserFlashError = e instanceof Error ? e.message : String(e);
       this.flashBrowserFlashing = false;
@@ -1519,7 +1528,9 @@ export class EspSetupWizard extends LitElement {
         </label>
 
         ${this.flashDetectedChip ? html`
-          <div class="chip-badge detected">Detected: ${this.flashDetectedChip} → ${CHIP_OPTIONS[this.flashChipName]?.label || this.flashChipName}</div>
+          <div class="chip-badge detected">Detected: ${this.flashDetectedChip}${this.flashBrowserPortLabel
+            ? html` on ${this.flashBrowserPortLabel}`
+            : nothing} → ${CHIP_OPTIONS[this.flashChipName]?.label || this.flashChipName}</div>
         ` : nothing}
         ${this.flashBrowserDetectError ? html`
           <div class="flash-warning">Automatic detection failed: ${this.flashBrowserDetectError}. You can select the board manually.</div>
@@ -1656,7 +1667,7 @@ export class EspSetupWizard extends LitElement {
                   ${this.flashBrowserFlashing ? 'Flashing…' : 'Flash via Browser USB'}
                 </button>
                 ${this.flashBrowserPort ? html`
-                  <span class="chip-badge">Device already granted — no USB prompt needed.</span>
+                  <span class="chip-badge">Device already granted (${this.flashBrowserPortLabel || 'USB device'}) — no USB prompt needed.</span>
                 ` : ''}
                 ${this.flashBrowserFlashError ? html`<div class="flash-warning">${this.flashBrowserFlashError}</div>` : ''}
               ` : html`

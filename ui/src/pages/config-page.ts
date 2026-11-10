@@ -4,7 +4,7 @@ import '../components/config-editor';
 import '../components/compile-log-viewer';
 import { hasEspTreeExternalComponents } from '../components/config-editor';
 import { api, CompileStatusResponse, DeviceConfig, normalizeMac, PreflightComparison } from '../api/client';
-import { chipFamilyFromName, openInstallDialog, usbFlashSupported } from '../lib/browser-flash';
+import { chipFamilyFromName, openInstallDialog, portLabel, usbFlashSupported } from '../lib/browser-flash';
 import { shared } from '../styles/shared';
 import { icon } from '../styles/icons';
 
@@ -64,6 +64,13 @@ export class EspConfigPage extends LitElement {
   @state() private browserFlashPreparing = false;
   @state() private browserFlashPrepareError = '';
   @state() private browserFlashOpen = false;
+  /**
+   * A port granted by the install dialog's chooser, so a retry reuses it instead of
+   * re-prompting. This page never detects a chip first, so `openInstallDialog` is the only
+   * place a port is chosen here — and that chooser needs the click's activation.
+   */
+  private browserFlashPort: SerialPort | null = null;
+  @state() private browserFlashPortLabel = '';
   private browserFlashFirmwareBlobUrl = '';
   private elapsedTimer: ReturnType<typeof setInterval> | null = null;
   @query('esp-compile-log-viewer') private compileLogViewer!: HTMLElement | null;
@@ -534,22 +541,27 @@ export class EspConfigPage extends LitElement {
   /**
    * Open the install dialog against this page's compiled factory image.
    *
-   * Called from a click so the requestPort() fallback still has its user activation;
-   * when the chip was already detected earlier in the session the port is passed
-   * straight in and the browser shows no second chooser.
+   * Called from a click so the requestPort() fallback still has its user activation; when
+   * the chip was already detected earlier in the session the port is passed straight in and
+   * the browser shows no second chooser.
    */
   private async openBrowserFlash(): Promise<void> {
     if (!this.browserFlashManifestUrl) return;
     this.browserFlashError = '';
     try {
-      const result = await openInstallDialog({
+      const { result, port } = await openInstallDialog({
         manifestUrl: this.browserFlashManifestUrl,
+        // Pass the held port *and* take back whatever the dialog settled on: with several
+        // boards attached the chooser may pick a different one from last time.
+        port: this.browserFlashPort,
         onClosed: () => this.onBrowserFlashClosed(),
       });
       if (result === 'cancelled') {
         this.browserFlashError = 'No USB device was selected.';
         return;
       }
+      this.browserFlashPort = port;
+      this.browserFlashPortLabel = port ? portLabel(port) : '';
       this.browserFlashOpen = true;
     } catch (err) {
       this.browserFlashError = err instanceof Error ? err.message : String(err);
@@ -613,6 +625,9 @@ export class EspConfigPage extends LitElement {
             <div class="success-banner" role="status">${icon('checkCircle')}<strong>Build succeeded</strong></div>
             <h1>Flash ${esphomeName} by USB</h1>
             <p>Connect the device to this computer with a USB cable, then select it in the browser.</p>
+            ${this.browserFlashPortLabel
+              ? html`<p class="muted">USB device in use: <code>${this.browserFlashPortLabel}</code></p>`
+              : nothing}
             ${this.preflight?.has_warnings ? html`<div class="warnings">${this.preflight.warnings.map((w) => html`<p>${w}</p>`)}</div>` : nothing}
             ${!this.browserSupportsUsbFlash
               ? html`<div class="notice warn">${icon('info')}<span>USB flashing requires a browser with Web Serial, such as Chrome or Edge, on an HTTPS page.</span></div>`
@@ -799,6 +814,9 @@ export class EspConfigPage extends LitElement {
                             </button>
                             <a class="btn" href=${api.downloadFactoryBinary(this.mac)} download>Download factory .bin</a>
                           </div>
+                          ${this.browserFlashPortLabel
+                            ? html`<p class="muted">USB device in use: <code>${this.browserFlashPortLabel}</code></p>`
+                            : nothing}
                           ${this.browserFlashError
                             ? html`<p class="browser-flash-error">${this.browserFlashError}</p>`
                             : nothing}
