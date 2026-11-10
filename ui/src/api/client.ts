@@ -100,6 +100,9 @@ export interface PreflightComparison {
   has_warnings: boolean;
   warnings: string[];
   metadata_unavailable?: boolean;
+  // ESP8266 only, decoded from the image header. `1M` cannot fit an OTA image
+  // beside the running one, so the device is USB-reflash-only.
+  flash_size?: string;
 }
 
 export interface UploadResponse {

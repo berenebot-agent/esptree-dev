@@ -352,7 +352,11 @@ private async start(): Promise<void> {
           <div class="meta-info">
             <span>Size: ${fmtBytes(job.firmware_size)}</span>
             <span>MD5: ${job.firmware_md5 || '-'}</span>
+            ${p?.flash_size ? html`<span>Flash: ${p.flash_size}</span>` : nothing}
           </div>
+          ${p?.flash_size === '1M'
+            ? html`<p class="warn-text">1 MB module: an ESP-NOW OTA image cannot fit beside the running one — reflash over USB.</p>`
+            : nothing}
           <div class="actions">
             <button class="btn primary" ?disabled=${!canStart} @click=${this.start}>Flash</button>
             <button class="btn" ?disabled=${this.busy} @click=${this.abort}>Cancel</button>
@@ -549,6 +553,7 @@ private async start(): Promise<void> {
     .compare-table .chip { margin-top: 4px; }
     .meta-info { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
     .meta-unavailable { color: var(--muted); }
+    .warn-text { color: var(--accent); }
     .warnings { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--ink); }
     .warnings label { display: flex; gap: 8px; align-items: center; font-weight: 500; }
     .warnings input { accent-color: var(--primary); width: 16px; height: 16px; }

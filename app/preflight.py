@@ -15,14 +15,21 @@ def preflight_comparison(node: dict[str, Any], info: dict[str, Any]) -> dict[str
         md5_status = "unknown"
         if current_md5 and new_md5:
             md5_status = "same" if current_md5 == new_md5 else "different"
+        flash_size = str(info.get("flash_size") or "").strip()
+        if flash_size == "1M":
+            warnings.append(
+                "This module has 1 MB of flash: an ESP-NOW OTA image cannot fit beside the "
+                "running one, so it can only be reflashed over USB."
+            )
         return {
             "name": {"current": "", "new": "", "match": False},
             "build_date": {"current": "", "new": "", "status": "unavailable", "delta": ""},
             "chip": {"current": "", "new": "", "match": False},
             "md5": {"current": current_md5, "new": new_md5, "status": md5_status},
-            "has_warnings": False,
-            "warnings": [],
+            "has_warnings": len(warnings) > 0,
+            "warnings": warnings,
             "metadata_unavailable": True,
+            "flash_size": flash_size,
         }
 
     current_name = str(node.get("esphome_name") or "").strip()
@@ -76,6 +83,7 @@ def preflight_comparison(node: dict[str, Any], info: dict[str, Any]) -> dict[str
         "build_date": {"current": current_build_date, "new": new_build_date, "status": build_date_status, "delta": build_date_delta},
         "chip": {"current": current_chip_name or "", "new": new_chip_name or "", "match": chip_match},
         "md5": {"current": current_md5, "new": new_md5, "status": md5_status},
+        "flash_size": str(info.get("flash_size") or "").strip(),
         "has_warnings": len(warnings) > 0,
         "warnings": warnings,
     }

@@ -8,6 +8,8 @@ Future releases should add an entry here.
 
 ## Unreleased
 
+- **An ESP8266 image is now recognised as ESP8266, with its flash size.** `bin_parser` read the ESP32 chip-id field unconditionally, so every ESP8266 build came back `Unknown 0x….` and its flash size — the one number that decides whether an ESP-NOW OTA can fit — was never read. Images are now told apart by the missing `0xEEEE` extended header, the size is decoded from header byte 3, and a 1 MB module (ESP-01S class) raises a preflight warning that it can only be reflashed over USB instead of failing after the transfer.
+
 - **An ESP8266 leaf now reports the MD5 of the image it is actually running.** `remote_protocol.cpp` left `firmware_md5` all zeros on that platform and sent the compile time of one translation unit (`__DATE__`) as the "build" — so an ESP-NOW OTA could never be confirmed, only called unverified. It now hashes the running sketch with `ESP.getSketchMD5()` once per boot, which is the same digest the add-on records for the `.ota.bin` (`ota_jobs.ota_md5`) and, on ESP8266, the same bytes as the `.bin`/`.factory.bin`. The date/time remain a human-readable fallback.
 - **No more invented signal strength on ESP8266.** Setting up a parent used to seed `-40 dBm  // assume good link`, which was published as a real reading and could keep a link that never measured anything looking healthy (and, before the floor check was guarded, drive topology refreshes every tick). The leaf now keeps the internal "no reading" sentinel and publishes the wire value `0`, which the UI already renders as unknown.
 

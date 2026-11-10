@@ -24,6 +24,10 @@ class FirmwareInfo:
     parsed_version: str
     app_desc_offset: int | None
     metadata_unavailable: bool = False
+    # ESP8266 only: decoded from image header byte 3. Decides whether an ESP-NOW
+    # OTA can fit at all — a 1 MB module has one app slot and no room to write a
+    # second image, so it is USB-reflash-only.
+    flash_size: str | None = None
 
     def as_dict(self) -> dict:
         return {
@@ -42,6 +46,7 @@ class FirmwareInfo:
             "parsed_build_date": self.formatted_build_date,
             "app_desc_offset": self.app_desc_offset,
             "metadata_unavailable": self.metadata_unavailable,
+            "flash_size": self.flash_size,
         }
 
     @property
@@ -63,6 +68,33 @@ def _find_app_desc(data: bytes) -> int | None:
     return data.find(APP_DESC_MAGIC)
 
 
+# ESP8266 image header byte 3: high nibble is the flash size, low nibble the SPI
+# clock. Same table esptool uses.
+ESP8266_FLASH_SIZES = {
+    0x0: "512K",
+    0x1: "256K",
+    0x2: "1M",
+    0x3: "2M",
+    0x4: "4M",
+    0x5: "2M",
+    0x6: "4M",
+    0x8: "8M",
+    0x9: "16M",
+}
+
+
+def is_esp8266_image(data: bytes) -> bool:
+    """True for an ESP8266 image: no 0xEEEE extended header where ESP32 keeps one.
+
+    An ESP32 image carries the extended-header magic at offset 8 and the chip id at
+    12..13; an ESP8266 image has the first segment's load address (0x4010xxxx) there.
+    Reading the chip id unconditionally turned every ESP8266 build into
+    "Unknown 0x...." and threw away the flash size, which is what decides whether an
+    ESP-NOW OTA can fit.
+    """
+    return len(data) >= 12 and data[8:10] != b"\xee\xee"
+
+
 def parse_firmware(path: Path) -> FirmwareInfo:
     with path.open("rb") as handle:
         data = handle.read()
@@ -73,6 +105,11 @@ def parse_firmware(path: Path) -> FirmwareInfo:
         return FirmwareInfo(False, "file does not start with an ESP image magic byte", None, None, "", "", "", "", "", "", None)
     if len(data) < 16:
         return FirmwareInfo(False, "firmware file is too small to contain an ESP image header", None, None, "", "", "", "", "", "", None)
+
+    if is_esp8266_image(data):
+        flash_size = ESP8266_FLASH_SIZES.get((data[3] >> 4) & 0x0F)
+        return FirmwareInfo(True, None, 0x8266, "ESP8266", "", "", "", "", "", "", None,
+                            metadata_unavailable=True, flash_size=flash_size)
 
     chip_type = int.from_bytes(data[12:14], "little", signed=False)
     chip_name = {
