@@ -10,6 +10,7 @@
 #if defined(ARDUINO_ARCH_ESP8266)
 // ESP8266 Arduino — most low-level wifi/esp IDf headers not available.
 // Channel ops handled via wifi_set_channel/wifi_get_channel (non-OS SDK).
+#include <Esp.h>
 #else
 // ESP-IDF (ESP32) — use native headers.
 #include <esp_random.h>
@@ -849,7 +850,10 @@ void RemoteProtocol::loop() {
 
   bool tx_queue_clear = !waiting_for_state_ack_ && consecutive_send_failures_ == 0 && !discovering_;
 
-  if (normal_ && tx_queue_clear && parent_link_rssi_ema_ < ESPNOW_PREFERRED_RSSI_FLOOR_DBM) {
+  // -127 means "no reading" (an ESP8266 leaf never gets one): it must not read as
+  // a weak link, or every tick would trigger a topology refresh that cannot help.
+  if (normal_ && tx_queue_clear && parent_link_rssi_ema_ != -127 &&
+      parent_link_rssi_ema_ < ESPNOW_PREFERRED_RSSI_FLOOR_DBM) {
     ESP_LOGI(TAG, "Parent link RSSI low (%d dBm), triggering topology refresh", parent_link_rssi_ema_);
     topology_refresh_due_ms_ = 0;
     start_route_recovery_cycle_();
@@ -893,11 +897,10 @@ void RemoteProtocol::loop() {
         parent_valid_ = true;
         hop_count_ = 0;
         hops_to_bridge_ = best_parent_.hops_to_bridge + 1;
-#ifdef ARDUINO_ARCH_ESP8266
-        parent_link_rssi_ema_ = -40;  // ESP8266 can't read RSSI — assume good link
-#else
+        // -127 is the internal "no reading" sentinel; the wire spelling is 0,
+        // applied in send_heartbeat_. Never publish a fabricated -40 dBm for a
+        // value nobody measured (ESP8266 ESP-NOW receive callbacks carry no RSSI).
         parent_link_rssi_ema_ = -127;
-#endif
         send_join_();
         state_name_ = "JOINING";
         queue_state_log_(espnow_log_state_t::JOINING, "State: JOINING");
@@ -1760,15 +1763,30 @@ bool RemoteProtocol::send_identity_descriptor_() {
   std::array<uint8_t, 16> firmware_md5{};
   firmware_md5.fill(0);
 #if defined(ARDUINO_ARCH_ESP8266)
-  // ESP8266: use compile-time __DATE__ and __TIME__ macros.
-  // TODO: These are static strings from the compiler; ensure format is
-  // compatible with the identity descriptor's 16-byte fields.
-  const char *compile_date = __DATE__;
-  const char *compile_time = __TIME__;
-  build_date = reinterpret_cast<const uint8_t *>(compile_date);
-  build_time = reinterpret_cast<const uint8_t *>(compile_time);
-  build_date_len = strlen(compile_date);
-  build_time_len = strlen(compile_time);
+  // ESP8266 images carry no app descriptor, so the running sketch's own MD5 is
+  // the only identity that can be compared with the artifact we were sent. It is
+  // exactly what the add-on records for an ESP8266 flash: `ota_jobs.ota_md5` is
+  // the digest of the `.ota.bin`, and on this platform `.bin`, `.ota.bin` and
+  // `.factory.bin` are the same bytes. Hashed once per boot (400 kB — not
+  // something to do per heartbeat); the image cannot change while it runs.
+  static const std::array<uint8_t, 16> sketch_md5 = [] {
+    std::array<uint8_t, 16> digest{};
+    const String hex = ESP.getSketchMD5();
+    if (hex.length() != 32) {
+      return digest;
+    }
+    for (size_t i = 0; i < digest.size(); ++i) {
+      digest[i] = static_cast<uint8_t>(strtoul(hex.substring(i * 2, i * 2 + 2).c_str(), nullptr, 16));
+    }
+    return digest;
+  }();
+  firmware_md5 = sketch_md5;
+  // The date/time stay a human-readable fallback: they are the compile time of
+  // one translation unit and prove nothing about which image is running.
+  build_date = reinterpret_cast<const uint8_t *>(__DATE__);
+  build_time = reinterpret_cast<const uint8_t *>(__TIME__);
+  build_date_len = strlen(__DATE__);
+  build_time_len = strlen(__TIME__);
 #elif defined(ESP_PLATFORM)
   esp_app_desc_t app_desc{};
   const esp_partition_t *running = esp_ota_get_running_partition();
@@ -1810,6 +1828,10 @@ bool RemoteProtocol::send_identity_descriptor_() {
   build_date_.assign(reinterpret_cast<const char *>(build_date), build_date_len);
   build_time_.assign(reinterpret_cast<const char *>(build_time), build_time_len);
   firmware_md5_ = firmware_md5;
+  if (firmware_md5[0] != 0 || firmware_md5[1] != 0 || firmware_md5[2] != 0 || firmware_md5[3] != 0) {
+    ESP_LOGI(TAG, "  [CHIP_INFO] firmware_md5=%02X%02X%02X%02X… (running image)",
+             firmware_md5[0], firmware_md5[1], firmware_md5[2], firmware_md5[3]);
+  }
 append_identity_descriptor_payload(push,
                                      reinterpret_cast<const uint8_t *>(esphome_name_.data()), esphome_name_.size(),
                                      reinterpret_cast<const uint8_t *>(node_label_.data()), node_label_.size(),
@@ -2004,11 +2026,7 @@ void RemoteProtocol::adopt_best_parent_candidate_(bool resume_normal_after_succe
   normal_ = resume_normal_after_success;
   joined_ = resume_normal_after_success;
   state_push_enabled_ = resume_normal_after_success;
-#ifdef ARDUINO_ARCH_ESP8266
-  parent_link_rssi_ema_ = -40;  // ESP8266 can't read RSSI — assume good link
-#else
-  parent_link_rssi_ema_ = -127;
-#endif
+  parent_link_rssi_ema_ = -127;  // "no reading" until a receive sample exists
   topology_refresh_due_ms_ = 0;
   state_name_ = "NORMAL";
   queue_state_log_(espnow_log_state_t::NORMAL, "Discovery found parent %s; resuming normal traffic",
