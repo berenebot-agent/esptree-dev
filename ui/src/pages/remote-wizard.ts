@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { ChipInfo, api, normalizeMac } from '../api/client';
 import '../components/compile-log-viewer';
 import { shared } from '../styles/shared';
+import { renderStages } from '../lib/stages';
 import { icon } from '../styles/icons';
 import {
   acquirePort,
@@ -613,12 +614,7 @@ export class EspRemoteWizard extends LitElement {
   private renderSteps() {
     const order = ['config', 'compiling', 'ready', 'done'] as const;
     const stage = this.stage === 'flashing' ? 'ready' : this.stage === 'error' ? 'config' : this.stage;
-    const at = order.indexOf(stage as typeof order[number]);
-    const labels = ['Describe', 'Build', 'Flash', 'Join'];
-    return html`<ol class="steps" aria-label="Progress">
-      ${labels.map((label, i) => html`<li class=${i < at ? 'done' : i === at ? 'current' : ''} aria-current=${i === at ? 'step' : 'false'}>
-        <span class="n">${i < at ? icon('check') : i + 1}</span>${label}</li>`)}
-    </ol>`;
+    return renderStages(['Describe', 'Build', 'Flash', 'Join'], order.indexOf(stage as typeof order[number]));
   }
 
   private renderHaIntegrationStep() {
@@ -937,20 +933,6 @@ export class EspRemoteWizard extends LitElement {
     :host { display: block; }
     .remote-page { max-width: 760px; }
     .crumbs svg { width: 14px; height: 14px; color: var(--faint); }
-    .steps { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; counter-reset: s; }
-    .steps li {
-      display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
-      padding: 8px 0; border-top: 3px solid var(--line); color: var(--muted); font-size: var(--text-sm); font-weight: 500;
-    }
-    .steps li.current { border-color: var(--primary); color: var(--ink); }
-    .steps li.done { border-color: var(--primary); color: var(--ink-2); }
-    .steps .n {
-      display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 50%;
-      background: var(--surface-subtle); color: var(--muted); font-size: var(--text-xs);
-    }
-    .steps .current .n { background: var(--primary); color: var(--on-primary); }
-    .steps .done .n { background: var(--primary-soft); color: var(--primary); }
-    .steps .n svg { width: 14px; height: 14px; }
     .card-body { display: grid; gap: 18px; padding: 20px; }
     label.field { display: grid; gap: 6px; }
     label.field > span { font-size: var(--text-sm); font-weight: 500; color: var(--ink-2); }
@@ -980,7 +962,6 @@ export class EspRemoteWizard extends LitElement {
     .ha-icon svg { width: 22px; height: 22px; }
     .ha-error { color: var(--danger); }
     @media (max-width: 560px) {
-      .steps li { flex-direction: column; align-items: flex-start; gap: 4px; font-size: var(--text-xs); }
       .card-body { padding: 16px; }
     }
   `];

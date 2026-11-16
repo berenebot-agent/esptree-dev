@@ -65,7 +65,9 @@ export class EspnowApp extends LitElement {
     else this.removeAttribute('theme');
     const meta = document.querySelector('meta[name="color-scheme"]');
     meta?.setAttribute('content', mode ?? 'light dark');
-    document.documentElement.style.background = mode === 'dark' ? '#111414' : mode === 'light' ? '#f4f6f6' : '';
+    // Paint the page behind the panel with the resolved canvas token, so an
+    // overscroll never flashes the other theme's ground.
+    document.documentElement.style.background = mode ? getComputedStyle(this).getPropertyValue('--canvas').trim() : '';
   };
   private themeTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -430,14 +432,14 @@ export class EspnowApp extends LitElement {
       height: 20px;
       padding: 0 6px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.16);
+      background: var(--toolbar-chip);
       color: var(--toolbar-ink);
       font-size: var(--text-xs);
       font-weight: 600;
       justify-content: center;
       font-variant-numeric: tabular-nums;
     }
-    .tab-count.live { background: var(--toolbar-indicator); color: #2b1a00; }
+    .tab-count.live { background: var(--toolbar-indicator); color: var(--on-indicator); }
     .tab-count svg { width: 12px; height: 12px; }
 
     .toolbar-end {
@@ -455,10 +457,10 @@ export class EspnowApp extends LitElement {
       font-size: var(--text-sm);
     }
     .status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sdot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: #6fd08a; box-shadow: 0 0 0 3px rgba(111, 208, 138, 0.2); }
+    .sdot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--toolbar-ok); }
     .status.bad { color: var(--toolbar-ink); }
-    .status.bad .sdot { background: #ff8a80; box-shadow: 0 0 0 3px rgba(255, 138, 128, 0.25); }
-    .status.warn .sdot { background: var(--toolbar-indicator); box-shadow: none; }
+    .status.bad .sdot { background: var(--toolbar-bad); }
+    .status.warn .sdot { background: var(--toolbar-indicator); }
 
     .outage {
       display: flex;

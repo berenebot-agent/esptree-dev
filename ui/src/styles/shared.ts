@@ -249,6 +249,40 @@ export const shared = css`
   .segmented button:hover { color: var(--ink); }
   .segmented button[aria-pressed='true'] { background: var(--primary-soft); color: var(--primary); }
 
+  /* Pipeline stages (lib/stages.ts) ------------------------------------------ */
+  .steps { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .steps li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    border-top: 3px solid var(--line);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .steps li.current { border-color: var(--primary); color: var(--ink); }
+  .steps li.done { border-color: var(--primary); color: var(--ink-2); }
+  .steps .n {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--surface-subtle);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+  .steps .current .n { background: var(--primary); color: var(--on-primary); }
+  .steps .done .n { background: var(--primary-soft); color: var(--primary); }
+  .steps .n svg { width: 14px; height: 14px; }
+  @media (max-width: 560px) {
+    .steps li { flex-direction: column; align-items: flex-start; gap: 4px; font-size: var(--text-xs); }
+  }
+
   /* Data tables ------------------------------------------------------------- */
   .table-wrap { overflow-x: auto; }
   table.data { width: 100%; border-collapse: collapse; font-size: var(--text-md); }
@@ -302,6 +336,7 @@ export const shared = css`
   .empty .btn { margin-top: 10px; }
   .empty .btn svg { width: 18px; height: 18px; margin: 0; color: inherit; }
   .spinner {
+    display: inline-block;
     width: 18px;
     height: 18px;
     border: 2px solid var(--line-strong);

@@ -74,6 +74,19 @@ colors:
   log-ink-dark: "#d7e0e1"
   log-muted-dark: "#879598"
   scrim-dark: "rgba(0, 0, 0, 0.6)"
+  toolbar-ok: "#6fd08a"
+  toolbar-bad: "#ff8a80"
+  toolbar-chip: "rgba(255, 255, 255, 0.16)"
+  toolbar-outline: "rgba(255, 255, 255, 0.3)"
+  on-indicator: "#2b1a00"
+  log-line: "rgba(255, 255, 255, 0.08)"
+  log-hover: "rgba(255, 255, 255, 0.04)"
+  log-control: "rgba(255, 255, 255, 0.14)"
+  log-control-strong: "rgba(255, 255, 255, 0.3)"
+  log-warn: "#f5c46b"
+  log-error: "#ff9a92"
+  log-error-bg: "rgba(255, 90, 80, 0.08)"
+  editor-bg: "#282c34"
 typography:
   headline:
     fontFamily: 'Roboto, "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif'
@@ -257,7 +270,7 @@ Confirmed visual rejections, from the owner's direction: an in-app sidebar, a he
 **Key Characteristics:**
 - A Home Assistant panel first: 56px toolbar, horizontal tabs, no in-app vertical navigation.
 - Flat surfaces: 1px outlines do the structural work; no card shadows at rest.
-- Route tree as the signature: connector geometry encodes each link's signal quality.
+- Route tree as the signature: one connected cascade of neutral guide lines shows who routes through whom; signal lives in the Signal column.
 - Teal and amber identity on Home Assistant-standard light and dark surfaces.
 - Status by word first, colour second; numbers in tabular figures.
 - Roboto when the system has it, with the platform sans behind it; no font files are shipped.
@@ -336,6 +349,20 @@ The palette is a deep teal frame with a teal primary, amber for attention, and a
 | `log-muted` | `#8a9a9e` | `#879598` | Log secondary text |
 | `scrim` | `rgba(10, 20, 22, 0.45)` | `rgba(0, 0, 0, 0.6)` | Dialog backdrop |
 
+### Theme-independent
+The toolbar, logs and YAML editor stay dark in both themes, so their colours are one set (the `fixed` block in `theme.ts`), not a light/dark pair.
+
+| Token | Value | Role |
+|---|---|---|
+| `toolbar-ok` / `toolbar-bad` | `#6fd08a` / `#ff8a80` | Connection dot in the toolbar |
+| `toolbar-chip` | `rgba(255, 255, 255, 0.16)` | Idle jobs count pill |
+| `toolbar-outline` | `rgba(255, 255, 255, 0.3)` | Outlined button on the toolbar (setup "Skip for now") |
+| `on-indicator` | `#2b1a00` | Text on `toolbar-indicator` (live jobs count) |
+| `log-line` / `log-hover` | white at 8% / 4% | Log dividers and row hover |
+| `log-control` / `log-control-strong` | white at 14% / 30% | Log toolbar button border, and its active state |
+| `log-warn` / `log-error` / `log-error-bg` | `#f5c46b` / `#ff9a92` / red at 8% | Warning and error log lines |
+| `editor-bg` | `#282c34` | YAML editor frame, matching CodeMirror one-dark |
+
 ### Named Rules
 
 **The Tokens Only Rule.** Components read `var(--token)` and nothing else for colour. A new colour gets a token in `theme.ts` with a dark value beside its light value, so both themes stay correct.
@@ -404,7 +431,7 @@ Flat by default. Depth comes from 1px outlines and tonal grounds (`surface`, `su
 
 ### Named Rules
 
-**The Route Line Rule.** The tree's connectors are the one place where a line carries meaning. Each node's elbow takes its colour and weight from that node's link quality, so a weak hop is visible in the shape of the network without reading a number.
+**The Route Line Rule.** The tree's connectors draw structure, not signal: one neutral 2px line joins every node to its parent, so the route reads as a single cascade. Only an offline link changes, to a dashed `faint` line. Link quality lives in the Signal column (bars plus dBm), where it can be compared row to row.
 
 ## Components
 
@@ -420,6 +447,7 @@ Components use the shared vocabulary in `ui/src/styles/shared.ts` and the job vo
 - **Default:** `surface` ground, `line-strong` border, `ink` text. Hover moves the ground to `surface-hover`.
 - **Primary:** `primary` ground with `on-primary` text and a matching border. Hover moves to `primary-strong`. It marks the page's main action.
 - **Danger:** outlined with `danger` text by default. `danger-solid` (filled `danger`, `on-danger` text, hover `danger-strong`) appears only on the confirm button of a destructive dialog.
+- **Disruptive commands** (Reboot) sit in their own row under a divider, at natural width, below the routine commands they would otherwise sit among.
 - **Text:** no border or ground; `primary` text; hover fills `primary-soft`. Used for row actions such as YAML and Hide.
 - **Icon-only:** 36px square, or 30px when small. Always carries an accessible name.
 - **States:** focus-visible is a 2px `primary` outline offset 2px. Disabled is 50% opacity with a not-allowed cursor. A busy button uses a progress cursor and a spinner.
@@ -451,19 +479,19 @@ Components use the shared vocabulary in `ui/src/styles/shared.ts` and the job vo
 ### Tables and tree rows
 - **Data tables:** column heads are 12px medium `muted` with 10px 16px padding and a 1px `line` bottom divider. Cells are 14px with 12px 16px padding. Rows divide with `line`; the last row has none. Numeric cells are tabular.
 - **Route tree:** a single card. The head is `surface-subtle` with 12px `muted` column labels. Each row is at least 56px, divided by `line`, hovering to `surface-hover`. The bridge root row sits on `surface-subtle`.
-- **Row content:** a 32px node disc (bridge on `primary-soft`, offline on `danger-soft`, others on `surface-subtle`), then the name as a link with a 12px meta line of role, MAC (mono), and chip type. Signal, hops, last seen, firmware, and status follow in aligned columns. The primary row action is a text button outside the link.
+- **Row content:** a 32px node disc that reads role by weight (bridge solid `primary`; relay `primary-soft` with a 1.5px `primary` ring; remote `surface` with a `line-strong` ring; offline on `danger-soft` in `danger`), then the name as a link with a 12px meta line of role, MAC (mono), and chip type. Signal, hops, last seen, firmware, and status follow in aligned columns. The primary row action is a text button outside the link.
 - **The whole row opens the device:** the name link's hit area is stretched over the row (`position: relative` row, `.title::after { inset: 0 }`), so a click on any cell — signal, hops, last seen, firmware, status — goes to that device. Row actions sit above the overlay (`z-index: 1`) and keep their own behaviour. The row shows `cursor: pointer`, and keyboard focus on the link rings the row.
 
 ### Route tree signature
-- **Connectors:** each ancestor level draws a 2px `line-strong` rail through the rows below it. Each node's elbow comes off its parent's rail with its own colour and weight:
-  - **Strong** (RSSI ≥ -67 dBm): 3px `ok-dot` link.
-  - **Fair** (-80 to -68 dBm): 2px `accent-fill` link.
-  - **Weak** (below -80 dBm): 1px `danger` link.
-  - **Down** (offline): dashed `danger` link at 70% opacity.
-  - **Unknown** (no RSSI): 2px `line-strong`.
-  - The last child's rail stops at the elbow.
+- **Connectors:** each level is indented one step, so a child's elbow sits under its parent's icon. A parent drops a 2px `line-strong` stem to its first child; ancestors with later siblings carry a rail through the rows between; each elbow runs into its child's icon. The last child's rail stops at the elbow. An offline node's elbow is dashed `faint`.
+- **Signal:** strong is RSSI ≥ -67 dBm, fair -80 to -68 dBm, weak below -80 dBm (see the signal meter below).
 - **Signal meter:** four bars rising from 5px to 14px, 4px wide. Strong lights four bars in `ok-dot`, fair three in `accent-fill`, weak one in `danger`. The dBm value is printed beside the bars, so the meter is never the only signal.
 - **Offline rows:** the disc and name shift to `danger` and `ink-2`, and the status reads "Missed heartbeats", "Not reported by bridge", or "Offline".
+
+### Pipeline stages
+- The firmware pipeline's progress row (`renderStages()` in `ui/src/lib/stages.ts`, `.steps` in `shared.ts`). Both the remote wizard (Describe, Build, Flash, Join) and the bridge flash in setup (Configure, Build, Flash, Detect) use it.
+- Each stage is a 3px top bar with a 22px numbered disc and a 13px label. The current stage has a `primary` bar and a solid `primary` disc; a finished stage keeps the `primary` bar and shows a check on `primary-soft`. Below 560px the label drops under the disc.
+- Setup's outer steps (bridge, restart, integration) are cards, not this row: a locked step shows one line saying what to do first.
 
 ### Facts
 - Key/value pairs in an auto-fill grid. Keys are 12px `muted`; values are 14px `ink` with tabular figures and overflow wrapping.

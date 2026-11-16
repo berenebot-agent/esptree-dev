@@ -165,9 +165,9 @@ export class EspActivityLogPage extends LitElement {
     .count { margin-left: auto; color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
     .log-body { flex: 1; overflow: auto; padding: 8px 0 12px; background: var(--log-bg); }
     .log-line { margin: 0; padding: 1px 16px; color: var(--log-ink); font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .log-line:hover { background: rgba(255, 255, 255, 0.04); }
-    .log-line.warn { color: #f5c46b; }
-    .log-line.error { color: #ff9a92; background: rgba(255, 90, 80, 0.08); }
+    .log-line:hover { background: var(--log-hover); }
+    .log-line.warn { color: var(--log-warn); }
+    .log-line.error { color: var(--log-error); background: var(--log-error-bg); }
     .log-line.debug { color: var(--log-muted); }
     .log-empty { display: grid; justify-items: center; gap: 6px; min-height: 300px; align-content: center; padding: 30px; text-align: center; color: var(--log-muted); }
     .log-empty strong { color: var(--log-ink); font-weight: 500; font-size: var(--text-lg); }

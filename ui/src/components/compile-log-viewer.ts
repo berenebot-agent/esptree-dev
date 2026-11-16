@@ -175,7 +175,7 @@ export class EspCompileLogViewer extends LitElement {
       align-items: center;
       gap: 8px;
       padding: 6px 8px 6px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--log-line);
       color: var(--log-muted);
       font-size: var(--text-xs);
     }
@@ -184,7 +184,7 @@ export class EspCompileLogViewer extends LitElement {
     .ctrl-btn {
       min-height: 28px;
       padding: 0 10px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid var(--log-control);
       border-radius: var(--radius-sm);
       background: transparent;
       color: var(--log-ink);
@@ -192,8 +192,8 @@ export class EspCompileLogViewer extends LitElement {
       font-size: var(--text-xs);
       cursor: pointer;
     }
-    .ctrl-btn:hover { background: rgba(255, 255, 255, 0.08); }
-    .ctrl-btn.active { border-color: rgba(255, 255, 255, 0.3); }
+    .ctrl-btn:hover { background: var(--log-line); }
+    .ctrl-btn.active { border-color: var(--log-control-strong); }
     .log-body {
       flex: 1;
       min-height: 160px;

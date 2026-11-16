@@ -103,6 +103,28 @@ const dark = css`
   color-scheme: dark;
 `;
 
+/*
+ * Surfaces that stay dark in both themes (the toolbar, logs, the YAML editor)
+ * share one set of values, so these are not split into light and dark.
+ */
+const fixed = css`
+  --toolbar-ok: #6fd08a;
+  --toolbar-bad: #ff8a80;
+  --toolbar-chip: rgba(255, 255, 255, 0.16);
+  --toolbar-outline: rgba(255, 255, 255, 0.3);
+  --on-indicator: #2b1a00;
+
+  --log-line: rgba(255, 255, 255, 0.08);
+  --log-hover: rgba(255, 255, 255, 0.04);
+  --log-control: rgba(255, 255, 255, 0.14);
+  --log-control-strong: rgba(255, 255, 255, 0.3);
+  --log-warn: #f5c46b;
+  --log-error: #ff9a92;
+  --log-error-bg: rgba(255, 90, 80, 0.08);
+  /* CodeMirror's one-dark ground, so the editor frame matches its theme. */
+  --editor-bg: #282c34;
+`;
+
 const scale = css`
   --font-sans: Roboto, "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Roboto Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -128,6 +150,7 @@ const scale = css`
 export const themeTokens = css`
   :host {
     ${scale}
+    ${fixed}
     ${light}
   }
   @media (prefers-color-scheme: dark) {

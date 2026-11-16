@@ -26,7 +26,7 @@ function checkYamlWarnings(text: string): string[] {
     warnings.push('This config uses packages: which is not supported in V1. Each device must be a single YAML file.');
   }
   if (!hasEspTreeExternalComponents(text)) {
-    warnings.push('ESP-Tree external components are not configured. See the required configuration when saving or compiling.');
+    warnings.push('ESP Tree external components are not configured. See the required configuration when saving or compiling.');
   }
   return warnings;
 }
@@ -134,7 +134,7 @@ export class EspConfigEditor extends LitElement {
       display: flex;
       flex-direction: column;
       min-width: 0;
-      background: #282c34;
+      background: var(--editor-bg);
     }
     .editor-container .cm-editor {
       flex: 1;

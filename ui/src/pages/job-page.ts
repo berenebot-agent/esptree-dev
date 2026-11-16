@@ -195,7 +195,7 @@ export class EspJobPage extends LitElement {
             <div>
               <h1>${jobLabel}</h1>
               <p class="sub meta">
-                ${status ? html`<span class="chip ${st.tone === 'neutral' ? '' : st.tone}">${STATUS_LABELS[status] || st.label}</span>` : nothing}
+                ${status ? html`<span class="chip ${st.tone === 'neutral' ? '' : st.tone}">${st.tone === 'ok' || st.tone === 'danger' ? html`<span class="dot ${st.tone}"></span>` : nothing}${STATUS_LABELS[status] || st.label}</span>` : nothing}
                 ${!isTerminal ? html`<span class="live"><span class="pulse"></span>Live</span>` : nothing}
                 ${job ? html`<a href=${`#/device/${encodeURIComponent(job.mac)}`} class="mono">${job.mac}</a>` : nothing}
               </p>

@@ -136,7 +136,9 @@ export class EspDeviceConfig extends LitElement {
         <button class="btn" aria-haspopup="dialog" ?disabled=${off} @click=${() => { this.showHeartbeatModal = true; }}>Set heartbeat</button>
         <button class="btn" aria-haspopup="dialog" ?disabled=${off} @click=${() => { this.showParentModal = true; void this.updateComplete.then(() => (this.renderRoot.querySelector('#pp') as HTMLElement | null)?.focus()); }}>Set parent</button>
         <button class="btn" ?disabled=${off} @click=${() => this.rediscover()}>Rediscover route</button>
-        <button class="btn danger reboot" ?disabled=${off} @click=${() => this.reboot()}>${icon('power')}Reboot</button>
+      </div>
+      <div class="command-foot">
+        <button class="btn danger" ?disabled=${off} @click=${() => this.reboot()}>${icon('power')}Reboot</button>
       </div>
       ${this.showRelayModal ? this.renderRelayModal() : nothing}
       ${this.showHeartbeatModal ? this.renderHeartbeatModal() : nothing}
@@ -235,8 +237,8 @@ export class EspDeviceConfig extends LitElement {
       padding: 8px 16px 16px;
     }
     .command-grid .btn { width: 100%; }
-    .command-grid .reboot { grid-column: 1 / -1; margin-top: 8px; }
-    .command-grid .reboot svg { width: 16px; height: 16px; }
+    .command-grid { padding-bottom: 12px; }
+    .command-foot { display: flex; padding: 12px 16px; border-top: 1px solid var(--line); }
     .toast { margin: 0 16px 16px; }
 
     .scrim {
@@ -263,7 +265,6 @@ export class EspDeviceConfig extends LitElement {
 
     @media (max-width: 520px) {
       .command-grid { grid-template-columns: minmax(0, 1fr); }
-      .command-grid .reboot { grid-column: auto; }
     }
   `];
 }
