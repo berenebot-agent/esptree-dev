@@ -1,4 +1,4 @@
-# ESP-NOW Bridge — Serial Mode (USB CDC)
+# ESP-NOW Bridge — Serial Mode (hardware UART via USB-UART adapter)
 # Uses serial_transport instead of WiFi/MQTT for upstream communication.
 #
 # Usage:
@@ -23,14 +23,12 @@ esp32:
       CONFIG_ESP_MAIN_TASK_STACK_SIZE: "12288"
 
 logger:
-  # Pin the console to UART0 explicitly. Without `hardware_uart:` ESPHome
-  # defaults an ESP32-C5/C6/S3 to USB-Serial-JTAG and generates
-  # CONFIG_ESP_CONSOLE_UART_NUM=-1, which routes the log stream AND any panic
-  # backtrace to native USB — a port this board does not use. On a CH340/CP2102
-  # wired to tx_pin/rx_pin below, that makes an early crash indistinguishable
-  # from a silent hang. Keep this on the same UART (and baud) as bridge_uart.
+  # baud_rate: 0 keeps log text off the data line. bridge_uart below owns the
+  # UART0 pins and carries binary COBS frames; a log line written there has no
+  # 0x00, glues onto the next frame and makes the add-on drop it. Read logs via
+  # the web server instead (or flash a separate debug build).
   hardware_uart: UART0
-  baud_rate: 460800
+  baud_rate: 0
   level: DEBUG
 
 ota:
@@ -83,8 +81,7 @@ esp_tree_bridge:
   api_key: !secret bridge_api_key
   serial_transport:
     uart_id: bridge_uart
-    # `usb_cdc: {}` is only correct on boards wired via native USB (ESP32-C5/S3/S2
-    # native CDC). This demo uses a hardware UART adapter (tx_pin/rx_pin above),
-    # so USE_USB_CDC must NOT be set — omit usb_cdc entirely.
+    # Only a hardware UART through a USB-UART adapter chip (CP2102/CH340/FTDI)
+    # is supported. Native USB (USB CDC / USB-Serial-JTAG) is not implemented.
 
 # No wifi: block — serial mode (WiFi not required when serial_transport is present)

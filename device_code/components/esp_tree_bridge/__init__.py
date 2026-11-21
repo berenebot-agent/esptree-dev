@@ -34,7 +34,13 @@ UARTComponent = cg.esphome_ns.namespace("uart").class_("UARTComponent", cg.Compo
 SERIAL_TRANSPORT_SCHEMA = cv.Schema(
     {
         cv.Required(CONF_UART_ID): cv.use_id(UARTComponent),
-        cv.Optional(CONF_USB_CDC): cv.Schema({}),
+        # Native USB (USB CDC / USB-Serial-JTAG) was never implemented: the flag
+        # this used to set was read by nothing, so a board wired that way just sat
+        # silent. Reject it instead of pretending.
+        cv.Optional(CONF_USB_CDC): cv.invalid(
+            "usb_cdc is not supported: the serial transport needs a hardware UART "
+            "wired through a USB-UART adapter (CP2102/CH340/FTDI) on the UART0 pins"
+        ),
     }
 )
 
@@ -91,8 +97,6 @@ async def to_code(config):
         uart_var = await cg.get_variable(serial_config[CONF_UART_ID])
         cg.add(var.set_uart_component(uart_var))
 
-        if CONF_USB_CDC in serial_config:
-            cg.add_build_flag("-DUSE_USB_CDC")
     else:
         if "wifi" not in core.CORE.loaded_integrations:
             raise cv.Invalid(

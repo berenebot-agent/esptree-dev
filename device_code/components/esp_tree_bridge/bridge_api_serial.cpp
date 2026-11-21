@@ -3,6 +3,7 @@
 #include "bridge_api_serial.h"
 #include "bridge_api_auth.h"
 #include "bridge_json_utils.h"
+#include "bridge_serial_framer.h"
 #include "esp_tree_bridge.h"
 #include "esp_tree_common/cobs_codec.h"
 #include "esp_tree_common/espnow_crypto.h"
@@ -39,6 +40,9 @@ enum class SerialAuthState {
 };
 
 struct BridgeApiSerialTransport::Impl {
+  static constexpr uint32_t CONNECTION_TIMEOUT_MS = 60000;
+  static constexpr size_t MAX_RX_BUFFER = runtime_pb::kRuntimeMaxFrameBytes * 2;
+
   Impl(ESPTreeBridge *bridge, BridgeApiSerialTransport *owner, esphome::uart::UARTComponent *uart)
       : bridge(bridge), owner(owner), uart(uart) {}
 
@@ -46,11 +50,11 @@ struct BridgeApiSerialTransport::Impl {
   BridgeApiSerialTransport *owner{nullptr};
   esphome::uart::UARTComponent *uart{nullptr};
   SerialAuthState auth_state{SerialAuthState::WAITING_HELLO};
-  std::vector<uint8_t> rx_buffer;
+  SerialFrameAccumulator rx_framer{MAX_RX_BUFFER};
   std::array<uint8_t, runtime_pb::kRuntimeServerNonceBytes> server_nonce{};
   uint32_t last_data_ms{0};
   uint32_t last_heartbeat_ms{0};
-  uint32_t rx_dropped_{0};
+  uint32_t rx_overflows_logged_{0};
 
   // OTA job bookkeeping, mirroring the WebSocket transport. The OTA machinery
   // itself (bridge_ota_manager) is transport-agnostic; these fields only carry the
@@ -60,9 +64,6 @@ struct BridgeApiSerialTransport::Impl {
   std::set<uint32_t> ota_pending_sequences;
   uint32_t ota_max_chunk_size{kMaxChunkSize};
   uint32_t ota_max_chunks_per_batch{6};
-
-  static constexpr uint32_t CONNECTION_TIMEOUT_MS = 60000;
-  static constexpr size_t MAX_RX_BUFFER = runtime_pb::kRuntimeMaxFrameBytes * 2;
 
   bool has_authenticated_client() const {
     return auth_state == SerialAuthState::AUTHENTICATED;
@@ -238,7 +239,7 @@ struct BridgeApiSerialTransport::Impl {
     auth_state = SerialAuthState::WAITING_HELLO;
     last_data_ms = 0;
     last_heartbeat_ms = 0;
-    rx_buffer.clear();
+    rx_framer.clear();
     if (bridge != nullptr) {
       bridge->clear_ota_transport_callbacks(owner);
     }
@@ -338,41 +339,31 @@ struct BridgeApiSerialTransport::Impl {
     }
   }
 
-  void process_rx_buffer() {
-    while (true) {
-      auto delim = std::find(rx_buffer.begin(), rx_buffer.end(), 0x00);
-      if (delim == rx_buffer.end()) return;
-
-      std::vector<uint8_t> frame_data(rx_buffer.begin(), delim);
-      rx_buffer.erase(rx_buffer.begin(), delim + 1);
-
-      if (frame_data.empty()) continue;
-
-      std::vector<uint8_t> decoded;
-      decoded.resize(frame_data.size());
-      size_t decoded_len = 0;
-      if (!esphome::esp_tree::cobs_decode(frame_data.data(), frame_data.size(),
-                                           decoded.data(), decoded_len)) {
-        ESP_LOGW(TAG, "Serial: COBS decode failure, discarding frame");
-        continue;
-      }
-      decoded.resize(decoded_len);
-      if (decoded.empty()) continue;
-
-      runtime_pb::ParsedEnvelope env;
-      if (!runtime_pb::parse_envelope(decoded.data(), decoded.size(), env)) {
-        ESP_LOGW(TAG, "Serial: protobuf parse failure, discarding frame");
-        continue;
-      }
-      if (env.api_version != runtime_pb::kRuntimeApiVersion) {
-        std::vector<uint8_t> err;
-        runtime_pb::error_envelope(err, env.request_id, "unsupported_version", "Unsupported API version");
-        send_cobs_frame(err);
-        continue;
-      }
-
-      handle_envelope(env);
+  void process_frame(const std::vector<uint8_t> &frame_data) {
+    std::vector<uint8_t> decoded;
+    decoded.resize(frame_data.size());
+    size_t decoded_len = 0;
+    if (!esphome::esp_tree::cobs_decode(frame_data.data(), frame_data.size(),
+                                         decoded.data(), decoded_len)) {
+      ESP_LOGW(TAG, "Serial: COBS decode failure, discarding frame");
+      return;
     }
+    decoded.resize(decoded_len);
+    if (decoded.empty()) return;
+
+    runtime_pb::ParsedEnvelope env;
+    if (!runtime_pb::parse_envelope(decoded.data(), decoded.size(), env)) {
+      ESP_LOGW(TAG, "Serial: protobuf parse failure, discarding frame");
+      return;
+    }
+    if (env.api_version != runtime_pb::kRuntimeApiVersion) {
+      std::vector<uint8_t> err;
+      runtime_pb::error_envelope(err, env.request_id, "unsupported_version", "Unsupported API version");
+      send_cobs_frame(err);
+      return;
+    }
+
+    handle_envelope(env);
   }
 
   void check_connection_timeout() {
@@ -405,21 +396,21 @@ BridgeApiSerialTransport::~BridgeApiSerialTransport() = default;
 void BridgeApiSerialTransport::loop() {
   if (impl_->uart == nullptr) return;
 
+  std::vector<uint8_t> frame;
   while (impl_->uart->available() > 0) {
     uint8_t byte;
     if (!impl_->uart->read_byte(&byte)) break;
-    if (impl_->rx_buffer.size() < impl_->MAX_RX_BUFFER) {
-      impl_->rx_buffer.push_back(byte);
-    } else {
-      impl_->rx_dropped_++;
+    if (impl_->rx_framer.push(byte, frame)) {
+      impl_->process_frame(frame);
     }
   }
 
-  if (impl_->rx_dropped_ > 0 && impl_->rx_dropped_ % 100 == 0) {
-    ESP_LOGW(TAG, "Serial RX buffer full — dropped %u bytes so far", (unsigned int)impl_->rx_dropped_);
+  if (impl_->rx_framer.overflows() != impl_->rx_overflows_logged_) {
+    impl_->rx_overflows_logged_ = impl_->rx_framer.overflows();
+    ESP_LOGW(TAG, "Serial RX frame exceeded %u bytes without a delimiter; resynchronising (%u bytes dropped so far)",
+             static_cast<unsigned>(impl_->MAX_RX_BUFFER), static_cast<unsigned>(impl_->rx_framer.dropped()));
   }
 
-  impl_->process_rx_buffer();
   impl_->check_connection_timeout();
   impl_->emit_heartbeat_if_due();
 }

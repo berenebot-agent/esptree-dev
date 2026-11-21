@@ -237,7 +237,14 @@ value:
 | `esp32c3` | GPIO21 | GPIO20 |
 | `esp32c5` | GPIO11 | GPIO12 |
 | `esp32c6` | GPIO16 | GPIO17 |
-| `esp32h2` | GPIO24 | GPIO23 |
+
+`esp32h2` is deliberately absent: the H2 has no Wi-Fi radio, so it cannot run
+ESP-NOW and can never be a bridge. A serial scaffold for it raises, and the
+bridge setup wizard refuses a detected H2 (`test/tests/test_serial_scaffold_pins.py`).
+
+These must be the pins a **USB-UART adapter chip** is wired to. Native USB (USB
+CDC / USB-Serial-JTAG) is not a supported serial transport; see
+`docs/CONFIGURATION.md` → *Serial bridge requirements and limits*.
 
 Lookup falls back to `esp32` only when `variant` is absent **and** `platform` is
 exactly `esp32` (`app/yaml_scaffold.py:68-74`). A C5 board with no `variant` gets

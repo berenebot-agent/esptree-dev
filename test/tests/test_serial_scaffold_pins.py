@@ -19,6 +19,8 @@ def test_every_chip_board_entry_yields_uart0_pins():
         pins = uart0_pins_for_board(board_info)
         if board_info.get("platform", "").startswith("esp8266"):
             continue  # not a serial-transport target
+        if board_info.get("variant") == "esp32h2":
+            continue  # no Wi-Fi radio: never a bridge (see test below)
         assert pins is not None, f"{chip_name} has no UART0 mapping: {board_info}"
 
 
@@ -33,3 +35,9 @@ def test_missing_variant_is_not_silently_accepted():
 
 def test_classic_esp32_falls_back_to_its_default_pair():
     assert uart0_pins_for_board({"platform": "esp32"}) == UART0_PINS_BY_VARIANT["esp32"]
+
+
+def test_esp32h2_is_never_a_serial_bridge():
+    """The H2 has no Wi-Fi radio, so it cannot run ESP-NOW: refuse to scaffold it."""
+    assert uart0_pins_for_board({"platform": "esp32-h2", "variant": "esp32h2"}) is None
+    assert "esp32h2" not in UART0_PINS_BY_VARIANT

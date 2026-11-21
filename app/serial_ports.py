@@ -65,3 +65,31 @@ def list_serial_ports(dev_dir: str = "/dev") -> list[dict[str, Any]]:
             }
         )
     return ports
+
+
+def stable_serial_path(port: str, dev_dir: str = "/dev") -> str:
+    """Return the ``/dev/serial/by-id/*`` alias for ``port`` when one exists.
+
+    ``/dev/ttyUSB0`` renumbers on replug and reboot, so saving it means a bridge
+    can later point at a different adapter or at nothing. The by-id symlink carries
+    the adapter's serial number and survives that. URLs (``socket://``,
+    ``rfc2217://``), paths that are already by-id, and ports with no by-id alias
+    (unplugged, or a host without udev links) are returned unchanged.
+    """
+    port = (port or "").strip()
+    if not port or "://" in port:
+        return port
+    by_id_dir = Path(dev_dir) / "serial" / "by-id"
+    if port.startswith(str(by_id_dir)) or not by_id_dir.is_dir():
+        return port
+    try:
+        resolved = Path(port).resolve(strict=True)
+    except OSError:
+        return port
+    for link in sorted(by_id_dir.glob("*")):
+        try:
+            if link.resolve(strict=True) == resolved:
+                return str(link)
+        except OSError:
+            continue
+    return port

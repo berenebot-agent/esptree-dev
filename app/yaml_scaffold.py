@@ -77,7 +77,8 @@ UART0_PINS_BY_VARIANT: dict[str, tuple[int, int]] = {
     "esp32c3": (21, 20),
     "esp32c5": (11, 12),
     "esp32c6": (16, 17),
-    "esp32h2": (24, 23),
+    # No esp32h2: the H2 has no Wi-Fi radio, so it cannot run ESP-NOW and can
+    # never be a bridge. Leaving it out makes a serial scaffold for it fail loudly.
 }
 
 # The hardware FIFO is 128 bytes and the link runs at ~46 KB/s at 460800 baud, so
@@ -287,13 +288,15 @@ def generate_scaffold(node: dict[str, Any], bridge_config: dict[str, Any] | None
         lines.extend([
             "logger:",
             "  level: DEBUG",
-            # Pin the console to UART0. Without hardware_uart: ESPHome defaults the
-            # C5/C6/S3 to USB-Serial-JTAG and emits CONFIG_ESP_CONSOLE_UART_NUM=-1,
-            # which routes logs AND panic backtraces to native USB. On a CH340/
-            # CP2102 wired to the UART0 pins that makes an early crash look like a
-            # silent hang. Must match the bridge_uart baud below.
+            # baud_rate: 0 keeps log text OFF the data line. bridge_uart owns the
+            # UART0 pins and carries binary COBS frames; any log line written there
+            # has no 0x00, glues onto the front of the next frame and makes the
+            # add-on drop it (auth_ok and the snapshot are the usual victims).
+            # Previously the logger also sat on UART0 at the same baud, so ESPHome
+            # moved bridge_uart to UART1 on the same pins and the two peripherals
+            # fought over TX. Logs remain available through the web server.
             "  hardware_uart: UART0",
-            f"  baud_rate: {baud}",
+            "  baud_rate: 0",
             "",
             "# UART bus for serial transport. The larger rx_buffer_size is required:",
             "# the ESP32 FIFO is 128 bytes and data arrives at ~46 KB/s at 460800",

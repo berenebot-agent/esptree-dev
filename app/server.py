@@ -62,6 +62,7 @@ from .models import (
     now_ts,
 )
 from .ota_worker import OTAWorker
+from .serial_ports import stable_serial_path
 from .pairing_store import PendingImportStore
 from .preflight import preflight_comparison
 from .protobuf.generated import esp_tree_runtime_pb2 as pb
@@ -1937,7 +1938,9 @@ def create_app() -> FastAPI:
                 # choice is lost here: the row would always look like a wifi bridge
                 # and the serial client would never be started for it.
                 transport=transport,
-                serial_port=body.serial_port.strip(),
+                # Save the stable /dev/serial/by-id alias, not ttyUSBn: the latter
+                # renumbers on replug/reboot and the bridge would stop resolving.
+                serial_port=stable_serial_path(body.serial_port.strip()),
                 baud=int(body.baud or 460800),
                 # Keep the OTA password on the bridge record as well as in secrets.yaml.
                 # secrets.yaml holds ONE ota_password for the whole network, so
@@ -2206,7 +2209,7 @@ def create_app() -> FastAPI:
             api_key=req.api_key or "",
             hostname=hostname,
             transport=req.transport,
-            serial_port=req.serial_port,
+            serial_port=stable_serial_path(req.serial_port) if req.transport == "serial" else req.serial_port,
             baud=req.baud,
         )
         await reconnect_bridge()

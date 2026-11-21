@@ -17,6 +17,7 @@ from google.protobuf.message import DecodeError
 import json
 from .bridge_constants import API_VERSION, BACKOFF_DELAYS, CLIENT_KIND, ConnectionHandler, FrameHandler, PLACEHOLDER_MAC, PROTOCOL
 from .bridge_serial_client import SerialBridgeClient
+from .serial_ports import stable_serial_path
 from .models import BridgeTarget, normalize_mac, now_ts
 from .protobuf.generated import esp_tree_runtime_pb2 as pb
 
@@ -498,6 +499,15 @@ class BridgeV2Manager:
                 continue
             self._skipped_bridges.pop(bridge_uuid, None)
             serial_port = bridge.get("serial_port", "")
+            if transport == "serial":
+                # Upgrade a saved /dev/ttyUSBn to its by-id alias while the adapter
+                # is plugged in, so a later replug/renumber still resolves. Persist
+                # it so the next sync sees the same target and keeps the client.
+                stable = stable_serial_path(serial_port)
+                if stable != serial_port:
+                    logger.info("serial bridge %s: using stable port %s for %s", bridge_uuid, stable, serial_port)
+                    await asyncio.to_thread(self._db.set_bridge_serial_port, bridge_uuid, stable)
+                    serial_port = stable
             baud = bridge.get("baud", 460800)
             wanted.add(bridge_uuid)
             existing = self._clients.get(bridge_uuid)

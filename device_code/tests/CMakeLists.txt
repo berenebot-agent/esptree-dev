@@ -163,3 +163,7 @@ add_test(NAME protocol_join_test COMMAND protocol_join_test)
 add_executable(cobs_codec_test cobs_codec_test.cpp)
 target_include_directories(cobs_codec_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR}/../components)
 add_test(NAME cobs_codec_test COMMAND cobs_codec_test)
+
+add_executable(serial_framer_test serial_framer_test.cpp)
+target_include_directories(serial_framer_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR}/../components)
+add_test(NAME serial_framer_test COMMAND serial_framer_test)

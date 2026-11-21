@@ -31,6 +31,11 @@ KEEPALIVE_INTERVAL_S = 20
 # How long to wait for the Pong before giving up on this keepalive tick.
 KEEPALIVE_PONG_TIMEOUT_S = 5.0
 SERIAL_READ_TIMEOUT = 0.1
+# ClientHello is re-sent on these waits until a challenge arrives (total ~10s).
+# The ROM boot text an ESP32 prints after reset has no 0x00 in it, so it glues
+# onto the front of the first frame and the challenge can be lost; waiting the
+# full 10s for it made every first connect after power-up slow.
+HELLO_RETRY_WAITS_S = (2.0, 2.0, 6.0)
 
 
 class SerialBridgeClient:
@@ -63,6 +68,11 @@ class SerialBridgeClient:
         self._loop: asyncio.AbstractEventLoop | None = None
         self._reconnect_task: asyncio.Task[None] | None = None
         self._last_data_time: float = 0.0
+        self._last_send_time: float = 0.0
+        # Set once the session is authenticated AND on_connection_change(True) has
+        # run. Until then, frames are queued so they are never delivered ahead of
+        # the connection callback or out of order with frames buffered during auth.
+        self._session_ready = False
 
     def start(self) -> None:
         if self._reconnect_task is None or self._reconnect_task.done():
@@ -124,6 +134,7 @@ class SerialBridgeClient:
             finally:
                 was_connected = self._connected
                 self._connected = False
+                self._session_ready = False
                 self._stop_reader()
                 self._fail_pending(ConnectionError("serial bridge disconnected"))
                 if was_connected and self._loop and not self._loop.is_closed():
@@ -153,30 +164,15 @@ class SerialBridgeClient:
         if "://" in configured:
             return configured
 
-        available = list(serial.tools.list_ports.comports())
-
-        # Resolve by stable by-id path first: /dev/ttyUSB0 renumbers between replug
-        # and reboot, so a saved path can silently point at a different adapter (or
-        # a phantom virtual UART). The by-id symlink carries the adapter's serial
-        # number and survives the renumber.
-        configured_lower = configured.lower()
-        if configured_lower.startswith("/dev/serial/by-id/") and Path(configured).exists():
+        # Anything else must be a device node that exists now. A saved
+        # /dev/ttyUSBn is upgraded to its /dev/serial/by-id alias when the bridge
+        # is saved or synced (serial_ports.stable_serial_path), which is what
+        # survives a replug/renumber. The target is deliberately never rewritten
+        # here: the manager compares targets to decide whether to restart us.
+        if configured and Path(configured).exists():
             return configured
-
-        for port in available:
-            if port.device == configured:
-                return configured
-
-        # Match a saved /dev/ttyUSBn or /dev/ttyACMn against the adapter that now
-        # answers for it, by USB identity, so a renumber is recovered rather than
-        # reported as "not found".
-        for port in available:
-            if configured and (configured_lower in (port.description or "").lower()
-                                or configured_lower in (port.hwid or "").lower()):
-                self.target.serial_port = port.device
-                logger.info("serial bridge: hotplug resolved %s → %s", configured, port.device)
-                return port.device
-
+        if any(port.device == configured for port in serial.tools.list_ports.comports()):
+            return configured
         return None
 
     def _connect_once(self) -> None:
@@ -191,12 +187,29 @@ class SerialBridgeClient:
             url=port,
             baudrate=self.target.baud,
             timeout=SERIAL_READ_TIMEOUT,
+            do_not_open=True,
         )
+        if "://" not in port:
+            # Hold DTR/RTS deasserted across open. On boards with the usual
+            # two-transistor auto-reset circuit (CP2102/CH340 devkits) these lines
+            # drive EN/IO0, and leaving pyserial's default (asserted) lets an open
+            # or close glitch reset the bridge, dropping every ESP-NOW session on
+            # each reconnect. Same approach as ESPHome's own serial log reader.
+            ser.dtr = False
+            ser.rts = False
+        ser.open()
+        try:
+            # Discard whatever was queued before we opened (boot text, a previous
+            # session's tail) so it cannot prefix the first frame we read.
+            ser.reset_input_buffer()
+        except Exception:
+            pass
         self._serial = ser
         logger.info("serial bridge %s: opened %s @ %d baud", self.bridge_uuid, port, self.target.baud)
 
     async def _run_auth(self) -> None:
         self._last_data_time = time.monotonic()
+        self._last_send_time = self._last_data_time
         self._reader_thread = threading.Thread(
             target=self._read_loop,
             daemon=True,
@@ -209,25 +222,30 @@ class SerialBridgeClient:
         self._auth_challenge_future = auth_challenge_future
         self._auth_ok_future = auth_ok_future
         self._auth_pending_frames = []
-        client_hello = pb.Envelope(
-            request_id=uuid.uuid4().hex,
-            api_version=API_VERSION,
-            client_hello=pb.ClientHello(request_full_snapshot=True, integration_version="addon"),
-        )
-        # Install the receiver before writing: a fast device may challenge before
-        # the write call returns.
-        self._send_envelope_sync(client_hello)
+        self._session_ready = False
 
         try:
-            await asyncio.wait_for(asyncio.shield(auth_challenge_future), timeout=10)
-        except asyncio.TimeoutError as exc:
-            self._auth_challenge_future = None
+            for attempt, wait_s in enumerate(HELLO_RETRY_WAITS_S):
+                client_hello = pb.Envelope(
+                    request_id=uuid.uuid4().hex,
+                    api_version=API_VERSION,
+                    client_hello=pb.ClientHello(request_full_snapshot=True, integration_version="addon"),
+                )
+                # Install the receiver before writing: a fast device may challenge
+                # before the write call returns.
+                self._send_envelope_sync(client_hello)
+                try:
+                    await asyncio.wait_for(asyncio.shield(auth_challenge_future), timeout=wait_s)
+                    break
+                except asyncio.TimeoutError as exc:
+                    if attempt == len(HELLO_RETRY_WAITS_S) - 1:
+                        raise RuntimeError("timeout waiting for auth_challenge from bridge") from exc
+                    logger.debug("serial bridge %s: no auth_challenge yet, resending ClientHello", self._port_desc())
+        except Exception:
+            # Includes the "authentication failed before challenge" RuntimeError
+            # that _route_frame sets on the challenge future.
             self._auth_ok_future = None
-            raise RuntimeError("timeout waiting for auth_challenge from bridge") from exc
-        except RuntimeError as exc:
-            self._auth_challenge_future = None
-            self._auth_ok_future = None
-            raise RuntimeError("authentication failed before challenge") from exc
+            raise
         finally:
             self._auth_challenge_future = None
 
@@ -268,9 +286,13 @@ class SerialBridgeClient:
         self.bridge_mac = normalize_mac(auth_env.auth_ok.bridge.bridge_mac)
         self._connected = True
         await self._on_connection_change(self, True)
+        # Frames that arrived after auth_ok (the full snapshot, early events) were
+        # queued by _route_frame; deliver them in arrival order, then go live. No
+        # await between the replay and the flag, so nothing can slip in between.
         pending_frames, self._auth_pending_frames = self._auth_pending_frames, []
         for pending_env, pending_raw in pending_frames:
             self._dispatch_frame(pending_env, pending_raw)
+        self._session_ready = True
         await self._run_session()
 
     async def _keepalive_loop(self) -> None:
@@ -291,7 +313,13 @@ class SerialBridgeClient:
                 return
             if not self.connected or self._stop_event.is_set():
                 continue
-            idle = time.monotonic() - self._last_data_time
+            # Ping when EITHER direction has been quiet. The bridge's own 60s
+            # timeout counts what it receives from us, so basing this only on
+            # received data let a chatty bridge (availability/topology events that
+            # need no reply) starve it of traffic: it dropped the session every
+            # ~2 minutes even though data was flowing.
+            now = time.monotonic()
+            idle = now - min(self._last_data_time, self._last_send_time)
             if idle < KEEPALIVE_INTERVAL_S:
                 continue
             try:
@@ -400,34 +428,44 @@ class SerialBridgeClient:
         if self._loop is None or self._loop.is_closed():
             return
 
-        if self._auth_challenge_future is not None and not self._auth_challenge_future.done():
-            kind = env.WhichOneof("msg")
-            if kind == "auth_challenge":
-                self._loop.call_soon_threadsafe(self._auth_challenge_future.set_result, env)
-                return
-            if kind == "auth_failed":
-                self._loop.call_soon_threadsafe(self._auth_challenge_future.set_exception, RuntimeError("authentication failed before challenge"))
-                return
-            if kind in ("full_snapshot", "auth_ok"):
-                # Do not accept these as proof of authentication. The bridge
-                # sends the snapshot after auth_ok, following the fresh HMAC.
-                return
+        # All routing happens on the event loop so it is ordered with the auth
+        # coroutine. Deciding on the reader thread raced it: a frame could see the
+        # auth_ok future already done but the session not yet marked connected and
+        # be delivered before on_connection_change, or ahead of buffered frames.
+        self._loop.call_soon_threadsafe(self._route_frame, env, data)
 
-        # Checked separately from the challenge future: that one is cleared as soon
-        # as the challenge lands, so auth_ok/auth_failed would otherwise fall through
-        # to _dispatch_frame and be delivered as an ordinary frame, leaving the
-        # handshake to time out despite the bridge having answered.
-        if self._auth_ok_future is not None and not self._auth_ok_future.done():
-            kind = env.WhichOneof("msg")
-            if kind in ("auth_failed", "auth_ok"):
-                self._loop.call_soon_threadsafe(self._auth_ok_future.set_result, env)
-                return
-            # Frames immediately following auth_ok can race the coroutine that
-            # observes that future. Buffer them and dispatch only after auth_ok.
-            self._loop.call_soon_threadsafe(self._auth_pending_frames.append, (env, data))
+    def _route_frame(self, env: pb.Envelope, raw: bytes) -> None:
+        """Event-loop side: feed the auth handshake, queue, or dispatch a frame."""
+        kind = env.WhichOneof("msg")
+
+        challenge = self._auth_challenge_future
+        if challenge is not None and not challenge.done():
+            if kind == "auth_challenge":
+                challenge.set_result(env)
+            elif kind == "auth_failed":
+                challenge.set_exception(RuntimeError("authentication failed before challenge"))
+            # Anything else before the challenge is unauthenticated (a previous
+            # session's tail, or a stale snapshot) and is dropped. In particular
+            # full_snapshot/auth_ok are never accepted as proof of authentication.
             return
 
-        self._loop.call_soon_threadsafe(self._dispatch_frame, env, data)
+        auth_ok = self._auth_ok_future
+        if auth_ok is not None and not auth_ok.done():
+            if kind in ("auth_failed", "auth_ok"):
+                auth_ok.set_result(env)
+            else:
+                # Held for in-order replay once auth_ok is confirmed; discarded
+                # with the attempt if authentication fails.
+                self._auth_pending_frames.append((env, raw))
+            return
+
+        if not self._session_ready:
+            if self._connected or (auth_ok is not None and auth_ok.done()):
+                # Between auth_ok and go-live: keep for in-order replay.
+                self._auth_pending_frames.append((env, raw))
+            return
+
+        self._dispatch_frame(env, raw)
 
     def _dispatch_frame(self, env: pb.Envelope, raw: bytes) -> None:
         kind = env.WhichOneof("msg")
@@ -481,6 +519,7 @@ class SerialBridgeClient:
         with self._send_lock:
             self._serial.write(encoded + b"\x00")
             self._serial.flush()
+            self._last_send_time = time.monotonic()
 
     async def _send_async(self, envelope: pb.Envelope) -> None:
         await asyncio.get_running_loop().run_in_executor(None, self._send_envelope_sync, envelope)

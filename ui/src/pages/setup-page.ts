@@ -24,7 +24,6 @@ const CHIP_OPTIONS: Record<string, { label: string; board_info: Record<string, s
   'ESP32-C3': { label: 'ESP32-C3 (esp32-c3-devkitm-1)', board_info: { platform: 'esp32', board: 'esp32-c3-devkitm-1', framework: 'esp-idf', variant: 'esp32c3' } },
   'ESP32-S2': { label: 'ESP32-S2 (esp32-s2-saola)', board_info: { platform: 'esp32', board: 'esp32-s2-saola', framework: 'esp-idf', variant: 'esp32s2' } },
   'ESP32': { label: 'ESP32 (esp32dev)', board_info: { platform: 'esp32', board: 'esp32dev', framework: 'esp-idf' } },
-  'ESP32-H2': { label: 'ESP32-H2 (esp32-h2-devkitm-1)', board_info: { platform: 'esp32', board: 'esp32-h2-devkitm-1', framework: 'esp-idf', variant: 'esp32h2' } },
   'ESP32-C2': { label: 'ESP32-C2 (esp32-c2-devkitm-1)', board_info: { platform: 'esp32', board: 'esp32-c2-devkitm-1', framework: 'esp-idf', variant: 'esp32c2' } },
 };
 
@@ -774,6 +773,9 @@ export class EspSetupWizard extends LitElement {
       this.flashBrowserPortLabel = portLabel(port);
 
       const { detected, family } = await detectConnectedChip(port);
+      if (family === 'ESP32-H2') {
+        throw new Error(`Detected ${detected}. The ESP32-H2 has no Wi-Fi radio, so it cannot run ESP-NOW and cannot be a bridge`);
+      }
       if (!family || !CHIP_OPTIONS[family]) {
         throw new Error(`Detected ${detected}, but there is no supported board mapping for it`);
       }

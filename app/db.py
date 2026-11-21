@@ -276,6 +276,11 @@ class Database:
             conn.execute(f"UPDATE bridges SET {assignments} WHERE uuid = ?", tuple(values[key] for key in keys) + (bridge_uuid,))
         return self.get_bridge(bridge_uuid)
 
+    def set_bridge_serial_port(self, bridge_uuid: str, serial_port: str) -> None:
+        """Rewrite a bridge's saved serial port without touching last_connected_at."""
+        with self.connect() as conn:
+            conn.execute("UPDATE bridges SET serial_port = ? WHERE uuid = ?", (serial_port, bridge_uuid))
+
     def delete_bridge(self, bridge_uuid: str) -> None:
         with self.connect() as conn:
             conn.execute("DELETE FROM bridges WHERE uuid = ?", (bridge_uuid,))

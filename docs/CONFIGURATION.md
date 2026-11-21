@@ -47,13 +47,47 @@ uses `id:` explicitly only for the bridge
 | Key | Required | Type | Effect |
 |---|---|---|---|
 | `uart_id` | **yes** | id reference to a `uart:` component | sets the UART the transport uses; adds `-DUSE_SERIAL` | 
-| `usb_cdc` | no | empty mapping (`usb_cdc: {}`) | adds `-DUSE_USB_CDC` |
+| `usb_cdc` | — | — | **rejected** at config validation: native USB is not implemented |
 
-Source: `esp_tree_bridge/__init__.py:30-35`, `esp_tree_bridge/__init__.py:83-91`.
+Source: `esp_tree_bridge/__init__.py` (`SERIAL_TRANSPORT_SCHEMA`, `to_code`).
 
-`usb_cdc` is only correct when the board is wired via native USB. The serial demo
-states this and omits it because it uses a hardware UART adapter
-(`device_code/demos/espnow-bridge-c5-serial.yml:82-84`).
+`usb_cdc` used to add a `-DUSE_USB_CDC` flag that no code read, so a board wired
+through native USB (USB CDC / USB-Serial-JTAG) just sat silent. It is now a
+validation error.
+
+#### Serial bridge requirements and limits
+
+**Bridge hardware**
+
+- An ESP32 with Wi-Fi: `esp32`, `esp32s2`, `esp32s3`, `esp32c2`, `esp32c3`,
+  `esp32c5` or `esp32c6`. Each chip needs its own image. ESP32-H2 and ESP32-P4
+  have no Wi-Fi radio and cannot run ESP-NOW. ESP8266 can be a remote but not a
+  serial bridge.
+- A **hardware UART on the chip's UART0 pins, through a USB-UART adapter chip**
+  (CP2102, CH340, FTDI). Boards whose only USB connection is the chip's own
+  native USB (most "SuperMini" C3/S3/C6 boards) need a separate adapter wired to
+  the UART0 pins. See `docs/BOARD_MATRIX.md` for the pin map; a board that routes
+  UART0 elsewhere must override the pins.
+- The link runs at 460800 baud, binary only. Keep the USB cable short.
+- The logger is set to `baud_rate: 0` so no log text reaches the data line (it
+  would corrupt the next frame). Read logs through the bridge's web server.
+- The bridge itself is reflashed over USB; remote ESP-NOW OTA through the bridge
+  works over serial.
+
+**Home Assistant host**
+
+- The add-on is built for **amd64 and aarch64** only. 32-bit ARM installs cannot
+  run it. It needs Home Assistant OS or Supervised (add-ons do not exist on
+  Container/Core installs).
+- Home Assistant in a VM (Proxmox, ESXi, Hyper-V) needs the USB adapter passed
+  through to the VM. `/dev/ttyS*` ports are never offered.
+- The add-on saves the adapter's `/dev/serial/by-id/...` path when one exists, so
+  the bridge keeps resolving after replug or reboot renumbers `ttyUSBn`.
+- The add-on opens the port with DTR/RTS deasserted, so boards with an auto-reset
+  circuit are not rebooted on each reconnect.
+- A bridge on another machine works through a network serial server: set the port
+  to `socket://host:port` (raw TCP, e.g. ser2net) or `rfc2217://host:port`. Only one
+  client may hold the link at a time.
 
 ### Transport requirement
 
