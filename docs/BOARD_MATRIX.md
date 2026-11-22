@@ -35,28 +35,28 @@ framework the add-on writes into a generated config:
 
 Notes on the two aliases, which are deliberate but easy to misread:
 
-- `ESP32-C61` resolves to the **C5** board and variant (`app/yaml_scaffold.py:27`).
-- `ESP32-P4` resolves to the **S3** board and variant (`app/yaml_scaffold.py:28`).
+- `ESP32-C61` resolves to the **C5** board and variant (`app/yaml_scaffold.py:28`).
+- `ESP32-P4` resolves to the **S3** board and variant (`app/yaml_scaffold.py:29`).
 
 Neither the C61 nor the P4 has its own `board:`/`variant:` entry anywhere in the
 repository, so the add-on builds those two chip names as C5 and S3 respectively.
 The ESPHome platform key is collapsed for every ESP32 family: anything whose
 `platform` starts with `esp32` is emitted as a single `esp32:` block
-(`app/yaml_scaffold.py:33-37`).
+(`app/yaml_scaffold.py:56-57`).
 
-A second table, `CHIP_TYPE_TO_BOARD` (`app/yaml_scaffold.py:5-16`), maps numeric
+A second table, `CHIP_TYPE_TO_BOARD` (`app/yaml_scaffold.py:6-17`), maps numeric
 esptool chip IDs to the same board info. It covers IDs 1, 2, 5, 9, 12, 13, 16, 23
 and `0x8266`/`0x8236`. It contains no entry for C61 (`0x0014`) or P4 (`0x0012`),
-even though `app/bin_parser.py:78-96` can name those chips when reading a firmware
+even though `app/bin_parser.py:134-136` can name those chips when reading a firmware
 image. A detected chip ID that is absent from both tables produces the "unknown
 chip" scaffold described below.
 
 ## What the wizards actually offer
 
-The add-on serves the registry over `GET /api/chips` (`app/server.py:3235-3260`),
+The add-on serves the registry over `GET /api/chips` (`app/server.py:3500`),
 with a `buildable` flag and an `unbuildable_reason` per chip, so the UI does not
 duplicate the map. The bridge flash wizard does **not** use that endpoint for its
-board list: it hardcodes a narrower set in `ui/src/pages/setup-page.ts:6-15`:
+board list: it hardcodes a narrower set in `ui/src/pages/setup-page.ts:20-28`:
 
 | Chip in the bridge wizard | Board label shown |
 |---|---|
@@ -66,25 +66,25 @@ board list: it hardcodes a narrower set in `ui/src/pages/setup-page.ts:6-15`:
 | `ESP32-C3` | `ESP32-C3 (esp32-c3-devkitm-1)` |
 | `ESP32-S2` | `ESP32-S2 (esp32-s2-saola)` |
 | `ESP32` | `ESP32 (esp32dev)` |
-| `ESP32-H2` | `ESP32-H2 (esp32-h2-devkitm-1)` |
 | `ESP32-C2` | `ESP32-C2 (esp32-c2-devkitm-1)` |
 
-So the bridge wizard offers eight chips: no `ESP8266`, no `ESP32-C61`, no
-`ESP32-P4`. The Create Remote wizard reads the full registry from `/api/chips`
-instead, and disables any chip whose `buildable` is false
-(`ui/src/pages/remote-wizard.ts:172-173`, `ui/src/pages/remote-wizard.ts:595-597`).
+So the bridge wizard offers seven chips: no `ESP8266`, no `ESP32-C61`, no
+`ESP32-P4`, no `ESP32-H2`. The H2 is refused outright at flash time
+(`ui/src/pages/setup-page.ts:776-777`: it has no Wi-Fi radio, so it cannot be a
+bridge; `CHANGELOG.md` records the same change). The Create Remote wizard reads the
+full registry from `/api/chips` instead, and disables any chip whose `buildable` is
+false (`ui/src/pages/remote-wizard.ts:726-727`; `canSubmit` at `:239-243`).
 
 ## Role support per chip
 
 The scaffold picks the component from the role first and the chip second
-(`app/yaml_scaffold.py:128-133`):
+(`app/yaml_scaffold.py:150-156`):
 
 - bridge → `esp_tree_bridge`
 - non-bridge on `esp8266` → `espnow_82xx_remote`
 - anything else → `esp_tree_remote`
 
-`espnow_mode` is forced to `regular` for ESP8266 and `lr` otherwise
-(`app/yaml_scaffold.py:134`). Nothing in the scaffold vetoes a role per chip: every
+Nothing in the scaffold vetoes a role per chip: every
 registry entry is scaffolded as either a bridge or a remote. What differs is which
 chips each wizard offers:
 
@@ -95,7 +95,7 @@ chips each wizard offers:
 | `ESP32-C3` | yes | yes | remote (`esp32-c3-devkitm-1`) |
 | `ESP32-C2` | yes | yes | none |
 | `ESP32-C6` | yes | yes | none |
-| `ESP32-H2` | yes | yes | none |
+| `ESP32-H2` | no | yes | none |
 | `ESP32-C5` | yes | yes | bridge (`esp32-c5-devkitc-1`) |
 | `ESP32-S3` | yes | yes | none |
 | `ESP32-C61` | no | yes | none |
@@ -103,8 +103,8 @@ chips each wizard offers:
 | `ESP8266` | registered, but not offered | offered | remote (`esp12e`) |
 
 The remote wizard reads `/api/chips`, so it lists all eleven registry entries.
-The bridge wizard's list is the eight hardcoded chips above
-(`ui/src/pages/setup-page.ts:6-15`). No ESP8266 bridge demo exists in this
+The bridge wizard's list is the seven hardcoded chips above
+(`ui/src/pages/setup-page.ts:20-28`). No ESP8266 bridge demo exists in this
 repository; see "ESP8266 bridge status" above.
 
 `esp12e` (4 MB) is the board every ESP8266 remote is scaffolded as, whatever the
@@ -113,10 +113,12 @@ has no second app slot, so `ESP.getFreeSketchSpace()` leaves no room to write an
 OTA image at all (a scaffolded remote is ~430 kB). A 1 MB board still works if it
 is built by hand with `esp01_1m`, but it can only be reflashed over USB.
 
-`espnow_mode` is forced to `regular` for ESP8266 and `lr` otherwise
-(`app/yaml_scaffold.py:134`). Both wizards start on `lr` before submission and let
-the scaffold override it (`ui/src/pages/setup-page.ts:78`,
-`ui/src/pages/remote-wizard.ts:238`).
+`espnow_mode` is forced to `regular` for ESP8266 remotes (`app/yaml_scaffold.py:160`,
+emitted at `:382`). Bridges with no mode set are emitted as `lr`
+(`app/yaml_scaffold.py:370`); other remotes take the configured value and default to
+`regular` (`app/yaml_scaffold.py:160`). The setup wizard starts on `regular`
+(`ui/src/pages/setup-page.ts:80`); the remote wizard starts with no mode and passes
+through the bridge's own mode (`ui/src/pages/remote-wizard.ts:48`, `:221`).
 
 ### ESP8266 remotes are offered, with a fixed scaffold shape
 
