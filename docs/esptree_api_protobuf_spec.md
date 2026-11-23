@@ -341,6 +341,20 @@ Batched stream of events. See [Section 4: Events](#4-events).
 |---|---|---|
 | `monotonic_ms` | `uint64` | Monotonic clock value for latency measurement |
 
+#### StateReceipt (23) — Add-on → Bridge
+
+Sent by the add-on after it handles a `RemoteStateEvent` whose `state_tx_counter` is non-zero. An event with a zero counter gets no receipt (`app/bridge_v2_client.py:403-405`). The bridge passes it to `api_runtime_handle_state_receipt` (`device_code/components/esp_tree_bridge/esp_tree_bridge.cpp:3106`).
+
+Note: the `.proto` comment reserves 23–29 for future bidirectional messages, but field 23 is already `StateReceipt`. The field number is what is on the wire, so the comment is stale.
+
+| Field | Type | Description |
+|---|---|---|
+| `remote_mac` | `string` | Remote that sent the state update |
+| `bridge_mac` | `string` | Bridge MAC; defaults to the client's bridge when the event has none |
+| `session_id` | `string` | Session the update belongs to |
+| `state_tx_counter` | `uint32` | Counter value from the acknowledged update |
+| `entity_index` | `uint32` | Entity the update was for |
+
 #### Error (99) — Bidirectional
 
 | Field | Type | Description |
@@ -542,6 +556,23 @@ Client                              Bridge
 | `OTA_STATE_SUCCESS (5)` | OTA completed successfully |
 | `OTA_STATE_FAILED (6)` | OTA failed |
 | `OTA_STATE_ABORTED (7)` | OTA was aborted |
+
+### 3.5 Device Identity Messages (field 40)
+
+#### DeviceIdMap (40) — Integration → Add-on
+
+Sent by the HA integration (`ha_integration/custom_components/esp_tree/bridge_runtime.py:157`) so the add-on can tie each remote MAC to its Home Assistant device ID. An entry with an empty `ha_device_id` removes that mapping (`app/bridge_v2_client.py:684-690`). The add-on does not forward it to the bridge; the bridge has no handler for field 40.
+
+| Field | Type | Description |
+|---|---|---|
+| `entries` | `repeated DeviceIdEntry` | One entry per remote |
+
+**DeviceIdEntry**
+
+| Field | Type | Description |
+|---|---|---|
+| `remote_mac` | `string` | Remote MAC address |
+| `ha_device_id` | `string` | Home Assistant device ID; empty removes the mapping |
 
 ---
 
