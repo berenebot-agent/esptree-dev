@@ -1381,7 +1381,7 @@ chip_id = int.from_bytes(open('espnow-remote.ota.bin','rb').read()[12:14], 'litt
 OTA over ESP-NOW allows the bridge to flash firmware onto remote leaf nodes via the ESP-NOW LR protocol, with support for multi-hop relay paths. The transfer is initiated by an external source (WebSocket client or CLI) connected to the bridge.
 
 **Design Principles:**
-- Source-agnostic bridge manager — any data source can feed chunks (WebSocket currently implemented)
+- Source-agnostic bridge manager — any data source can feed chunks (WebSocket and serial transports both implemented: `bridge_api_proto_ws.cpp:469`, `bridge_api_serial.cpp:141`)
 - Capped/negotiated chunk size per transfer so jumbo frames can be added later with minimal recoding
 - Sliding window with cumulative ACKs for efficient, ordered delivery
 - MD5 integrity checking

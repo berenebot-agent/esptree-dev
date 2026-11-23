@@ -185,7 +185,7 @@ void add_allowed_parent(const std::array<uint8_t 6>& mac);
 ```cpp
 bool is_protocol_ready() const;      // crypto + protocol initialized
 bool is_transport_ready() const;     // ESP-NOW transport initialized
-const char* get_state_name() const;  // DISCOVERING, JOINING, JOINED, STATE_SYNC, NORMAL, PROVIDING_RELAY
+const char* get_state_name() const;  // DISCOVERING, JOINING, JOINED, STATE_SYNC, NORMAL (WAIT_WIFI is ESPHome-only)
 uint32_t get_uptime_seconds() const;
 ```
 
@@ -212,7 +212,7 @@ When `init()` is called, the protocol begins immediately:
 2. **JOINING**: Sends `PKT_JOIN` to selected bridge, derives session key from PSK + nonces.
 3. **JOINED / STATE_SYNC**: Sends full entity state snapshot to bridge.
 4. **NORMAL**: Operational — sends STATE updates on entity changes, heartbeats at interval, processes commands.
-5. **PROVIDING_RELAY**: (if `set_relay_enabled(true)`) — node relays packets for other remotes.
+5. **Relay** (if `set_relay_enabled(true)`) — node relays packets for other remotes; the state name stays `NORMAL`.
 
 If the bridge disappears, the protocol detects transmit stalls and returns to DISCOVERING automatically.
 
@@ -367,7 +367,11 @@ I (0) app_main:   motion_idx=0 temp_idx=1 relay_idx=2
 | `JOINED` | JOIN_ACK received, syncing state |
 | `STATE_SYNC` | Sending full entity state to bridge |
 | `NORMAL` | Fully operational |
-| `PROVIDING_RELAY` | Relaying packets for child remotes |
+
+Relaying is not a connection state. When the node starts forwarding for a child
+remote, the protocol queues a `Now Providing Relay for <mac>` log entry
+(`device_code/components/esp_tree_remote/remote_protocol.cpp:764`), and `get_state_name()`
+keeps returning the state above.
 
 ---
 

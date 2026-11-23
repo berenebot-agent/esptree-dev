@@ -135,7 +135,7 @@ remote that has no `wifi:` block.
 
 **Cause.** Two code paths referenced `wifi::global_wifi_component` outside a
 `USE_WIFI` guard. The symbol only exists when the `wifi` component is loaded
-(`device_code/components/esp_tree_remote/remote_protocol.cpp:2016-2020`, `:2428-2432`).
+(`device_code/components/esp_tree_remote/remote_protocol.cpp:2024-2028`, `:2436-2440`).
 
 **Fix.** Both paths are now wrapped in `#ifdef USE_WIFI` with a `false` fallback.
 Update the component. The affected paths are a radio-channel hint and a
@@ -531,7 +531,7 @@ instead of recovering (`app/bridge_serial_client.py:457-461`).
 **Symptoms.** A serial bridge session ends after 60 seconds of quiet, then
 reconnects.
 
-**Cause.** `CONNECTION_TIMEOUT_S = 60` (`app/bridge_serial_client.py:25`). A quiet
+**Cause.** `CONNECTION_TIMEOUT_S = 60` (`app/bridge_serial_client.py:26`). A quiet
 link looks identical to a dead one.
 
 **Fix.** A keepalive Ping is sent every 20 seconds of idle
@@ -640,7 +640,7 @@ of the transfer itself — the UI colours it amber, like `version_mismatch`
 the new image, or is out of range of its parent. Transfer itself is capped separately
 by `ota_transfer_timeout_s`, **1800 seconds** (`app/config.py:22`). Both are
 `Settings` fields with no `config.yaml` option exposed — the add-on options are only
-`firmware_retention_days` and `scan_subnets` (`config.yaml:28-33`), so they are
+`firmware_retention_days` and `scan_subnets` (`config.yaml:29-34`), so they are
 **not user-configurable through the add-on UI** in this release.
 
 ### `version_mismatch` — the device rejoined but reports the old version
