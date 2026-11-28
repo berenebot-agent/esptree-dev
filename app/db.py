@@ -84,9 +84,18 @@ class Database:
             self._set_schema_version(conn, migration.version)
 
     def init(self) -> None:
+        # One transaction for the whole schema. The connection runs in
+        # autocommit mode (isolation_level=None), so each CREATE/ALTER would
+        # otherwise commit — and fsync — on its own: ~120 commits here, which
+        # costs seconds on a slow disk and is pure startup latency for the
+        # add-on. A single transaction is also the correct semantics for a
+        # migration run: either the schema lands with its version bump or it
+        # does not land at all.
         with self.connect() as conn:
             conn.executescript(
                 """
+                BEGIN IMMEDIATE;
+
                 CREATE TABLE IF NOT EXISTS schema_versions (
                     version INTEGER PRIMARY KEY,
                     applied_at INTEGER NOT NULL
@@ -162,6 +171,7 @@ class Database:
                 """
             )
             self._run_migrations(conn)
+            conn.execute("COMMIT")
 
     @staticmethod
     def row(row: sqlite3.Row | None) -> dict[str, Any] | None:
