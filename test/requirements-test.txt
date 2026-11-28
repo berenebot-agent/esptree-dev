@@ -1,2 +1,7 @@
 pytest==8.3.5
 pytest-asyncio==0.25.2
+# Sharding and per-test watchdogs for the performance harness
+# (test/perf/perfharness.py). pytest-xdist runs each test in its own process,
+# which is what keeps the suites' process-wide mocks and env mutations isolated.
+pytest-xdist==3.6.1
+pytest-timeout==2.3.1

@@ -71,6 +71,13 @@ python3 scripts/check_doc_anchors.py # CI gate: docs cite code as file.ext:123
   but as **separate `pytest` processes** — `ha_integration/tests/conftest.py` replaces
   `google.protobuf` with a stub during collection, so a combined run breaks the add-on's
   `esp_tree_runtime_pb2`. Keep them separate.
+- Both Python suites load a shared performance harness (`test/perf/perfharness.py`, wired
+  from each suite's `conftest.py`): RAM-backed `tmp_path`, per-test timing, always-on
+  detail logs, run metadata and an append-only ledger under `.local/perf/`, plus a
+  per-process memory cap. `test/PERFORMANCE.md` records the measured baseline, every
+  environment knob and what is deliberately still serial. The runner auto-selects Docker
+  or a pinned project venv (`--local` forces it), runs the two suites as concurrent lanes,
+  and skips the dependency install when the pinned requirement set is unchanged.
 - `dev.sh verify` and the Docker-backed compile scripts are the release path. `compile-local`
   is for iteration only.
 - C++ tests fall back to the Debian OpenSSL sysroot at `/opt/data/sysroot/openssl-prefix`;

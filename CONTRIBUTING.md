@@ -61,6 +61,13 @@ Run commands from the repository root unless noted.
 
 The add-on Python runtime is containerized. Do not validate imports or Python syntax with host `python` or `python3` commands. Integration tests live under `ha_integration/tests/` and run with pytest in the configured integration test environment.
 
+`test/run-unit-tests.sh` is the canonical gate for both Python suites: it runs them as
+two concurrent pytest processes (never one), sizes itself from the host, and picks the
+container image or a pinned project venv. Both suites load the shared performance harness
+that keeps the run at a couple of seconds and leaves per-test detail, metadata and a run
+ledger under `.local/perf/`. See `test/PERFORMANCE.md` for the measured baseline, the
+environment knobs and the list of things deliberately left serial.
+
 For the UI, use the existing Node toolchain:
 
 ```bash

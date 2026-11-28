@@ -343,3 +343,31 @@ def mock_hass(runtime):
     hass = MagicMock()
     hass.data = {"esp_tree": {"runtime": runtime}}
     return hass
+
+
+# --- test performance harness ------------------------------------------------
+# Shared with the add-on suite: RAM-backed scratch for tmp_path, per-test
+# timing, always-on detail logs, run metadata and the append-only ledger.
+# See test/PERFORMANCE.md. Delegated rather than declared with
+# `pytest_plugins` because pytest rejects that in a non-root conftest.
+import sys as _sys
+from pathlib import Path as _Path
+
+_PERF_DIR = _Path(__file__).resolve().parents[2] / "test" / "perf"
+if str(_PERF_DIR) not in _sys.path:
+    _sys.path.insert(0, str(_PERF_DIR))
+
+import perfharness as _perfharness  # noqa: E402  (path set up above)
+
+_PLUGIN = _perfharness.PLUGIN
+
+pytest_addoption = _PLUGIN.pytest_addoption
+pytest_report_header = _PLUGIN.pytest_report_header
+pytest_collection_finish = _PLUGIN.pytest_collection_finish
+pytest_runtest_logreport = _PLUGIN.pytest_runtest_logreport
+pytest_sessionfinish = _PLUGIN.pytest_sessionfinish
+pytest_terminal_summary = _PLUGIN.pytest_terminal_summary
+
+
+def pytest_configure(config):  # noqa: D103 - thin delegation
+    _PLUGIN.pytest_configure(config)
